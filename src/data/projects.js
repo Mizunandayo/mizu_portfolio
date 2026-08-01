@@ -84,7 +84,7 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo',  label: 'Walkthrough', url: 'https://mitsu-iota.vercel.app/' },
+      { kind: 'demo',  label: 'Walkthrough', url: 'https://mitsu-iota.vercel.app/', primary: true },
       { kind: 'repo',  label: 'Repository',  url: 'https://github.com/Mizunandayo/mitsu' },
       { kind: 'video', label: 'Presentation',url: 'https://youtu.be/l7jBbqcaIGA' },
     ],
@@ -167,7 +167,7 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo',    label: 'Web App',      url: 'https://minari-eight.vercel.app/' },
+      { kind: 'demo',    label: 'Web App',      url: 'https://minari-eight.vercel.app/', primary: true },
       { kind: 'repo',    label: 'Repository',   url: 'https://github.com/Mizunandayo/minari' },
       { kind: 'video',   label: 'Presentation', url: 'https://www.youtube.com/watch?v=ndJ8cZIg4cM' },
       { kind: 'devpost', label: 'DevPost',      url: 'https://devpost.com/software/minari-autonomous-flaky-test-resolution-for-gitlab' },
@@ -250,7 +250,7 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo',  label: 'Web App',      url: 'https://misaki-phi.vercel.app/' },
+      { kind: 'demo',  label: 'Web App',      url: 'https://misaki-phi.vercel.app/', primary: true },
       { kind: 'repo',  label: 'Repository',   url: 'https://github.com/Mizunandayo/misaki' },
       { kind: 'video', label: 'Presentation', url: 'https://www.youtube.com/watch?v=rVXMIxTKRq0' },
     ],
@@ -330,8 +330,8 @@ export const PROJECTS = [
     ],
 
     links: [
+      { kind: 'demo',  label: 'Walkthrough', url: 'https://mirai-tech-ex-hackathon-transformin-snowy.vercel.app/', primary: true },
       { kind: 'demo',  label: 'Web App',     url: 'https://mirai-tech-ex-hackathon-transformin.vercel.app/' },
-      { kind: 'demo',  label: 'Walkthrough', url: 'https://mirai-tech-ex-hackathon-transformin-snowy.vercel.app/' },
       { kind: 'repo',  label: 'Repository',  url: 'https://github.com/Mizunandayo/mirai' },
       { kind: 'video', label: 'Demo',        url: 'https://www.youtube.com/watch?v=aVDTUfj3qAQ' },
     ],
@@ -413,8 +413,8 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo', label: 'Demo',       url: 'https://lnkd.in/gV3RCnD9' },
-      { kind: 'repo', label: 'Repository', url: 'https://lnkd.in/gDTupz-q' },
+      { kind: 'demo', label: 'Walkthrough', url: 'https://mizunandayo.github.io/miwa/', primary: true },
+      { kind: 'repo', label: 'Repository',  url: 'https://github.com/Mizunandayo/miwa' },
     ],
   },
 
@@ -491,7 +491,7 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo', label: 'Live Site', url: 'https://www.bacsalbusinessconsultancy.com/' },
+      { kind: 'demo', label: 'Live Site', url: 'https://www.bacsalbusinessconsultancy.com/', primary: true },
     ],
   },
 
@@ -556,7 +556,8 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo', label: 'Play', url: 'https://galactic-conquest.onrender.com/' },
+      { kind: 'demo', label: 'Play',       url: 'https://galactic-conquest.onrender.com/', primary: true },
+      { kind: 'repo', label: 'Repository', url: 'https://github.com/Mizunandayo/Galactic-Conquest---2nd-Runner-Up-Raite-Hackathon-October-17-2025' },
     ],
   },
 
@@ -630,7 +631,9 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo', label: 'Live Site', url: 'https://careerstep-bpsu1.web.app/index.html' },
+      { kind: 'demo', label: 'Live Site',  url: 'https://careerstep-bpsu1.web.app/index.html', primary: true },
+      /* Team repository — owned by ArlynA47, not Mizunandayo. */
+      { kind: 'repo', label: 'Repository', url: 'https://github.com/ArlynA47/bpsu1' },
     ],
   },
 
@@ -713,12 +716,33 @@ export const PROJECTS = [
     ],
 
     links: [
-      { kind: 'demo', label: 'Live Site', url: 'https://eye2wear.onrender.com' },
+      { kind: 'demo', label: 'Live Site',  url: 'https://eye2wear.onrender.com', primary: true },
+      { kind: 'repo', label: 'Repository', url: 'https://github.com/Mizunandayo/Eye2Wear---Optical-Clinic' },
     ],
   },
 ]
 
 /* ── Derived helpers ───────────────────────────── */
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+/** Renders a `period` for display.
+ *    same month        → 'July 2026'
+ *    same year         → 'May – June 2026'
+ *    spanning years    → 'November 2025 – February 2026'  */
+export const formatPeriod = ({ start, end }) => {
+  const [sy, sm] = start.split('-').map(Number)
+  const [ey, em] = end.split('-').map(Number)
+  const from = MONTHS[sm - 1]
+  const to = MONTHS[em - 1]
+
+  if (sy === ey && sm === em) return `${from} ${sy}`
+  if (sy === ey) return `${from} – ${to} ${sy}`
+  return `${from} ${sy} – ${to} ${ey}`
+}
 
 const monthKey = (p) => `${p.end}-${p.start}`
 
@@ -728,6 +752,15 @@ export const ORDERED = [...PROJECTS].sort((a, b) =>
 )
 
 export const bySlug = (slug) => PROJECTS.find((p) => p.slug === slug)
+
+/** The project's own live site — where its work-grid card points.
+    Marked explicitly with `primary: true` rather than inferred from
+    array order: Mirai and Mitsu each ship more than one demo URL, and
+    letting position decide picks the wrong one silently. */
+export const liveUrl = (p) =>
+  (p.links.find((l) => l.primary) ||
+   p.links.find((l) => l.kind === 'demo') ||
+   p.links[0])?.url ?? null
 
 export const siblings = (slug) => {
   const i = ORDERED.findIndex((p) => p.slug === slug)

@@ -19,17 +19,22 @@ export function ImagePlaceholder({
   fit = 'cover',
   showCaption = true,
   label,
+  /* Fill the parent instead of holding a ratio — for full-bleed slots
+     where the container decides the height. */
+  fill = false,
   className = '',
 }) {
   const [failed, setFailed] = useState(false)
   const dir = base ?? `/work/${slug}`
   const url = `${dir}/${src}`
   const caption = showCaption && cap ? <Caption>{cap}</Caption> : null
+  const frame = fill ? { height: '100%' } : { aspectRatio: ratio }
+  const figureStyle = fill ? { margin: 0, height: '100%' } : { margin: 0 }
 
   if (failed) {
     return (
-      <figure className={className} style={{ margin: 0 }}>
-        <div className="ph-mizu" style={{ aspectRatio: ratio }}>
+      <figure className={className} style={figureStyle}>
+        <div className="ph-mizu" style={frame}>
           <span className="ph-label-mizu">
             {label ?? (
               <>
@@ -46,8 +51,8 @@ export function ImagePlaceholder({
   }
 
   return (
-    <figure className={className} style={{ margin: 0 }}>
-      <div className="ph-mizu" style={{ aspectRatio: ratio }}>
+    <figure className={className} style={figureStyle}>
+      <div className="ph-mizu" style={frame}>
         <img
           src={url}
           alt={alt ?? cap ?? ''}

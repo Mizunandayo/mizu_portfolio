@@ -1,4 +1,4 @@
-import { PROFILE, HERO_STATS } from '../../data/profile.js'
+import { PROFILE} from '../../data/profile.js'
 import { StarField, PerspectiveGrid, Spotlight, RippleField } from '../shared/Backdrop.jsx'
 import { StatBar, Pill, GitHubIcon, ArrowIcon } from '../shared/primitives.jsx'
 
@@ -122,37 +122,8 @@ export default function Hero() {
           </Pill>
         </div>
 
-        <StatBar stats={HERO_STATS} className="hero-enter" style={{ animationDelay: '0.54s' }} />
 
-        <div
-          className="hero-enter"
-          style={{
-            animationDelay: '0.62s',
-            marginTop: 32,
-            display: 'flex', flexWrap: 'wrap', gap: 20,
-            justifyContent: 'center', alignItems: 'center',
-          }}
-        >
-          {[
-            { label: 'Open to', value: PROFILE.availability.modes.join(' · ') },
-            { label: 'Based in', value: PROFILE.location },
-            { label: 'Focus', value: 'Agentic AI · Full-stack' },
-          ].map((m) => (
-            <div key={m.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <span
-                style={{
-                  fontSize: '0.76rem', fontWeight: 700, letterSpacing: '0.10em',
-                  textTransform: 'uppercase', color: 'rgba(212,212,216,0.68)',
-                }}
-              >
-                {m.label}
-              </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'rgba(228,228,231,0.9)' }}>
-                {m.value}
-              </span>
-            </div>
-          ))}
-        </div>
+
       </div>
 
       <div

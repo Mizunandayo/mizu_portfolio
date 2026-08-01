@@ -19,7 +19,24 @@ const OUT = path.resolve(__dirname, '../src/data/icons.js')
 const NAME_TO_SLUG = {
   /* Languages */
   'TypeScript': 'typescript', 'JavaScript': 'javascript', 'Python': 'python',
-  'HTML': 'html5', 'CSS': 'css', 'SCSS': 'sass',
+  'Rust': 'rust', 'HTML': 'html5', 'CSS': 'css', 'SCSS': 'sass',
+
+  /* Added from the published project stack pages.
+     null = confirmed absent from simple-icons, falls back to a glyph. */
+  'CrewAI': 'crewai', 'Qwen2.5 72B': 'qwen', 'Vercel AI SDK': 'vercel',
+  'Gemini 2.0 Flash': 'googlegemini',
+  'AMD MI300X': 'amd', 'ROCm': null, 'TensorFlow Lite': 'tensorflow',
+  'gpt-4o-mini-transcribe': null, 'edge-tts': null, 'Google Translate': 'googletranslate',
+  'sounddevice': null, 'One Euro Filter': null, 'FABRIK': null,
+  'Three.js': 'threedotjs', 'NumPy': 'numpy',
+  'Material UI': 'mui', 'Zustand': null, 'Immer': 'immer',
+  'D3.js': 'd3', 'React Simple Maps': null,
+  'Lucide': 'lucide', 'Prism': null,
+  'Pydantic': 'pydantic', 'SQLAlchemy': 'sqlalchemy', 'Alembic': null,
+  'asyncpg': null, 'Celery': 'celery', 'sse-starlette': null,
+  'HMAC': null, 'slowapi': null, 'defusedxml': null, 'SHA-256': null,
+  'structlog': null, 'Sentry': 'sentry',
+  'uv': 'uv', 'Hatchling': null, 'python-dotenv': 'dotenv',
 
   /* AI & agents.
      simple-icons carries no OpenAI, Langfuse, Valibot, tree-sitter or
@@ -51,7 +68,7 @@ const NAME_TO_SLUG = {
   /* Security & quality */
   'JWT': 'jsonwebtokens', 'Google OAuth': 'google', 'Valibot': null,
   'CSP / HSTS': null, 'Rate limiting': null,
-  'pytest': 'pytest', 'Vitest': 'vitest', 'Ruff': 'ruff', 'Black': null, 'ESLint': 'eslint',
+  'pytest': 'pytest', 'Vitest': 'vitest', 'Ruff': 'ruff', 'Black': 'black', 'ESLint': 'eslint',
 
   /* Tooling */
   'Git': 'git', 'GitHub': 'github', 'GitLab': 'gitlab', 'Postman': 'postman',
@@ -75,17 +92,17 @@ const NAME_TO_SLUG = {
   'Google Cloud Run ': 'googlecloud', 'Secret Manager': 'googlecloud',
   'GitLab MCP': 'gitlab', 'Nodemon': 'nodemon', 'Vitest ': 'vitest',
   'React Flow': null, 'Jinja2': 'jinja', 'Qdrant ': 'qdrant',
-  'discord.js': 'discord', 'Tauri ': 'tauri', 'SQLite': 'sqlite',
+  'discord.js': 'discorddotjs', 'Tauri ': 'tauri', 'SQLite': 'sqlite',
   'Nodemailer': null, 'Puppeteer ': 'puppeteer', 'MediaPipe Hand Landmarker': 'mediapipe',
-  'PySide6': 'qt', 'pywin32': null, 'Ruff ': 'ruff', 'Black ': null,
+  'PySide6': 'qt', 'pywin32': null, 'Ruff ': 'ruff',
   'ApexCharts': null, 'Recharts': null, 'jsPDF': null, 'html2canvas': null,
   'Multer': null, 'WeasyPrint': null, 'Bright Data MCP Server': null,
   'Web Unlocker': null, 'SERP API': null, 'Web Scraper API': null,
   'Scraping Browser': null, 'Langfuse ': null, 'LangChain ': 'langchain',
-  'Farcaster SDK': 'farcaster', 'MiniKit': null, 'Smart Contracts': null,
+  'Farcaster SDK': 'farcaster', 'MiniKit': 'coinbase', 'Smart Contracts': null,
   'Rapier WASM ': 'webassembly', 'MuJoCo ': null, 'vLLM ': 'vllm',
   'Llama 3.3 70B ': 'meta', 'Edge-TTS': null, 'pykakasi': null,
-  'CrewAI-style pipeline': null, 'AMD Developer Cloud': 'amd',
+  'CrewAI-style pipeline': 'crewai', 'AMD Developer Cloud': 'amd',
   'One Euro filtering': null, 'Mixed-DPI desktop geometry': null,
   'Prisma ORM': 'prisma', 'Valibot ': null, 'ESLint ': 'eslint',
   'Postman ': 'postman', 'shadcn/ui ': 'shadcnui', 'GSAP ': 'greensock',
@@ -199,17 +216,20 @@ for (const v of Object.values(si)) {
   if (v && typeof v === 'object' && v.slug && v.path) bySlug.set(v.slug, v)
 }
 
-/* Only emit marks that are actually rendered — every unused path is dead
-   weight in the main bundle, and SVG path data gzips poorly.
-   Today that means the aggregate Stack section. Pass --all to include the
-   nine per-project stacks too, if deck icons get switched on. */
-const includeDecks = process.argv.includes('--all')
+/* Two surfaces render technology icons: the aggregate Stack section on
+   the home page, and the per-project stack inside the project dialog.
+   Both are covered by default — narrowing to the aggregate alone leaves
+   every project-only name (Firebase Hosting, Axios, npm, …) falling
+   through to a category glyph in the dialog.
+
+   --stack-only trims to the home section if the bundle needs it back. */
+const stackOnly = process.argv.includes('--stack-only')
 
 const allNames = new Set([
   ...STACK.flatMap((g) => g.items.map((i) => i.name)),
-  ...(includeDecks
-    ? PROJECTS.flatMap((p) => p.stack.flatMap((g) => g.items.map((i) => i.name)))
-    : []),
+  ...(stackOnly
+    ? []
+    : PROJECTS.flatMap((p) => p.stack.flatMap((g) => g.items.map((i) => i.name)))),
 ])
 
 const icons = {}

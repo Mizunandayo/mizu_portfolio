@@ -1,5 +1,6 @@
 import { CERTS_ORDERED, CERT_COUNT, CERT_ISSUERS } from '../../data/certifications.js'
-import { SectionShell } from '../shared/primitives.jsx'
+import { PROFILE } from '../../data/profile.js'
+import { SectionShell, Pill, CredlyIcon, ExternalIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
 import { Reveal } from '../../hooks/useScrollReveal.jsx'
 
@@ -19,6 +20,26 @@ export default function Certifications() {
           </Reveal>
         ))}
       </div>
+
+      <Reveal delay={2}>
+        <div
+          className="flex flex-col items-center text-center"
+          style={{ marginTop: 44 }}
+        >
+          <p
+            className="small-copy"
+            style={{ color: 'rgba(161,161,170,0.92)', marginBottom: 18, maxWidth: '34rem' }}
+          >
+            Badges are published on Credly.
+          </p>
+
+          <Pill href={PROFILE.contact.credly} external>
+            <CredlyIcon />
+            View Credly profile
+            <ExternalIcon />
+          </Pill>
+        </div>
+      </Reveal>
     </SectionShell>
   )
 }

@@ -1,21 +1,40 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PROFILE } from '../data/profile.js'
-import { ArrowIcon } from './shared/primitives.jsx'
 
-const LINKS = [
-  { href: '#work',           label: 'Work' },
-  { href: '#about',          label: 'About' },
-  { href: '#experience',     label: 'Experience' },
-  { href: '#stack',          label: 'Stack' },
-  { href: '#awards',         label: 'Awards' },
-  { href: '#certifications', label: 'Certs' },
+/* ══════════════════════════════════════════════════
+   Notch navbar.
+
+   Ported from the vengenceui NotchNavbar. The geometry
+   is kept verbatim — two 40px-tall flexible side rails
+   and a 64px centre block joined by two 50px corner
+   slices whose clip-path curves between the heights,
+   with paired hairlines tracing the silhouette.
+
+   Adapted to this project: React Router instead of
+   next/link, inline SVG instead of lucide-react, CSS
+   transitions instead of framer-motion, and no theme
+   toggle — the design is committed to dark, so there
+   is no light mode to switch to.
+   ══════════════════════════════════════════════════ */
+
+/* One list. The source component split these left/right around a centred
+   logo; with the brand moved to the left rail the links read as a single
+   run instead. */
+const ALL = [
+  { label: 'Work',       href: '#work',           Icon: IconWork },
+  { label: 'About',      href: '#about',          Icon: IconUser },
+  { label: 'Experience', href: '#experience',     Icon: IconCalendar },
+  { label: 'Stack',      href: '#stack',          Icon: IconStack },
+  { label: 'Hackathons', href: '#hackathons',     Icon: IconAward },
+  { label: 'Certs',      href: '#certifications', Icon: IconBadge },
 ]
 
 export default function Nav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [active, setActive] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
   const isHome = pathname === '/'
 
   useEffect(() => {
@@ -28,118 +47,248 @@ export default function Nav() {
     return () => obs.disconnect()
   }, [isHome, pathname])
 
+  /* Close the mobile menu on route change, and lock the page behind it. */
+  useEffect(() => { setMenuOpen(false) }, [pathname])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
+
   const go = (e, href) => {
     e.preventDefault()
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  const toContact = (e) => {
-    e.preventDefault()
-    if (isHome) document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    else navigate('/#contact')
+    setMenuOpen(false)
+    if (isHome) document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    else navigate(`/${href}`)
   }
 
   return (
-    <nav
-      aria-label="Primary"
-      className="nav-glass fixed top-5 left-1/2 z-50"
-      style={{
-        transform: 'translateX(-50%)',
-        borderRadius: 999,
-        padding: '0 6px',
-        height: 52,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        border: '1px solid rgba(163,163,163,0.26)',
-        boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.4)',
-        minWidth: 'max-content',
-        maxWidth: 'calc(100vw - 24px)',
-      }}
-    >
-      {/* Brand */}
-      <Link
-        to="/"
-        className="flex items-center gap-2 no-underline text-white px-4"
-        style={{
-          fontWeight: 700, fontSize: '0.84rem', letterSpacing: '0.14em',
-          textTransform: 'uppercase', whiteSpace: 'nowrap',
-        }}
-      >
-        <span style={{ fontSize: '0.96rem', letterSpacing: '-0.01em' }}>{PROFILE.kanji}</span>
-        {PROFILE.brand}
-      </Link>
-
-      <Divider />
-
-      {isHome ? (
-        <div className="hidden lg:flex" style={{ gap: 2 }}>
-          {LINKS.map(({ href, label }) => {
-            const on = active === href.slice(1)
-            return (
-              <a
-                key={href}
-                href={href}
-                onClick={(e) => go(e, href)}
-                className="no-underline"
-                style={{
-                  fontSize: '0.84rem',
-                  fontWeight: on ? 600 : 500,
-                  color: on ? '#fff' : 'rgba(255,255,255,0.55)',
-                  padding: '6px 12px',
-                  borderRadius: 999,
-                  background: on ? 'rgba(161,161,170,0.22)' : 'transparent',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 200ms cubic-bezier(0.16,1,0.3,1)',
-                }}
-              >
-                {label}
-              </a>
-            )
-          })}
+    <>
+      <header className="notch-mizu">
+        {/* Left rail */}
+        <div className="notch-rail-mizu">
+          <Rails />
         </div>
-      ) : (
-        <Link
-          to="/#work"
-          className="no-underline hidden sm:flex items-center gap-2"
-          style={{
-            fontSize: '0.84rem', fontWeight: 500,
-            color: 'rgba(255,255,255,0.6)',
-            padding: '6px 12px', borderRadius: 999, whiteSpace: 'nowrap',
-          }}
-        >
-          <ArrowIcon dir="left" />
-          All work
-        </Link>
+
+        {/* Notch — three slices */}
+        <div className="notch-block-mizu">
+          <div className="notch-corner-mizu notch-corner-l-mizu">
+            <div className="notch-fill-mizu" />
+            <svg className="notch-edge-mizu" viewBox="0 0 50 64" aria-hidden="true">
+              <path d="M0 39.5 C25 39.5 25 63.5 50 63.5" />
+              <path d="M0 36.5 C25 36.5 25 60.5 50 60.5" />
+            </svg>
+          </div>
+
+          <div className="notch-center-mizu">
+            <div className="notch-fill-mizu">
+              <svg className="notch-edge-mizu" preserveAspectRatio="none" aria-hidden="true">
+                <line x1="0" y1="63.5" x2="100%" y2="63.5" />
+                <line x1="0" y1="60.5" x2="100%" y2="60.5" />
+              </svg>
+            </div>
+
+            {/* Every child sits on one centred axis — no per-item
+                vertical nudges, or the CTA pill's own padding pulls its
+                label off the line the text links sit on. */}
+            <div className="notch-content-mizu">
+              {/* Brand — left */}
+              <Link to="/" className="notch-brand-mizu" aria-label={`${PROFILE.brand} — home`}>
+                <span className="notch-brand-kanji-mizu">{PROFILE.kanji}</span>
+                <span className="notch-brand-word-mizu">{PROFILE.brand}</span>
+              </Link>
+
+              {/* Links — centre */}
+              <nav className="notch-nav-mizu" aria-label="Primary">
+                {isHome
+                  ? ALL.map((i) => (
+                      <NavLink key={i.label} {...i} active={active === i.href.slice(1)} onClick={go} />
+                    ))
+                  : <BackLink />}
+              </nav>
+
+              {/* Right cluster */}
+              <div className="notch-right-mizu">
+                <a href="#contact" onClick={(e) => go(e, '#contact')} className="notch-cta-mizu">
+                  Get in touch
+                </a>
+
+                <button
+                  type="button"
+                  className="notch-burger-mizu"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-expanded={menuOpen}
+                  aria-controls="notch-menu"
+                  aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                >
+                  {menuOpen ? <IconClose /> : <IconMenu />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="notch-corner-mizu notch-corner-r-mizu">
+            <div className="notch-fill-mizu" />
+            <svg className="notch-edge-mizu" viewBox="0 0 50 64" aria-hidden="true">
+              <path d="M0 63.5 C25 63.5 25 39.5 50 39.5" />
+              <path d="M0 60.5 C25 60.5 25 36.5 50 36.5" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Right rail */}
+        <div className="notch-rail-mizu notch-rail-r-mizu">
+          <Rails />
+        </div>
+      </header>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <>
+          <div className="notch-scrim-mizu" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+          <div id="notch-menu" className="notch-menu-mizu">
+            <nav aria-label="Mobile">
+              {isHome ? (
+                ALL.map(({ label, href, Icon }) => (
+                  <a key={label} href={href} onClick={(e) => go(e, href)} className="notch-menu-item-mizu">
+                    <Icon />
+                    <span>{label}</span>
+                  </a>
+                ))
+              ) : (
+                <Link to="/#work" className="notch-menu-item-mizu" onClick={() => setMenuOpen(false)}>
+                  <IconWork />
+                  <span>All work</span>
+                </Link>
+              )}
+
+              <div className="notch-menu-rule-mizu" />
+
+              <a href={`mailto:${PROFILE.contact.email}`} className="notch-menu-cta-mizu">
+                Get in touch
+              </a>
+            </nav>
+          </div>
+        </>
       )}
-
-      <Divider />
-
-      <a
-        href="#contact"
-        onClick={toContact}
-        className="no-underline flex items-center gap-2"
-        style={{
-          background: '#ffffff', color: '#050505',
-          fontSize: '0.78rem', fontWeight: 700,
-          padding: '8px 18px', borderRadius: 999,
-          transition: 'opacity 150ms', whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.86')}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-      >
-        Get in touch
-      </a>
-    </nav>
+    </>
   )
 }
 
-const Divider = () => (
-  <div
-    aria-hidden="true"
-    style={{
-      width: 1, height: 20, background: 'rgba(255,255,255,0.10)',
-      flexShrink: 0, margin: '0 4px',
-    }}
-  />
-)
+/* ── Pieces ────────────────────────────────────── */
+
+function NavLink({ href, label, Icon, active, onClick }) {
+  return (
+    <a
+      href={href}
+      onClick={(e) => onClick(e, href)}
+      className={`notch-link-mizu${active ? ' is-active' : ''}`}
+      aria-current={active ? 'true' : undefined}
+    >
+      <Icon />
+      <span>{label}</span>
+    </a>
+  )
+}
+
+function BackLink() {
+  return (
+    <Link to="/#work" className="notch-link-mizu">
+      <IconArrowLeft />
+      <span>All work</span>
+    </Link>
+  )
+}
+
+/* The paired hairlines that run along the top rails. */
+function Rails() {
+  return (
+    <svg className="notch-edge-mizu" preserveAspectRatio="none" aria-hidden="true">
+      <line x1="0" y1="39.5" x2="100%" y2="39.5" />
+      <line x1="0" y1="36.5" x2="100%" y2="36.5" />
+    </svg>
+  )
+}
+
+/* ── Icons — lucide-shaped, inlined to avoid the dependency ── */
+
+const s = {
+  width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none',
+  stroke: 'currentColor', strokeWidth: 1.9,
+  strokeLinecap: 'round', strokeLinejoin: 'round',
+  'aria-hidden': 'true',
+}
+
+function IconWork() {
+  return (
+    <svg {...s}>
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+    </svg>
+  )
+}
+
+function IconUser() {
+  return (
+    <svg {...s}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
+    </svg>
+  )
+}
+
+function IconCalendar() {
+  return (
+    <svg {...s}>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  )
+}
+
+function IconStack() {
+  return (
+    <svg {...s}>
+      <path d="M12 3 3 7.5 12 12l9-4.5L12 3Z" />
+      <path d="M3 12.5 12 17l9-4.5" />
+      <path d="M3 17.5 12 22l9-4.5" />
+    </svg>
+  )
+}
+
+function IconAward() {
+  return (
+    <svg {...s}>
+      <circle cx="12" cy="9" r="6" />
+      <path d="M8.5 14 7 22l5-3 5 3-1.5-8" />
+    </svg>
+  )
+}
+
+function IconBadge() {
+  return (
+    <svg {...s}>
+      <path d="M12 2.8 4.6 5.9v5.4c0 4.9 3.2 8.7 7.4 10.4 4.2-1.7 7.4-5.5 7.4-10.4V5.9L12 2.8Z" />
+      <path d="M9 11.9l2.2 2.2 4.2-4.4" />
+    </svg>
+  )
+}
+
+function IconMenu() {
+  return <svg {...s} width="19" height="19"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+}
+
+function IconClose() {
+  return <svg {...s} width="19" height="19"><path d="M6 6l12 12M18 6L6 18" /></svg>
+}
+
+function IconArrowLeft() {
+  return <svg {...s}><path d="M19 12H5M11 5l-7 7 7 7" /></svg>
+}

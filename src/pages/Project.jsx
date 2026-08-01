@@ -5,6 +5,10 @@ import { Overview, Highlights, Architecture, TechStack, Gallery, Links, PrevNext
 import { bySlug, siblings } from '../data/projects.js'
 import { metaFor } from '../seo.js'
 
+/* Standalone case-study page. Reached from the Hackathons and Experience
+   sections, from deep links, and by crawlers — the work grid links
+   straight out to each project's live site instead. Prerendered to
+   static HTML at build time. */
 export default function Project() {
   const { slug } = useParams()
   const project = bySlug(slug)

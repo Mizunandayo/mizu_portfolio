@@ -44,11 +44,313 @@ body::after {
 .reveal-d5 { transition-delay: 400ms; }
 .reveal-d6 { transition-delay: 480ms; }
 
-/* ── Glass ─────────────────────────────────────── */
-.nav-glass {
-  background: rgba(5,5,5,0.72);
+/* ══════════════════════════════════════════════════
+   Notch navbar
+
+   Geometry from the vengenceui NotchNavbar: 40px-tall
+   side rails, a 64px centre block, joined by two 50px
+   corner slices whose clip-path curves between the two
+   heights. Paired hairlines (0.5px, 3px apart) trace
+   the whole silhouette.
+
+   All coordinates are absolute px because the corner
+   clip-paths are authored against a fixed 50×64 box —
+   the slices must keep those exact dimensions.
+   ══════════════════════════════════════════════════ */
+
+.notch-mizu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 64px;
+  display: flex;
+  pointer-events: none;   /* rails are inert; content re-enables */
+}
+
+.notch-mizu a,
+.notch-mizu button { pointer-events: auto; }
+
+/* Shared surface for every slice. */
+.notch-fill-mizu {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 5, 0.82);
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Hairlines. */
+.notch-edge-mizu {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.notch-edge-mizu line,
+.notch-edge-mizu path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-opacity: 0.14;
+  stroke-width: 0.5;
+}
+
+/* Side rails — 40px tall, flexible width. */
+.notch-rail-mizu {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  background: rgba(5, 5, 5, 0.82);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  z-index: 2;
+}
+
+.notch-rail-r-mizu { margin-left: -1px; }
+
+/* The notch itself. */
+.notch-block-mizu {
+  position: relative;
+  display: flex;
+  height: 64px;
+  flex-shrink: 0;
+  margin-left: -1px;
+  z-index: 1;
+  max-width: calc(100% - 32px);
+}
+
+.notch-corner-mizu {
+  position: relative;
+  width: 50px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* Left corner drops from the 40px rail to the 64px centre. */
+.notch-corner-l-mizu .notch-fill-mizu {
+  clip-path: path('M0 0 H50 V64 C25 64 25 40 0 40 Z');
+}
+
+/* Right corner climbs back up. */
+.notch-corner-r-mizu {
+  margin-left: -1px;
+}
+.notch-corner-r-mizu .notch-fill-mizu {
+  clip-path: path('M0 0 H50 V40 C25 40 25 64 0 64 Z');
+}
+
+.notch-center-mizu {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin-left: -1px;
+}
+
+/* One centred axis for every child. The asymmetric padding sits the row
+   inside the notch's deep half rather than straddling the rail line —
+   flex-end plus per-item margins was the previous approach and it left
+   the CTA pill's label off the line the text links sat on, because the
+   pill's own 7px padding makes its box taller. */
+.notch-content-mizu {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 16px 4px;
+}
+
+/* ── Links ─────────────────────────────────────── */
+.notch-nav-mizu {
+  display: none;
+  align-items: center;
+  gap: 22px;
+  flex-shrink: 0;
+}
+
+.notch-right-mizu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.notch-link-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.58);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.notch-link-mizu svg { opacity: 0.7; transition: opacity 200ms cubic-bezier(0.16,1,0.3,1); }
+.notch-link-mizu:hover { color: rgba(255, 255, 255, 0.95); }
+.notch-link-mizu:hover svg { opacity: 1; }
+
+.notch-link-mizu.is-active { color: #fff; font-weight: 600; }
+.notch-link-mizu.is-active svg { opacity: 1; }
+
+/* ── Brand ─────────────────────────────────────────
+   Baseline alignment is internal only — it sets 水 against MIZU. The
+   box itself is centred by the parent like every other child. */
+.notch-brand-mizu {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: rgba(250, 250, 250, 0.97);
+  transition: opacity 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.notch-brand-mizu:hover { opacity: 0.82; }
+
+.notch-brand-kanji-mizu { font-size: 1rem; letter-spacing: -0.01em; }
+
+.notch-brand-word-mizu {
+  font-weight: 700;
+  font-size: 0.84rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── CTA ───────────────────────────────────────── */
+.notch-cta-mizu {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  color: #050505;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 8px 15px;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 150ms;
+}
+
+.notch-cta-mizu:hover { opacity: 0.86; }
+
+/* ── Mobile ────────────────────────────────────── */
+.notch-burger-mizu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 180ms, background 180ms;
+}
+
+.notch-burger-mizu:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.notch-scrim-mizu {
+  position: fixed;
+  inset: 64px 0 0;
+  z-index: 39;
+  background: rgba(3, 3, 3, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.notch-menu-mizu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 14px 16px 20px;
+  background: rgba(5, 5, 5, 0.96);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid rgba(161, 161, 170, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: notchMenuIn 220ms cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes notchMenuIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.notch-menu-mizu nav { display: flex; flex-direction: column; gap: 2px; }
+
+.notch-menu-item-mizu {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 12px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: rgba(228, 228, 231, 0.92);
+  text-decoration: none;
+  transition: background 170ms;
+}
+
+.notch-menu-item-mizu:hover { background: rgba(255, 255, 255, 0.05); }
+.notch-menu-item-mizu svg { opacity: 0.7; flex-shrink: 0; }
+
+.notch-menu-rule-mizu {
+  height: 1px;
+  background: rgba(161, 161, 170, 0.22);
+  margin: 12px 0;
+}
+
+.notch-menu-cta-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #050505;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms;
+}
+
+.notch-menu-cta-mizu:hover { opacity: 0.88; }
+
+/* Brand + six links + CTA needs real width. Below this the links
+   collapse into the menu rather than crowding the notch. */
+@media (min-width: 1024px) {
+  .notch-nav-mizu { display: flex; }
+  .notch-burger-mizu { display: none; }
+  .notch-content-mizu { padding: 18px 26px 4px; }
+}
+
+@media (max-width: 1023px) {
+  .notch-block-mizu { max-width: calc(100% - 16px); }
+  .notch-content-mizu { gap: 10px; }
+}
+
+/* Narrow phones: the menu already carries the contact action. */
+@media (max-width: 419px) {
+  .notch-cta-mizu { display: none; }
+  .notch-brand-mizu { gap: 6px; }
+  .notch-brand-word-mizu { font-size: 0.78rem; letter-spacing: 0.11em; }
 }
 
 .glass-panel {
@@ -168,40 +470,129 @@ body::after {
    -mizu additions
    ══════════════════════════════════════════════════ */
 
-/* ── Work grid card ────────────────────────────── */
+/* ══════════════════════════════════════════════════
+   Work grid card
+
+   Tall panel: a preview inset at the top and cropped
+   by its frame, open dark space beneath it, then the
+   title block resting on the bottom edge. The preview
+   is scaled past its frame so it reads as a window
+   onto a larger screen, not a contained thumbnail.
+   ══════════════════════════════════════════════════ */
+
+.work-grid-mizu {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
 .work-card-mizu {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 470px;
   text-decoration: none;
-  transition: border-color 170ms ease, background 170ms ease;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(163, 163, 163, 0.16);
+  background: #0a0a0a;
+  transition: border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.work-card-mizu:hover .work-card-core-mizu {
-  border-color: rgba(212, 212, 216, 0.38);
-  background: rgba(255, 255, 255, 0.05);
+.work-card-mizu:hover {
+  border-color: rgba(212, 212, 216, 0.34);
+  background: #0d0d0d;
 }
 
-.work-card-core-mizu {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: 1px solid transparent;
-  border-radius: 18px;
-  transition: border-color 170ms ease, background 170ms ease;
+/* ── Preview ───────────────────────────────────── */
+.work-card-shot-mizu {
+  position: relative;
+  height: 232px;
+  margin: 16px 16px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
+/* Kill the placeholder's own frame — the crop frame provides it. */
+.work-card-shot-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  aspect-ratio: auto;
+  width: 118%;
+  height: auto;
+  min-height: 100%;
+  margin-left: -9%;
+  align-items: flex-start;
+}
+
+.work-card-shot-mizu img {
+  height: auto !important;
+  object-position: top center;
+}
+
+.work-card-shot-mizu figure { height: 100%; }
+
+/* Fades the crop into the card rather than ending on a hard edge. */
+.work-card-shot-mizu::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 64px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(10, 10, 10, 0.85));
+}
+
+/* ── Title block ───────────────────────────────── */
 .work-card-body-mizu {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  padding: 20px 22px 22px;
+  margin-top: auto;
+  padding: 28px 26px 28px;
+}
+
+.work-card-meta-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.work-card-name-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: 1.42rem;
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  color: rgba(250, 250, 250, 0.98);
+  margin-bottom: 8px;
+}
+
+.work-card-kanji-mizu {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgba(113, 113, 122, 0.95);
+}
+
+.work-card-desc-mizu {
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: rgba(212, 212, 216, 0.8);
 }
 
 .work-card-ribbon-mizu {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 26px;
+  right: 26px;
   z-index: 2;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.68rem;
@@ -392,7 +783,7 @@ body::after {
 .an-blue-mizu    { border-color: rgba(96, 165, 250, 0.34);  background: rgba(96, 165, 250, 0.07); }
 
 /* ── Certification badge cards ─────────────────────
-   Flat panel siblings of the Awards cards directly
+   Flat panel siblings of the hackathon cards directly
    above. Equal height, credential ID pinned to the
    bottom edge so the grid keeps a baseline. */
 .cert-card-mizu {
@@ -497,6 +888,868 @@ body::after {
   .cert-card-mizu  { padding: 18px 18px 16px; }
 }
 
+/* ══════════════════════════════════════════════════
+   Hackathons — editorial archive
+
+   Blog-style entries, newest first, banded by year.
+   Podium finishes are the featured posts: image column
+   widens, headline steps up, framed with crosshair
+   register marks. The rest are standard entries. That
+   makes the two wins findable by shape, so the run can
+   stay in true chronological order.
+   ══════════════════════════════════════════════════ */
+
+/* ── Record line ───────────────────────────────── */
+.hack-record-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 clamp(14px, 2.4vw, 30px);
+  padding: 20px 0 22px;
+  border-top: 1px solid rgba(161, 161, 170, 0.24);
+  border-bottom: 1px solid rgba(161, 161, 170, 0.24);
+  margin: 0;
+}
+
+.hack-record-cell-mizu {
+  display: inline-flex;
+  align-items: baseline;
+  gap: clamp(14px, 2.4vw, 30px);
+}
+
+.hack-record-sep-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  color: rgba(161, 161, 170, 0.4);
+  user-select: none;
+}
+
+.hack-record-cell-mizu dt {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.hack-record-cell-mizu dd {
+  margin: 0 0 0 9px;
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: rgba(250, 250, 250, 0.97);
+}
+
+/* ── Year band ─────────────────────────────────── */
+.hack-year-mizu {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 46px 0 26px;
+}
+
+.hack-year-num-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: rgba(228, 228, 231, 0.15);
+  flex-shrink: 0;
+}
+
+.hack-year-rule-mizu {
+  flex: 1;
+  height: 1px;
+  background: rgba(161, 161, 170, 0.2);
+}
+
+.hack-year-count-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+  flex-shrink: 0;
+}
+
+/* ── Entry ─────────────────────────────────────────
+   Image column left, text right. The featured variant
+   widens the image and boxes the whole entry. */
+.hack-entry-mizu {
+  position: relative;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0 32px;
+  padding: 30px 0;
+  border-top: 1px solid rgba(161, 161, 170, 0.16);
+}
+
+.hack-entry-mizu.is-featured {
+  grid-template-columns: 400px 1fr;
+  gap: 0 38px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 30px 32px;
+  margin: 20px 0;
+}
+
+.hack-lead-mizu { position: relative; min-width: 0; }
+
+.hack-lead-mizu .ph-mizu {
+  border-radius: 10px;
+  transition: border-color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hack-entry-mizu:hover .hack-lead-mizu .ph-mizu {
+  border-color: rgba(212, 212, 216, 0.4);
+}
+
+.hack-entry-mizu:hover .hack-headline-mizu { color: #fff; }
+
+.hack-text-mizu {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ── Kicker ────────────────────────────────────── */
+.hack-kicker-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.92);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.hack-kicker-date-mizu { color: rgba(228, 228, 231, 0.95); font-weight: 700; }
+.hack-kicker-dot-mizu  { color: rgba(161, 161, 170, 0.5); }
+
+/* ── Headline ──────────────────────────────────── */
+.hack-headline-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: 1.24rem;
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.25;
+  color: rgba(250, 250, 250, 0.97);
+  margin-bottom: 10px;
+}
+
+.hack-entry-mizu.is-featured .hack-headline-mizu {
+  font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+}
+
+.hack-place-mizu {
+  display: inline-block;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(212, 212, 216, 0.34);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: rgba(250, 250, 250, 0.98);
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+
+.hack-note-mizu {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: rgba(212, 212, 216, 0.82);
+  max-width: 44ch;
+  margin-bottom: 14px;
+}
+
+.hack-project-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: rgba(212, 212, 216, 0.88);
+  text-decoration: none;
+  transition: color 170ms;
+}
+
+.hack-project-mizu svg { opacity: 0.55; transition: opacity 170ms, transform 170ms; }
+.hack-project-mizu:hover { color: #fff; }
+.hack-project-mizu:hover svg { opacity: 1; transform: translateX(2px); }
+.hack-project-mizu.is-static { color: rgba(161, 161, 170, 0.8); font-style: italic; }
+
+/* ── Whole-entry hit target ────────────────────────
+   Covers the entry so a click anywhere opens the
+   dialog. Transparent and empty, so it contributes
+   only its aria-label to the accessibility tree — the
+   headline and copy stay ordinary text. The project
+   link is raised above it and keeps working. */
+.hack-open-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: inherit;
+}
+
+.hack-entry-mizu .hack-project-mizu {
+  position: relative;
+  z-index: 2;
+}
+
+/* Photo count, sat on the lead image. */
+.hack-count-mizu {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(5, 5, 5, 0.76);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(250, 250, 250, 0.9);
+}
+
+/* ── Crosshair register marks — featured only ──── */
+.hack-cross-mizu {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+}
+
+.hack-cross-mizu::before,
+.hack-cross-mizu::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.hack-cross-mizu::before {
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.hack-cross-mizu::after {
+  top: 0; bottom: 0; left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+/* -7px = half the 13px mark plus the 1px rule, so the arms cross
+   exactly where the two borders meet. */
+.hack-cross-mizu.tl { top: -7px; left: -7px; }
+.hack-cross-mizu.tr { top: -7px; right: -7px; }
+.hack-cross-mizu.bl { bottom: -7px; left: -7px; }
+.hack-cross-mizu.br { bottom: -7px; right: -7px; }
+
+@media (max-width: 900px) {
+  .hack-entry-mizu,
+  .hack-entry-mizu.is-featured {
+    grid-template-columns: 1fr;
+    gap: 22px 0;
+  }
+  .hack-entry-mizu.is-featured { padding: 24px 22px; }
+  .hack-lead-mizu { max-width: 520px; }
+}
+
+@media (max-width: 640px) {
+  .hack-year-mizu { padding: 34px 0 20px; }
+  .hack-record-cell-mizu dd { font-size: 1.4rem; }
+}
+
+/* ══════════════════════════════════════════════════
+   Hackathon dialog
+
+   Gallery left — active image plus a thumbnail
+   carousel — details right. Native <dialog>, same
+   contract as the project dialog: browser handles
+   focus trap, ESC and top-layer stacking; scroll lock,
+   backdrop click and containment are explicit.
+   ══════════════════════════════════════════════════ */
+
+.hkd-mizu {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  /* Tighter gutter than the project dialog — this one is image-led and
+     wants the width. */
+  padding: clamp(12px, 2.2vw, 30px);
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hkd-mizu::backdrop {
+  background: rgba(3, 3, 3, 0.82);
+  backdrop-filter: blur(7px) saturate(120%);
+  -webkit-backdrop-filter: blur(7px) saturate(120%);
+}
+
+/* Image-led: the gallery column takes roughly 60% so the stage image is
+   the largest thing on screen, with the details reading beside it. */
+.hkd-panel-mizu {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  width: min(1400px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #050505;
+  border: 1px solid rgba(163, 163, 163, 0.26);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 28px 90px rgba(0, 0, 0, 0.65);
+}
+
+.hkd-close-mizu {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hkd-close-mizu:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Left: gallery ─────────────────────────────────
+   Full bleed and sized by its own content: the stage
+   holds a true 16:9 and the carousel sits under it.
+   Because the details column contributes no height
+   (see .hkd-detail-mizu), this column defines the
+   panel height — so there is never leftover space
+   above or below the image. */
+.hkd-gallery-mizu {
+  padding: 0;
+  background: #070707;
+  border-right: 1px solid rgba(161, 161, 170, 0.18);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hkd-stage-mizu {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.hkd-stage-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  height: 100%;
+}
+
+/* Caption rides over the image rather than taking height from it. */
+.hkd-caption-mizu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 40px 22px 16px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(250, 250, 250, 0.92);
+  background: linear-gradient(to bottom, transparent, rgba(3, 3, 3, 0.86));
+  pointer-events: none;
+}
+
+.hkd-carousel-mizu {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 16px 20px 18px;
+  border-top: 1px solid rgba(161, 161, 170, 0.18);
+  background: #050505;
+}
+
+.hkd-thumb-mizu {
+  flex: 0 0 128px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  opacity: 0.5;
+  transition: opacity 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hkd-thumb-mizu:hover { opacity: 0.82; }
+
+.hkd-thumb-mizu.is-active { opacity: 1; }
+
+.hkd-thumb-mizu .ph-mizu {
+  border-radius: 8px;
+  border-color: rgba(161, 161, 170, 0.26);
+}
+
+.hkd-thumb-mizu.is-active .ph-mizu {
+  border-color: rgba(250, 250, 250, 0.85);
+}
+
+/* ── Right: details ────────────────────────────── */
+/* Height-neutral: the inner wrapper is taken out of flow so this column
+   never stretches the grid row. Long details scroll inside it. */
+.hkd-detail-mizu {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.hkd-detail-inner-mizu {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hkd-kicker-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.92);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.hkd-kicker-date-mizu { color: rgba(228, 228, 231, 0.95); font-weight: 700; }
+.hkd-kicker-dot-mizu  { color: rgba(161, 161, 170, 0.5); }
+
+.hkd-title-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: rgba(250, 250, 250, 0.97);
+  margin-bottom: 14px;
+}
+
+.hkd-place-mizu {
+  display: inline-block;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(212, 212, 216, 0.34);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: rgba(250, 250, 250, 0.98);
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 16px;
+}
+
+.hkd-note-mizu {
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: rgba(228, 228, 231, 0.9);
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+.hkd-summary-mizu {
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.84);
+  margin-bottom: 22px;
+}
+
+.hkd-project-mizu {
+  width: 100%;
+  padding: 14px 0 18px;
+  border-top: 1px solid rgba(161, 161, 170, 0.2);
+  margin-bottom: 4px;
+}
+
+.hkd-project-label-mizu {
+  display: block;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+  margin-bottom: 6px;
+}
+
+.hkd-project-name-mizu {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: rgba(250, 250, 250, 0.96);
+  line-height: 1.45;
+}
+
+.hkd-links-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.hkd-nolinks-mizu {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+@keyframes hkdIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hkd-mizu[open] { animation: hkdIn 300ms cubic-bezier(0.16,1,0.3,1); }
+.hkd-mizu[open]::backdrop { animation: pdlgBackdropIn 300ms ease; }
+
+/* Between full-width and stacked, ease the split back toward parity so
+   the details column keeps a readable measure. */
+/* Between full-width and stacked, ease the split back toward parity so
+   the details column keeps a readable measure. */
+@media (max-width: 1180px) {
+  .hkd-panel-mizu { grid-template-columns: 1.2fr 1fr; }
+  .hkd-detail-inner-mizu { padding: 32px 28px; }
+}
+
+/* Stacked: the columns become rows, so the details must return to
+   normal flow and let the panel grow instead of scrolling internally. */
+@media (max-width: 860px) {
+  .hkd-panel-mizu { grid-template-columns: 1fr; }
+  .hkd-gallery-mizu {
+    border-right: none;
+    border-bottom: 1px solid rgba(161, 161, 170, 0.18);
+  }
+  .hkd-detail-mizu { position: static; }
+  .hkd-detail-inner-mizu {
+    position: static;
+    overflow: visible;
+    padding: 26px 24px 30px;
+  }
+  .hkd-thumb-mizu { flex: 0 0 104px; }
+}
+
+@media (max-width: 640px) {
+  .hkd-mizu { padding: 0; }
+  .hkd-panel-mizu {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    height: 100%;
+  }
+  .hkd-carousel-mizu { padding: 14px 16px 16px; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   About — centred, portrait-led
+
+   Everything sits on one centre axis. The prose is the
+   exception: it is centred as a block but left-aligned
+   internally, because centred body copy is hard to
+   read at any measure.
+   ══════════════════════════════════════════════════ */
+
+/* ── Portrait ──────────────────────────────────────
+   Bare. The image is a transparent cut-out, so it
+   sits straight on the band with no frame, no rule and
+   no stamp — anything else would draw a box around
+   something that has no edges. */
+.about-file-mizu {
+  width: clamp(240px, 38vw, 460px);
+  margin: 0 auto clamp(38px, 5vw, 58px);
+}
+
+/* Strip the placeholder shell's frame and hatch — with a cut-out there
+   is nothing to contain. While the file is missing this leaves just the
+   centred label, which is the intended temporary state. */
+.about-file-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+/* ── Claim ─────────────────────────────────────── */
+.about-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3.6vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.038em;
+  line-height: 1.12;
+  color: #f5f5f5;
+  text-align: center;
+  max-width: 24ch;
+  margin: 0 auto clamp(30px, 4vw, 44px);
+}
+
+/* ── Prose ─────────────────────────────────────────
+   Centred block, left-aligned text. */
+.about-body-mizu {
+  max-width: 62ch;
+  margin: 0 auto;
+}
+
+.about-para-mizu {
+  font-size: clamp(0.95rem, 1.3vw, 1.05rem);
+  line-height: 1.9;
+  color: rgba(212, 212, 216, 0.86);
+  margin-bottom: 1.6rem;
+
+  /* Justified: flush on both edges, which suits the centred axis and
+     the rest of the system's alignment. `hyphens` is doing real work
+     here — without it a 62ch measure justifies into visible rivers of
+     white space between words. */
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+/* Each paragraph is the only child of its own .reveal wrapper, so
+   `.about-para-mizu:last-child` would match every one of them and zero
+   all the spacing. Test the wrapper instead. */
+.about-body-mizu > :last-child .about-para-mizu { margin-bottom: 0; }
+
+/* ── Skills — numbered index, no rules ─────────── */
+.about-skills-mizu {
+  margin-top: clamp(46px, 6vw, 72px);
+  text-align: center;
+}
+
+.about-skills-label-mizu {
+  display: block;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.92);
+  margin-bottom: 22px;
+}
+
+.about-skills-list-mizu {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 860px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px clamp(20px, 3vw, 38px);
+}
+
+.about-skills-list-mizu li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.93rem;
+  font-weight: 500;
+  color: rgba(228, 228, 231, 0.92);
+}
+
+.about-skill-num-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(161, 161, 170, 0.6);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+@media (max-width: 620px) {
+  .about-file-mizu { width: 100%; max-width: 340px; }
+  /* Narrow measures justify badly — too few words per line to
+     distribute, so the gaps get wide. Fall back to ragged right. */
+  .about-para-mizu { text-align: left; hyphens: none; }
+}
+
+/* ══════════════════════════════════════════════════
+   Contact — statement + channel directory
+   ══════════════════════════════════════════════════ */
+
+.contact-strip-mizu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.contact-status-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 245, 0.94);
+}
+
+.contact-dot-mizu {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.95);
+  flex-shrink: 0;
+}
+
+.contact-strip-rule-mizu {
+  flex: 1;
+  height: 1px;
+  background: rgba(161, 161, 170, 0.22);
+}
+
+.contact-where-mizu {
+  flex-shrink: 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.92);
+}
+
+.contact-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(2.1rem, 6.4vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: -0.042em;
+  line-height: 0.98;
+  color: #f5f5f5;
+  margin-bottom: 22px;
+}
+
+.contact-lede-mizu {
+  font-size: clamp(0.98rem, 1.5vw, 1.12rem);
+  line-height: 1.7;
+  color: rgba(212, 212, 216, 0.84);
+  max-width: 40ch;
+  margin-bottom: 48px;
+}
+
+/* ── Directory ─────────────────────────────────────
+   One row per channel, all the same shape. The address
+   itself is the content — not hidden behind a label. */
+.contact-dir-mizu { border-top: 1px solid rgba(161, 161, 170, 0.22); }
+
+.contact-row-mizu {
+  display: grid;
+  grid-template-columns: 128px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 12px 22px 4px;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.18);
+  text-decoration: none;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              padding-left 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.contact-row-mizu:hover {
+  background: rgba(255, 255, 255, 0.035);
+  padding-left: 16px;
+}
+
+.contact-row-label-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.contact-row-value-mizu {
+  font-size: clamp(0.95rem, 1.9vw, 1.24rem);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: rgba(240, 240, 245, 0.94);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.contact-row-mizu:hover .contact-row-value-mizu { color: #fff; }
+
+.contact-row-arrow-mizu {
+  display: inline-flex;
+  color: rgba(161, 161, 170, 0.7);
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              transform 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.contact-row-mizu:hover .contact-row-arrow-mizu {
+  color: #fff;
+  transform: translateX(4px);
+}
+
+@media (max-width: 620px) {
+  .contact-row-mizu {
+    grid-template-columns: 1fr auto;
+    gap: 4px 16px;
+    padding: 18px 8px 18px 4px;
+  }
+  .contact-row-label-mizu { grid-column: 1 / -1; }
+  .contact-row-mizu:hover { padding-left: 10px; }
+  .contact-strip-mizu { flex-wrap: wrap; gap: 10px 14px; }
+  .contact-strip-rule-mizu { display: none; }
+}
+
 /* ── Timeline (experience / education) ─────────── */
 .tl-mizu {
   position: relative;
@@ -555,6 +1808,241 @@ body::after {
   line-height: 1.7;
 }
 
+/* ══════════════════════════════════════════════════
+   Project dialog
+
+   Native <dialog>: the browser handles focus trapping,
+   ESC, top-layer stacking above the fixed nav, inert
+   background and focus restore. The element itself is
+   a transparent full-viewport flex container — the
+   visible surface is .pdlg-panel-mizu inside it, which
+   is what makes a click on the empty area register as
+   a backdrop click.
+   ══════════════════════════════════════════════════ */
+
+.pdlg-mizu {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: clamp(12px, 3vw, 40px);
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdlg-mizu::backdrop {
+  background: rgba(3, 3, 3, 0.8);
+  backdrop-filter: blur(7px) saturate(120%);
+  -webkit-backdrop-filter: blur(7px) saturate(120%);
+}
+
+.pdlg-panel-mizu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100%);
+  max-height: 100%;
+  background: #050505;
+  border: 1px solid rgba(163, 163, 163, 0.26);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 28px 90px rgba(0, 0, 0, 0.65);
+}
+
+/* Floats over the cover image rather than sitting in a header bar —
+   with the image leading, a header would push it below the fold. */
+.pdlg-close-mizu {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pdlg-close-mizu:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.pdlg-scroll-mizu {
+  overflow-y: auto;
+  overscroll-behavior: contain;   /* don't chain scroll to the page behind */
+  flex: 1;
+}
+
+/* ── 1 · Cover ─────────────────────────────────── */
+.pdlg-cover-mizu { position: relative; }
+
+/* The cover is flush to the panel edge, so its own frame would double
+   the panel border. Strip it and square the bottom corners. */
+.pdlg-cover-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+}
+
+/* ── 2–4 · Title, summary, links ───────────────── */
+.pdlg-body-mizu { padding: 30px 30px 34px; }
+
+.pdlg-title-mizu {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+  color: #f5f5f5;
+  margin-bottom: 10px;
+}
+
+.pdlg-title-kanji-mizu {
+  color: rgba(113, 113, 122, 0.95);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: 0.82em;
+}
+
+.pdlg-award-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(212, 212, 216, 0.34);
+  border-radius: 6px;
+  padding: 5px 9px;
+  color: rgba(250, 250, 250, 0.96);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* One mono line replaces the spec table — event, role, duration, dates. */
+.pdlg-meta-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.95);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.pdlg-summary-mizu {
+  font-size: clamp(0.96rem, 1.7vw, 1.08rem);
+  line-height: 1.75;
+  color: rgba(228, 228, 231, 0.9);
+  letter-spacing: -0.008em;
+  max-width: 46rem;
+  margin-bottom: 26px;
+}
+
+.pdlg-links-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ── 5–6 · Stack, gallery ──────────────────────── */
+.pdlg-block-mizu {
+  padding: 32px 30px;
+  border-top: 1px solid rgba(161, 161, 170, 0.18);
+}
+
+.pdlg-block-mizu.is-alt { background: #070707; }
+
+.pdlg-eyebrow-mizu { margin-bottom: 6px; }
+
+/* No rules between stack categories inside the dialog. The home Stack
+   section keeps them — it runs to 11 categories and needs the structure
+   — but a project stack is three or four rows, where the category
+   labels alone are enough separation and the lines just add noise. */
+.pdlg-block-mizu .stack-layers-mizu {
+  border-top: none;
+  margin-top: 0;
+}
+
+.pdlg-block-mizu .stack-layer-mizu {
+  border-bottom: none;
+  padding: 15px 0;
+}
+
+/* Each row is wrapped in a .reveal div by <Layers>, so the row itself is
+   always an only-child — first/last has to be tested on the wrapper. */
+.pdlg-block-mizu .stack-layers-mizu > :first-child .stack-layer-mizu { padding-top: 4px; }
+.pdlg-block-mizu .stack-layers-mizu > :last-child  .stack-layer-mizu { padding-bottom: 0; }
+
+.pdlg-gallery-mizu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 18px;
+}
+
+/* ── Footer ────────────────────────────────────── */
+.pdlg-foot-mizu {
+  padding: 22px 30px 26px;
+  border-top: 1px solid rgba(161, 161, 170, 0.18);
+  background: #070707;
+}
+
+.pdlg-full-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(228, 228, 231, 0.92);
+  text-decoration: none;
+  transition: color 170ms;
+}
+
+.pdlg-full-mizu:hover { color: #fff; }
+
+/* ── Entrance ──────────────────────────────────── */
+@keyframes pdlgIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pdlgBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.pdlg-mizu[open] { animation: pdlgIn 300ms cubic-bezier(0.16,1,0.3,1); }
+.pdlg-mizu[open]::backdrop { animation: pdlgBackdropIn 300ms ease; }
+
+@media (max-width: 640px) {
+  .pdlg-mizu { padding: 0; }
+  .pdlg-panel-mizu {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    height: 100%;
+  }
+  .pdlg-body-mizu  { padding: 24px 20px 26px; }
+  .pdlg-block-mizu { padding: 26px 20px; }
+  .pdlg-foot-mizu  { padding: 20px; }
+}
+
 /* ── Focus + skip link ─────────────────────────── */
 :focus-visible {
   outline: 2px solid rgba(125, 211, 252, 0.9);
@@ -577,6 +2065,19 @@ body::after {
 .skip-mizu:focus { left: 0; }
 
 /* ── Responsive ────────────────────────────────── */
+@media (max-width: 1180px) {
+  .work-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .work-grid-mizu { grid-template-columns: 1fr; gap: 18px; }
+  .work-card-mizu { min-height: 400px; }
+  .work-card-shot-mizu { height: 200px; margin: 12px 12px 0; }
+  .work-card-body-mizu { padding: 24px 22px; }
+  .work-card-name-mizu { font-size: 1.28rem; }
+  .work-card-ribbon-mizu { top: 20px; right: 20px; }
+}
+
 @media (max-width: 980px) {
   .stack-layer-mizu { grid-template-columns: 1fr; gap: 12px; padding: 18px 0; }
   .sl-cat-mizu { padding-top: 0; }
@@ -612,4 +2113,7 @@ body::after {
   .hero-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
   .ripple-breath, .ripple-ring, .badge-dot-anim { animation: none !important; }
   .ripple-ring { opacity: 0.35 !important; }
+  .pdlg-mizu[open], .pdlg-mizu[open]::backdrop { animation: none !important; }
+  .hkd-mizu[open], .hkd-mizu[open]::backdrop { animation: none !important; }
+  .notch-menu-mizu { animation: none !important; }
 }

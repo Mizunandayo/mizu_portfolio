@@ -22,7 +22,7 @@ submission — but scaled from one project to nine.
 
 | # | Decision | Choice | Why |
 |---|---|---|---|
-| 1 | Structure | Home scroll + per-project deck routes | Nine projects at Mitsu depth won't fit one page; each needs a shareable URL |
+| 1 | Structure | Home scroll; work cards open a **project dialog**, backed by prerendered routes | Clicking a card never leaves the page. The same URL still resolves to a full standalone case study for deep links and crawlers |
 | 2 | Stack | Vite 5 + React 18 + Tailwind 3 + react-router-dom, prerendered | Mitsu's CSS transfers 1:1; prerender buys real SEO and link previews without a framework change |
 | 3 | Media | Placeholder-first | Ships today, sharpens as assets land; identical to Mitsu's approach |
 
@@ -132,10 +132,15 @@ Brand marks are generated from `simple-icons` (a **devDependency**) into
 from the package reaches the runtime bundle — only the path strings actually rendered.
 
 ```
-npm run icons          # marks used by the aggregate Stack section
-npm run icons -- --all # + the nine per-project deck stacks
+npm run icons                  # home Stack section + all nine project stacks
+npm run icons -- --stack-only  # home section only, if the bundle needs trimming
 node scripts/find-slug.mjs redis postgres   # look up a slug before mapping it
 ```
+
+**Both icon surfaces are covered by default.** The home Stack section and the per-project stack
+inside the project dialog (§7.1) each render `TechIcon`. Generating for the home section alone —
+which is what `--stack-only` does — leaves every project-only name (Firebase Hosting, Axios, npm,
+Nodemon…) falling through to a category glyph in the dialog.
 
 **Icons carry their real brand colour** — see the carve-out in §3.3. Used raw, though, many would be
 invisible here, so the generator corrects each one against the `#050505` canvas:
@@ -166,7 +171,12 @@ alpha rather than `0.62` because an outline reads lighter than a solid silhouett
 Adding a technology: add it to `stack.js`, map it in `NAME_TO_SLUG`, run `npm run icons`. An
 unmapped name is reported by the generator rather than silently rendering blank.
 
-**Cost:** ~26 KB gzipped for 53 marks. Budget after icons is 103 KB against the 120 KB ceiling.
+**Coverage:** 111 brand marks. 80% of per-project stack entries resolve to a real logo; the rest are
+either genuinely absent from simple-icons (OpenAI, Valibot, tree-sitter, Recharts, ApexCharts,
+React Flow, Jotai, MuJoCo, Langfuse) or not products at all (CORS, WebSocket, Server-Sent Events,
+LocalStorage, Smart Contracts, APIs).
+
+**Cost:** ~49 KB gzipped for 111 marks — see the budget note in §11.
 
 ### 3.7 Section rhythm
 
@@ -212,6 +222,10 @@ Mitsu is a pitch deck for a product. A portfolio is a different argument, so fiv
 
 ## 5. Information architecture
 
+The work grid links **out** to each project's own deployed site, not to these routes. The case-study
+routes still exist and still prerender — they are reached from the Hackathons and Experience sections,
+from deep links, and by crawlers.
+
 ```
 /                        Home — the person
 /work/mitsu              ┐
@@ -229,16 +243,40 @@ Mitsu is a pitch deck for a product. A portfolio is a different argument, so fiv
 All ten content routes prerender to static HTML with their own `<title>`, `<meta name=description>`,
 and OG image.
 
-### 5.1 Nav
+### 5.1 Nav — notch navbar
 
-Floating pill, identical to Mitsu's: detached `top-5`, centered, `border-radius: 999`, height 52,
-glass, active section = filled pill, white CTA on the right.
+Ported from the vengenceui **NotchNavbar**, replacing Mitsu's floating pill. Full-width, fixed to
+`top: 0`, built from five slices whose combined silhouette steps down from a thin rail to a taller
+centre block:
 
-- **Brand:** `水 MIZU` → `/`
-- **Home links:** Work · About · Experience · Awards · Certs · Contact
-- **Deck links:** `← All work` · project name · prev/next
-- **CTA:** `Get in touch`
-- Below `lg`, links collapse; brand + CTA remain.
+```
+────────────────╮                              ╭────────────────   40px rails
+                 ╲   水 MIZU   ·   nav   ·  ▮   ╱
+                  ╰──────────────────────────╯                     64px centre
+  rail      corner        centre           corner       rail
+  flex-1    50px          flex-1           50px         flex-1
+```
+
+The two corners are `clip-path: path()` on a fixed 50×64 box — `M0 0 H50 V64 C25 64 25 40 0 40 Z`
+on the left, mirrored on the right. Those coordinates are absolute, so **the corner slices must keep
+exactly those dimensions**; they cannot be made responsive by percentage. Every slice carries paired
+0.5px hairlines 3px apart, tracing the full silhouette. Adjacent slices overlap by `-1px` to kill
+subpixel seams.
+
+- **Brand:** `水 MIZU` → `/`, centred in the notch
+- **Left:** Work · About · Experience — **Right:** Stack · Hackathons · Certs
+- **CTA:** `Get in touch`, white pill behind a hairline divider
+- **Case-study pages:** section anchors are replaced by `← All work`, since those sections don't exist there
+- **Below `md`:** links collapse to a hamburger; brand and a compact Contact pill remain
+
+**Four things changed in the port.** The source is a Next.js/TypeScript component, so: `next/link`
+became React Router `Link`; `lucide-react` icons were inlined as SVG rather than adding the
+dependency; `framer-motion`'s mobile-menu transition became a CSS keyframe, matching the rest of the
+site; and the `next-themes` toggle was dropped entirely — §2 commits this design to dark, so there is
+no light mode to toggle. Runtime dependencies are unchanged at three.
+
+Scrollspy is preserved from the previous nav: an `IntersectionObserver` at `threshold: 0.3` marks the
+active section, which renders at full white and weight 600.
 
 ---
 
@@ -251,7 +289,7 @@ glass, active section = filled pill, white CTA on the right.
 | 3 | Work | `work` | `#050505` | 9 project cards → decks |
 | 4 | Experience | `experience` | `#070707` | Bacsal internship + BPSU education |
 | 5 | Stack | `stack` | `#050505` | Aggregate technologies, layered |
-| 6 | Awards | `awards` | `#070707` | 7 hackathon honors |
+| 6 | Hackathons | `hackathons` | `#070707` | Competition record — §6.5 |
 | 7 | Certifications | `certifications` | `#050505` | 11 certs, grouped by issuer |
 | 8 | Contact | `contact` | `#070707` | Availability + links |
 
@@ -313,7 +351,13 @@ double bezel, and holds:
 ```
 
 Hover: border `rgba(163,163,163,0.22)` → `rgba(212,212,216,0.38)`, 170ms. No lift, no scale, no
-glow — Mitsu's hovers are all border-and-background only.
+glow — Mitsu's hovers are all border-and-background only. The one addition is the CTA: its arrow
+nudges 1.5px up-and-right, the standard outbound cue.
+
+**Cards open the project dialog** (§7.1) rather than navigating. Footers read **View project →**.
+The live-site link lives inside the dialog's Links block, sourced from `liveUrl(project)` — the link
+flagged `primary: true` in `projects.js`, marked explicitly rather than inferred from array order,
+since Mitsu and Mirai each ship two demo URLs and position would silently pick the wrong one.
 
 Order is reverse-chronological by end date, which also front-loads the strongest work:
 
@@ -350,7 +394,7 @@ grid  1 / 2 / 3 / 4 cols  (sm / md / lg / xl)
 ```
 
 Flat panel styling (`rgba(255,255,255,.03)` + hairline + r12, border lifts on hover), matching the
-Awards cards immediately above it so the two sections read as siblings.
+hackathon cards immediately above it so the two sections read as siblings.
 
 **Data is flat, not grouped by issuer.** Grouping would leave Cisco and PMI as one-card rows.
 Each card carries its own issuer instead, and `CERTS_ORDERED` sorts newest-first off a `sort`
@@ -359,11 +403,68 @@ Each card carries its own issuer instead, and `CERTS_ORDERED` sorts newest-first
 `object-fit: contain`, not `cover`: a clipped credential mark looks broken. Non-square images
 letterbox inside the frame rather than cropping.
 
+Below the grid, a ghost pill links out to the **Credly profile**
+(`credly.com/users/francis-daniel-genese`), stored on `PROFILE.contact.credly` alongside the other
+channels. The Credly mark is inlined in `primitives.jsx` from simple-icons and rendered via
+`currentColor`, not Credly orange — §3.3 keeps brand colour to the stack chips.
+
 Badges live in [public/certs/](public/certs/) and follow the same drop-in convention as project
 media — filename comes from the `badge` field, a missing file renders a labelled placeholder, and
 adding the image swaps it in with no code change. The folder README lists all eleven expected
 filenames and notes that transparent PNGs are required (a white background would show as a bright
 block against the dark frame).
+
+### 6.5 Hackathons — competition record
+
+**Not a card grid.** Seven cards at identical weight hides the two things that matter, which the
+data makes obvious once plotted:
+
+```
+2025-06   🥈 1st Runner-Up    █      ← placed on the first attempt
+2025-10   🥉 2nd Runner-Up    ██     ← two in one month
+2025-12   ·                   █
+2026-06   ·  ·  ·             ███    ← three in a single month
+```
+
+Placed at the first attempt, then escalated to three international AI hackathons inside one month.
+A uniform grid flattens both. So the section reads as a **chronological log**, newest first, banded
+by year:
+
+```
+ENTERED 7  ///  PODIUM 2  ///  PROJECTS 5  ///  MONTHS 13
+────────────────────────────────────────────────────────
+
+2026                                            3 entries
+──────────────────────────────────────────────────────────
+ JUN    Transforming Enterprise Through AI              —
+        LABLAB.AI
+        Mirai ミライ — AI-Powered Robot Arm Simulator →
+──────────────────────────────────────────────────────────
+ …
+
+2025                                            4 entries
+──────────────────────────────────────────────────────────
+ DEC    HacKada — AI in UX for Fintech                  —
+        …
+   ┼──────────────────────────────────────────────────┼
+   │ OCT    RAITE 2025 Hackathon      🥉 2nd Runner-Up │
+   │        REGIONAL ASSEMBLY ON IT EDUCATION          │
+   │        Galactic Conquest — Web3 Strategy Game  →  │
+   ┼──────────────────────────────────────────────────┼
+```
+
+**A podium is a boxed result; an entry is a log line.** The distinction is structural, not a colour
+change — podium rows get a full frame, side padding, a larger title and crosshair register marks,
+while entries get a single top rule. That means the two wins are found by scanning shape, not by
+reading every row, and it works without reordering the run out of chronology.
+
+**The crosshair marks encode a result rather than decorating a card.** Same discipline as the colour
+rule in §3.3: the motif appears only where it means something. Applied to all seven rows it would be
+wallpaper.
+
+**The record line is entirely derived** from `hackathons.js` — entered, podium, unique projects
+(HirNa! came out of two separate entries and counts once), and the span in months between the first
+and last entry. Nothing to keep in sync.
 
 ### 6.4 Contact
 
@@ -420,6 +521,52 @@ conditionally — a project with no architecture data simply omits that block.
 | 6 | Media gallery | `media[]` | always (placeholders) |
 | 7 | Links | `links[]` | always |
 | 8 | Prev / next | derived from order | always |
+
+### 7.1 Project dialog
+
+Clicking a work card opens a dialog. `/work/<slug>` therefore renders one of two ways depending on
+how it was reached:
+
+```
+click a card on the site          cold load / shared link / crawler
+        │                                       │
+        ▼                                       ▼
+  URL → /work/mitsu                       URL → /work/mitsu
+  home stays mounted                      standalone page
+  <dialog> opens over it                  prerendered static HTML
+  back / ESC closes it                    full <h1>, meta, JSON-LD
+```
+
+React Router's background-location pattern carries this: a `<Link>` passes
+`state={{ background: location }}`, `App.jsx` keeps the main `<Routes>` pinned to that background
+location, and renders a second `<Routes>` for the dialog on top. No state means no dialog, so cold
+loads, pasted URLs and the prerenderer all get the standalone page.
+
+**The dialog is a digest, not the whole case study.** Five sections:
+
+| Section | Content |
+|---|---|
+| Masthead | Spec strip, wordmark + kanji, tagline, award ribbon, stat bar |
+| Summary | The two-to-three sentence `summary` |
+| Details | Spec table — event, role, built in, period, result |
+| Gallery | All `media[]`, images and YouTube facades, auto-fit grid |
+| Tech stack | `stack[]` through the same `Layers` grammar as the home section |
+| Links | Every `links[]` entry as a pill, live site first |
+
+Highlights and architecture stay on the standalone page, which the dialog footer links to — that
+also keeps the case studies reachable from the work grid.
+
+**Built on native `<dialog>` + `showModal()`**, not a div overlay. That buys focus trapping, ESC,
+top-layer stacking above the fixed nav, `inert` background content and focus restore to the
+triggering card — behaviour that otherwise needs a focus-trap library and is usually got wrong.
+Handled explicitly, because the element does not provide them: body scroll lock with
+scrollbar-gap compensation so the page behind doesn't shift sideways, backdrop-click-to-close, and
+`overscroll-behavior: contain` so scrolling past the panel doesn't chain to the page underneath.
+
+Prev/next swaps content in place with `replace: true`, so closing always returns to where the
+dialog was opened from rather than walking back through every project viewed. The dialog also drives
+the head tags while open and hands them back on close — hence `applyMeta()` being exported from
+`Seo.jsx`, since the host page stays mounted and its own `<Seo>` effect never re-runs.
 
 **Deck hero** reuses `.hero-strip` for the event line —
 `GOOGLE CLOUD RAPID AGENT HACKATHON /// GITLAB /// 8 DAYS` — then the wordmark
@@ -498,7 +645,7 @@ prev/next, the sitemap, and prerender routes all derive from this array.
 ```
 
 Sibling data files: [src/data/profile.js](src/data/profile.js) (identity, about, skills, contact),
-[src/data/awards.js](src/data/awards.js), [src/data/certifications.js](src/data/certifications.js),
+[src/data/hackathons.js](src/data/hackathons.js), [src/data/certifications.js](src/data/certifications.js),
 [src/data/experience.js](src/data/experience.js).
 
 ---
@@ -519,7 +666,17 @@ Sibling data files: [src/data/profile.js](src/data/profile.js) (identity, about,
 | `hirna` | HirNa! | Byteforward — Final Pitch | Jun–Oct 2025 | 🥈 1st Runner-Up |
 | `eye2wear` | Eye2Wear | Full-stack clinic system | Feb–Oct 2025 | — |
 
-### 9.2 Awards — 7
+### 9.2 Hackathons — 7
+
+**The section is called Hackathons, not Awards.** All seven entries are hackathons — there are no
+non-hackathon honors — and only two carry a podium placement, so labelling the other five as
+"awards" overstated participation and completion certificates. Six of the seven also restate a
+project already in the work grid, which is why there is one section rather than two.
+
+Ordering is derived: podium finishes lead, best result first via a `rank` field (finishing position,
+lower is better), then everything else newest-first. Without `rank` the 🥉 sorted above the 🥈
+purely because it was more recent.
+
 
 lablab.ai ×3 (Transforming Enterprise Through AI, Web Data UNLOCKED, AMD Developer — all Jun 2026) ·
 KadaKareer HacKada AI in UX for Fintech (Dec 2025) · Byteforward Final Pitch (Oct 2025) ·
@@ -577,13 +734,13 @@ mizuportfolio/
     ├── data/
     │   ├── projects.js             ← 9 projects + ORDERED / siblings / ROUTES
     │   ├── icons.js                ← GENERATED — do not hand-edit
-    │   ├── profile.js  stack.js  awards.js
+    │   ├── profile.js  stack.js  hackathons.js
     │   └── certifications.js  experience.js
     ├── hooks/useScrollReveal.jsx   ← Mitsu's, + no-IntersectionObserver fallback
     ├── components/
     │   ├── Nav.jsx  Footer.jsx  Seo.jsx
     │   ├── home/    Hero · About · Work · Experience ·
-    │   │            Stack · Awards · Certifications · Contact
+    │   │            Stack · Hackathons · Certifications · Contact
     │   ├── deck/    DeckHero.jsx · blocks.jsx
     │   └── shared/  primitives.jsx · placeholders.jsx ·
     │                Backdrop.jsx · TechIcon.jsx
@@ -616,7 +773,22 @@ runtime for client navigation; the prerender bakes them for crawlers and unfurle
 
 **Deploy:** Vercel, static output, `dist/`. No server runtime.
 
-**Budgets:** JS ≤ 120 KB gzipped · LCP < 1.5s on 4G · Lighthouse ≥ 95 across all four categories.
+**Budgets:** JS ≤ 130 KB gzipped · LCP < 1.5s on 4G · Lighthouse ≥ 95 across all four categories.
+
+The JS ceiling was originally 120 KB. Reconciling the Stack section against the published project
+stack pages took it from 65 to 120 technologies and the icon set from 53 to 79 brand marks, landing
+the bundle at **120.6 KB** — 0.6 KB over. The ceiling was raised rather than cutting content the
+section exists to show. Two things make that defensible: the page is prerendered, so first paint
+does not wait on JS at all, and the marks are static path data that compresses and caches well.
+
+Extending icon coverage to the per-project stacks in the dialog took it to **128.6 KB** — 111 marks,
+against a 130 KB ceiling. That is close enough that the next stack addition will cross it.
+
+The lever is `src/data/icons.js`, roughly 40% of the bundle. The clean split is by surface, not by
+lazy-loading the whole file: the home Stack section is prerendered and needs its marks synchronously
+or the static HTML ships glyphs and swaps on hydration, but **the dialog is client-only and never
+prerendered**, so the project-only marks can be moved to a second chunk and dynamically imported
+with no SSR consequence. That is the change to make when the ceiling actually binds.
 
 ---
 
@@ -644,7 +816,7 @@ landmarks, one `<h1>` per route, `alt` text sourced from `media[].cap`.
 | 1 | `shared/` primitives — `SectionShell`, `MicroLabel`, `StatBar`, `Pill`, placeholders, `useScrollReveal` |
 | 2 | `data/` — all five files populated from LinkedIn content |
 | 3 | Home: Hero (+ `RippleField`), About, Work grid |
-| 4 | Home: Experience, Stack, Awards, Certifications, Contact, Footer |
+| 4 | Home: Experience, Stack, Hackathons, Certifications, Contact, Footer |
 | 5 | `ProjectDeck` template + all 8 deck blocks; verify against all 9 projects |
 | 6 | SEO — `<Seo>`, prerender, sitemap, JSON-LD, OG images |
 | 7 | A11y pass, reduced-motion, Lighthouse, responsive audit at 360/768/1024/1440 |

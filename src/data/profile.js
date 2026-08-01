@@ -1,4 +1,8 @@
-/* Identity, contact and narrative. Declared once — the hero, contact
+import { PROJECTS } from './projects.js'
+import { HACKATHONS } from './hackathons.js'
+import { CERT_COUNT } from './certifications.js'
+
+/* Identity, contact and narrative. Declared once - the hero, contact
    section, footer, nav CTA and JSON-LD all read from here. */
 
 export const PROFILE = {
@@ -6,16 +10,19 @@ export const PROFILE = {
   shortName: 'Francis',
   kanji:     '水',
   brand:     'MIZU',
-  role:      'Software Engineer · AI Engineer',
+  role:      'Software Engineer',
   tagline:   'Agentic AI · LLM Applications · Intelligent Systems',
-  location:  'Limay, Central Luzon, Philippines',
+  location:  'Bataan, Philippines',
 
-  strip: ['Software Engineer', 'AI Engineer', 'Limay, Philippines'],
+  strip: ['Software Engineer', 'Bataan, Philippines'],
 
   intro:
-    'I build AI-powered applications and scalable software systems — turning ideas into ' +
+    'I build AI-powered applications and scalable software systems turning ideas into ' +
     'production-ready software through modern web technologies, intelligent systems and ' +
     'thoughtful system design.',
+
+  /* The About section's claim. */
+  claim: 'Discipline is to build it and ship it.',
 
   about: [
     'Software Engineer building AI-powered applications and scalable software systems. I enjoy ' +
@@ -27,7 +34,7 @@ export const PROFILE = {
     'explore agentic AI, LLMs, and emerging technologies while building solutions that solve ' +
     'real-world problems.',
 
-    'I believe the best way to learn is by building, and I’m always looking for opportunities ' +
+    'My path of growth is by building, and I’m always looking for opportunities ' +
     'to contribute, grow, and create technology that makes a meaningful impact.',
   ],
 
@@ -50,27 +57,43 @@ export const PROFILE = {
     email:    'francisdanielgenese@gmail.com',
     linkedin: 'https://www.linkedin.com/in/francis-daniel-genese-141294170',
     github:   'https://github.com/Mizunandayo',
+    credly:   'https://www.credly.com/users/francis-daniel-genese',
   },
 
-  /* Displayed forms — kept separate from the hrefs above. */
+  /* Displayed forms - kept separate from the hrefs above. */
   contactDisplay: {
-    linkedin: 'linkedin.com/in/francis-daniel-genese-141294170',
-    github:   'github.com/Mizunandayo',
+    linkedin: 'in/francis-daniel-genese-141294170',
+    github:   'Mizunandayo',
+    credly:   'users/francis-daniel-genese',
   },
+
+  /* /public/profile/portrait.png - transparent cut-out, no backdrop.
+     Missing shows a placeholder. */
+  portrait: { src: 'portrait.png', alt: 'Francis Daniel Genese' },
 }
 
-/* Hero stat bar. Every figure is derived from the data files. */
-export const HERO_STATS = [
-  { num: '9',  lbl: 'Projects shipped' },
-  { num: '7',  lbl: 'Hackathon awards' },
-  { num: '11', lbl: 'Certifications' },
-  { num: '5',  lbl: 'Solo builds in ≤ 8 days' },
+/* Contact channels, rendered as a directory rather than a row of
+   buttons - one shape for every way to reach him. */
+export const CHANNELS = [
+  { key: 'email',    label: 'Email',    value: PROFILE.contact.email,
+    href: `mailto:${PROFILE.contact.email}` },
+  { key: 'linkedin', label: 'LinkedIn', value: PROFILE.contactDisplay.linkedin,
+    href: PROFILE.contact.linkedin, external: true },
+  { key: 'github',   label: 'GitHub',   value: PROFILE.contactDisplay.github,
+    href: PROFILE.contact.github, external: true },
+  { key: 'credly',   label: 'Credly',   value: PROFILE.contactDisplay.credly,
+    href: PROFILE.contact.credly, external: true },
 ]
+
+/* Hero stat bar. Counts are read from the data files rather than typed,
+   so adding a project, hackathon or certification updates the hero
+   automatically. Only the last figure is a hand-written claim. */
+
 
 /* Site-level constants. */
 export const SITE = {
   url:   'https://mizu-portfolio.vercel.app',
-  title: 'Francis Daniel Genese — Software Engineer & AI Engineer',
+  title: 'Francis Daniel Genese - Software Engineer & AI Engineer',
   description:
     'Software engineer building AI-powered applications and scalable systems. Nine shipped ' +
     'projects across agentic AI, LLM platforms, computer vision and full-stack web.',
