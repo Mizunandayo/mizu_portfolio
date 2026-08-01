@@ -79,14 +79,16 @@ export const PROJECTS = [
     media: [
       { src: 'walkthrough.png', cap: 'Mitsu walkthrough', ratio: '16/9' },
       { yt: 'l7jBbqcaIGA',      cap: 'Video presentation' },
-      { src: 'gestures.png',    cap: 'Gesture state machine', ratio: '4/3' },
-      { src: 'multimonitor.png',cap: 'Cross-monitor relocation', ratio: '4/3' },
+      { src: 'gestures.png',    cap: 'Gesture state machine', ratio: '16/9' },
+      { src: 'multimonitor.png',cap: 'Cross-monitor relocation', ratio: '16/9' },
     ],
 
     links: [
       { kind: 'demo',  label: 'Walkthrough', url: 'https://mitsu-iota.vercel.app/', primary: true },
       { kind: 'repo',  label: 'Repository',  url: 'https://github.com/Mizunandayo/mitsu' },
       { kind: 'video', label: 'Presentation',url: 'https://youtu.be/l7jBbqcaIGA' },
+      { kind: 'devpost', label: 'DevPost',
+        url: 'https://devpost.com/software/mitsu-hand-and-voice-gesture-control-for-the-desktop' },
     ],
   },
 
@@ -162,8 +164,8 @@ export const PROJECTS = [
     media: [
       { src: 'app.png',       cap: 'Agent run view', ratio: '16/9' },
       { yt: 'ndJ8cZIg4cM',    cap: 'Video presentation' },
-      { src: 'reasoning.png', cap: 'Live reasoning stream', ratio: '4/3' },
-      { src: 'mr.png',        cap: 'Generated merge request', ratio: '4/3' },
+      { src: 'reasoning.png', cap: 'Live reasoning stream', ratio: '16/9' },
+      { src: 'mr.png',        cap: 'Generated merge request', ratio: '16/9' },
     ],
 
     links: [
@@ -245,14 +247,16 @@ export const PROJECTS = [
     media: [
       { src: 'app.png',       cap: 'Misaki web app', ratio: '16/9' },
       { yt: 'rVXMIxTKRq0',    cap: 'Video presentation' },
-      { src: 'riskmap.png',   cap: 'Jurisdiction risk map', ratio: '4/3' },
-      { src: 'report.png',    cap: 'Generated compliance report', ratio: '4/3' },
+      { src: 'riskmap.png',   cap: 'Jurisdiction risk map', ratio: '16/9' },
+      { src: 'report.png',    cap: 'Generated compliance report', ratio: '16/9' },
     ],
 
     links: [
       { kind: 'demo',  label: 'Web App',      url: 'https://misaki-phi.vercel.app/', primary: true },
       { kind: 'repo',  label: 'Repository',   url: 'https://github.com/Mizunandayo/misaki' },
       { kind: 'video', label: 'Presentation', url: 'https://www.youtube.com/watch?v=rVXMIxTKRq0' },
+      { kind: 'submission', label: 'lablab.ai',
+        url: 'https://lablab.ai/ai-hackathons/brightdata-ai-agents-web-data-hackathon/mizu/misaki-ai-legislative-intelligence-platform' },
     ],
   },
 
@@ -325,8 +329,8 @@ export const PROJECTS = [
     media: [
       { src: 'app.png',      cap: 'Mirai web app', ratio: '16/9' },
       { yt: 'aVDTUfj3qAQ',   cap: 'Demo video' },
-      { src: 'sim.png',      cap: 'Browser physics simulation', ratio: '4/3' },
-      { src: 'export.png',   cap: 'Hardware export', ratio: '4/3' },
+      { src: 'sim.png',      cap: 'Browser physics simulation', ratio: '16/9' },
+      { src: 'export.png',   cap: 'Hardware export', ratio: '16/9' },
     ],
 
     links: [
@@ -334,6 +338,8 @@ export const PROJECTS = [
       { kind: 'demo',  label: 'Web App',     url: 'https://mirai-tech-ex-hackathon-transformin.vercel.app/' },
       { kind: 'repo',  label: 'Repository',  url: 'https://github.com/Mizunandayo/mirai' },
       { kind: 'video', label: 'Demo',        url: 'https://www.youtube.com/watch?v=aVDTUfj3qAQ' },
+      { kind: 'submission', label: 'lablab.ai',
+        url: 'https://lablab.ai/ai-hackathons/techex-intelligent-enterprise-solutions-hackathon/mizu/mirai-ai-powered-robot-arm-simulator' },
     ],
   },
 
@@ -407,14 +413,18 @@ export const PROJECTS = [
     ],
 
     media: [
-      { src: 'overlay.png',  cap: 'Miwa translation overlay', ratio: '16/9' },
-      { src: 'walkthrough.png', cap: 'Miwa walkthrough', ratio: '4/3' },
-      { src: 'replies.png',  cap: 'Agent reply suggestions', ratio: '4/3' },
+      { src: 'overlay.png',     cap: 'Miwa translation overlay', ratio: '16/9' },
+      { src: 'walkthrough.png', cap: 'Miwa walkthrough', ratio: '16/9' },
+      { src: 'replies.png',     cap: 'Agent reply suggestions', ratio: '16/9' },
+      { yt:  'jZzCQzYThZE',     cap: 'Video presentation' },
     ],
 
     links: [
-      { kind: 'demo', label: 'Walkthrough', url: 'https://mizunandayo.github.io/miwa/', primary: true },
-      { kind: 'repo', label: 'Repository',  url: 'https://github.com/Mizunandayo/miwa' },
+      { kind: 'demo',  label: 'Walkthrough',  url: 'https://mizunandayo.github.io/miwa/', primary: true },
+      { kind: 'repo',  label: 'Repository',   url: 'https://github.com/Mizunandayo/miwa' },
+      { kind: 'video', label: 'Presentation', url: 'https://www.youtube.com/watch?v=jZzCQzYThZE' },
+      { kind: 'submission', label: 'lablab.ai',
+        url: 'https://lablab.ai/ai-hackathons/amd-developer/miwa/miwa-real-time-japanese-discord-voice-translator' },
     ],
   },
 
@@ -485,8 +495,8 @@ export const PROJECTS = [
 
     media: [
       { src: 'home.png',    cap: 'Bacsal Business Consultancy', ratio: '16/9' },
-      { src: 'contact.png', cap: 'Contact page', ratio: '4/3' },
-      { src: 'team.png',    cap: 'Team page', ratio: '4/3' },
+      { src: 'contact.png', cap: 'Contact page', ratio: '16/9' },
+      { src: 'team.png',    cap: 'Team page', ratio: '16/9' },
       { src: 'admin.png',   cap: 'Admin dashboard', ratio: '16/9' },
     ],
 
@@ -551,8 +561,8 @@ export const PROJECTS = [
 
     media: [
       { src: 'dashboard.png', cap: 'Galactic strategy dashboard', ratio: '16/9' },
-      { src: 'troops.png',    cap: 'Troop dashboard', ratio: '4/3' },
-      { src: 'award.png',     cap: '🥉 2nd Runner-Up — RAITE 2025', ratio: '4/3' },
+      { src: 'troops.png',    cap: 'Troop dashboard', ratio: '16/9' },
+      { src: 'award.png',     cap: '🥉 2nd Runner-Up — RAITE 2025', ratio: '16/9' },
     ],
 
     links: [
@@ -626,8 +636,8 @@ export const PROJECTS = [
 
     media: [
       { src: 'app.png',     cap: 'HirNa! — Hire Talent. Here. Now.', ratio: '16/9' },
-      { src: 'heatmap.png', cap: 'Employment heatmap', ratio: '4/3' },
-      { src: 'award.png',   cap: '🥈 1st Runner-Up — Byteforward', ratio: '4/3' },
+      { src: 'heatmap.png', cap: 'Employment heatmap', ratio: '16/9' },
+      { src: 'award.png',   cap: '🥈 1st Runner-Up — Byteforward', ratio: '16/9' },
     ],
 
     links: [
@@ -710,8 +720,8 @@ export const PROJECTS = [
 
     media: [
       { src: 'app.png',         cap: 'Eye2Wear optical clinic', ratio: '16/9' },
-      { src: 'appointment.png', cap: 'Appointment page', ratio: '4/3' },
-      { src: 'team.png',        cap: 'Team page', ratio: '4/3' },
+      { src: 'appointment.png', cap: 'Appointment page', ratio: '16/9' },
+      { src: 'team.png',        cap: 'Team page', ratio: '16/9' },
       { src: 'dashboard.png',   cap: 'Analytics dashboard', ratio: '16/9' },
     ],
 
@@ -762,13 +772,7 @@ export const liveUrl = (p) =>
    p.links.find((l) => l.kind === 'demo') ||
    p.links[0])?.url ?? null
 
-export const siblings = (slug) => {
-  const i = ORDERED.findIndex((p) => p.slug === slug)
-  if (i === -1) return { prev: null, next: null }
-  return {
-    prev: i > 0 ? ORDERED[i - 1] : ORDERED[ORDERED.length - 1],
-    next: i < ORDERED.length - 1 ? ORDERED[i + 1] : ORDERED[0],
-  }
-}
-
-export const ROUTES = ['/', ...ORDERED.map((p) => `/work/${p.slug}`)]
+/* `siblings` and a per-project ROUTES list lived here for the
+   standalone case-study pages. Those are gone — projects open as a
+   dialog from the work grid — so both were removed rather than left
+   as dead exports. */

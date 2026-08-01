@@ -22,8 +22,8 @@ import { PROFILE } from '../data/profile.js'
    logo; with the brand moved to the left rail the links read as a single
    run instead. */
 const ALL = [
-  { label: 'Work',       href: '#work',           Icon: IconWork },
   { label: 'About',      href: '#about',          Icon: IconUser },
+  { label: 'Work',       href: '#work',           Icon: IconWork },
   { label: 'Experience', href: '#experience',     Icon: IconCalendar },
   { label: 'Stack',      href: '#stack',          Icon: IconStack },
   { label: 'Hackathons', href: '#hackathons',     Icon: IconAward },

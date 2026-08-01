@@ -1,68 +1,71 @@
-import { PROFILE, CHANNELS } from '../../data/profile.js'
-import { ArrowIcon } from '../shared/primitives.jsx'
+import { PROFILE } from '../../data/profile.js'
+import { Pill, MailIcon, LinkedInIcon, GitHubIcon } from '../shared/primitives.jsx'
 import { Reveal } from '../../hooks/useScrollReveal.jsx'
 
 /* ══════════════════════════════════════════════════
-   Contact — closing statement + channel directory.
+   Contact — panel closer.
 
-   No card, no centred stack of buttons. The statement
-   runs at display scale, and every way to reach him is
-   one row in a directory: label, the actual address,
-   and an arrow. Same shape for all four, so nothing
-   competes and the addresses are readable rather than
-   hidden behind a word like "LinkedIn".
+   Same shape as the Misaki deck's hero: a single
+   rounded panel holding a mono kicker, an oversized
+   two-tone headline, centred supporting copy, and a
+   pair of CTAs. The second half of the headline drops
+   to grey so the line reads as one sentence at two
+   weights rather than two sentences.
+
+   Credly is deliberately not here — it has its own
+   button in the Certifications section, and a fourth
+   pill would turn the CTA pair into a link farm.
    ══════════════════════════════════════════════════ */
 
 export default function Contact() {
-  const { availability } = PROFILE
+  const { availability, contact, location } = PROFILE
 
   return (
     <section id="contact" className="relative py-32 z-10" style={{ background: '#070707' }}>
       <div className="max-w-[1100px] mx-auto px-8">
-        {/* Status strip */}
         <Reveal>
-          <div className="contact-strip-mizu">
-            <span className="contact-status-mizu">
-              <span className="badge-dot-anim contact-dot-mizu" aria-hidden="true" />
+          <div className="contact-panel-mizu">
+            {/* Kicker */}
+            <p className="contact-kicker-mizu">
+              <span className="" aria-hidden="true" />
               {availability.status}
-            </span>
-            <span className="contact-strip-rule-mizu" aria-hidden="true" />
-            <span className="contact-where-mizu">
-              {availability.locations} · {availability.modes.join(' · ')}
-            </span>
+              <span className="contact-kicker-dot-mizu" aria-hidden="true">·</span>
+              {location}
+              <span className="contact-kicker-dot-mizu" aria-hidden="true">·</span>
+              {availability.modes.join(' · ')}
+            </p>
+
+            {/* Two-tone headline.
+                A closing argument, not a request. The lead makes a
+                promise; the grey tail is the evidence for it — and the
+                evidence is the rest of the page. */}
+            <h2 className="contact-claim-mizu">
+              <span className="contact-claim-lead-mizu">Give me a problem</span>
+              <span className="contact-claim-lead-mizu">and a deadline.</span>
+              <span className="contact-claim-tail-mizu">I ship.</span>
+            </h2>
+
+            <p className="contact-lede-mizu">
+              Nine hackathons. Five of them built solo in eight days or less. A production CMS
+              shipped during a four-month internship. {availability.headline}
+            </p>
+
+            <div className="contact-cta-mizu">
+              <Pill href={`mailto:${contact.email}`} solid>
+                <MailIcon />
+                {contact.email}
+              </Pill>
+              <Pill href={contact.linkedin} external>
+                <LinkedInIcon />
+                LinkedIn
+              </Pill>
+              <Pill href={contact.github} external>
+                <GitHubIcon />
+                GitHub
+              </Pill>
+            </div>
           </div>
         </Reveal>
-
-        <Reveal delay={1}>
-          <h2 className="contact-claim-mizu">
-            Let’s build
-            <br />
-            something together.
-          </h2>
-        </Reveal>
-
-        <Reveal delay={2}>
-          <p className="contact-lede-mizu">{availability.headline}</p>
-        </Reveal>
-
-        {/* Channel directory */}
-        <div className="contact-dir-mizu">
-          {CHANNELS.map((c, i) => (
-            <Reveal key={c.key} delay={Math.min(i + 2, 6)}>
-              <a
-                href={c.href}
-                className="contact-row-mizu"
-                {...(c.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              >
-                <span className="contact-row-label-mizu">{c.label}</span>
-                <span className="contact-row-value-mizu">{c.value}</span>
-                <span className="contact-row-arrow-mizu" aria-hidden="true">
-                  <ArrowIcon />
-                </span>
-              </a>
-            </Reveal>
-          ))}
-        </div>
       </div>
     </section>
   )

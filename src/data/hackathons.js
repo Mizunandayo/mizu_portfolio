@@ -7,9 +7,14 @@
    larger lead image and crosshair register marks. `rank` is the
    finishing position, lower is better, used to break same-month ties.
 
-   `id` is the media folder under /public/hackathons/. `media[0]` is the
-   lead image; the rest render as a thumbnail strip. Same drop-in
-   convention as project media — a missing file shows a placeholder. */
+   `id` is the media folder under src/assets/hackathons/. Images are
+   discovered from that folder at build time — see hackathonMedia.js —
+   so there is no media list to maintain. Drop a file in and it shows;
+   remove it and it stops.
+
+   Naming: `cover` leads, then `01`, `02`, `03` … Any of png/jpg/jpeg/
+   webp/avif. `captions` is optional alt text keyed by filename stem;
+   anything unnamed falls back to a positional label. */
 
 export const HACKATHONS = [
   {
@@ -22,10 +27,10 @@ export const HACKATHONS = [
     note:      'Apps for Your Life track — computer vision, built solo in 8 days.',
     project:   'Mitsu 見つ — Touchless Window Control for Windows',
     slug:      'mitsu',
-    media: [
-      { src: 'walkthrough.png', cap: 'Mitsu walkthrough' },
-      { src: 'gestures.png',    cap: 'Gesture control' },
-    ],
+    captions: {
+      'cover': 'Mitsu walkthrough',
+      '01':    'Gesture control',
+    },
   },
   {
     id:        'google-cloud-rapid-agent',
@@ -37,10 +42,10 @@ export const HACKATHONS = [
     note:      'GitLab track — autonomous flaky-test repair, built solo.',
     project:   'Minari 実成 — Autonomous Flaky-Test Resolution',
     slug:      'minari',
-    media: [
-      { src: 'app.png',        cap: 'Minari web app' },
-      { src: 'submission.png', cap: 'DevPost submission' },
-    ],
+    captions: {
+      'cover': 'Minari web app',
+      '01':    'DevPost submission',
+    },
   },
   {
     id:        'byteforward-2025',
@@ -53,11 +58,11 @@ export const HACKATHONS = [
     note:      'First hackathon entered — placed on the first attempt.',
     project:   'HirNa! — Smart Talent Sourcing Platform',
     slug:      'hirna',
-    media: [
-      { src: 'award.png',       cap: 'BPSU1 — 1st Runner-Up' },
-      { src: 'certificate.png', cap: 'Certificate of Participation' },
-      { src: 'team.png',        cap: 'BPSU1 team' },
-    ],
+    captions: {
+      'cover': 'BPSU1 — 1st Runner-Up',
+      '01':    'Certificate of Participation',
+      '02':    'BPSU1 team',
+    },
   },
   {
     id:        'raite-2025',
@@ -70,11 +75,11 @@ export const HACKATHONS = [
     note:      'National-level programming competition.',
     project:   'Galactic Conquest — Web3 Mining Strategy Game',
     slug:      'galactic-conquest',
-    media: [
-      { src: 'award.png',  cap: 'BPSU — 2nd Runner-Up' },
-      { src: 'plaque.png', cap: 'Plaque' },
-      { src: 'team.png',   cap: 'Team' },
-    ],
+    captions: {
+      'cover': 'BPSU — 2nd Runner-Up',
+      '01':    'Plaque',
+      '02':    'Team',
+    },
   },
   {
     id:        'transforming-enterprise-ai',
@@ -86,9 +91,9 @@ export const HACKATHONS = [
     note:      'Robotics & Simulation track.',
     project:   'Mirai ミライ — AI-Powered Robot Arm Simulator',
     slug:      'mirai',
-    media: [
-      { src: 'certificate.png', cap: 'Certificate of Completion' },
-    ],
+    captions: {
+      'cover': 'Certificate of Completion',
+    },
   },
   {
     id:        'web-data-unlocked',
@@ -100,9 +105,9 @@ export const HACKATHONS = [
     note:      'Security & Compliance + AI/ML API track.',
     project:   'Misaki 見先 — AI Legislative Intelligence Platform',
     slug:      'misaki',
-    media: [
-      { src: 'certificate.png', cap: 'Certificate of Completion' },
-    ],
+    captions: {
+      'cover': 'Certificate of Completion',
+    },
   },
   {
     id:        'amd-developer',
@@ -114,9 +119,9 @@ export const HACKATHONS = [
     note:      'AI Agents & Agentic Workflows track, on MI300X.',
     project:   'Miwa 美話 — Real-Time Discord Voice Translation Overlay',
     slug:      'miwa',
-    media: [
-      { src: 'certificate.png', cap: 'Certificate of Completion' },
-    ],
+    captions: {
+      'cover': 'Certificate of Completion',
+    },
   },
   {
     id:        'hackada-2025',
@@ -129,9 +134,9 @@ export const HACKATHONS = [
     /* No project card: this never became a shipped build. */
     project:   'Homie (concept)',
     slug:      null,
-    media: [
-      { src: 'certificate.png', cap: 'Certificate of Completion' },
-    ],
+    captions: {
+      'cover': 'Certificate of Completion',
+    },
   },
   {
     id:        'byteforward-final-pitch',
@@ -143,10 +148,10 @@ export const HACKATHONS = [
     note:      'Advanced to the Final Pitch stage.',
     project:   'HirNa! — Smart Talent Sourcing Platform',
     slug:      'hirna',
-    media: [
-      { src: 'pitch.png',       cap: 'Final Pitch' },
-      { src: 'certificate.png', cap: 'Certificate of Participation' },
-    ],
+    captions: {
+      'cover': 'Final Pitch',
+      '01':    'Certificate of Participation',
+    },
   },
 ]
 

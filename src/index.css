@@ -10,7 +10,15 @@
    ══════════════════════════════════════════════════ */
 
 /* ── Reset / Base ──────────────────────────────── */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Hold the scrollbar track permanently. The boot overlay locks scroll
+     with overflow:hidden, which otherwise takes the scrollbar away —
+     the content box widens by its width and every centred element
+     slides sideways, so the hero visibly shifts the instant the loader
+     releases, as though a different hero had replaced it. */
+  scrollbar-gutter: stable;
+}
 
 body {
   font-family: 'Poppins', system-ui, sans-serif;
@@ -43,6 +51,257 @@ body::after {
 .reveal-d4 { transition-delay: 320ms; }
 .reveal-d5 { transition-delay: 400ms; }
 .reveal-d6 { transition-delay: 480ms; }
+
+/* ══════════════════════════════════════════════════
+   Boot — a beam scans 水 / ミズ into resolution
+   The mark starts as an unresolved wireframe and turns solid behind a
+   sweeping beam; completing the pass blooms it, then it fades and the
+   backdrop follows. Every step is a CSS animation, which means the
+   prerendered HTML shows the loader before a line of JS runs, and the
+   overlay still clears itself if the bundle never arrives.
+   ══════════════════════════════════════════════════ */
+
+html.booting-mizu { overflow: hidden; }
+
+.boot-mizu {
+  position: fixed;
+  inset: 0;
+  /* Just under body::after (9999) so the site's grain lies over the
+     loader too — the same surface, not a splash screen in front of it. */
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Opaque. The page stays hidden behind this until it fades — nothing
+     of the hero reads through while the scan is running. */
+  background: #050505;
+  /* Overlaps the mark's fade rather than waiting for it. Running them
+     back to back left ~450ms of empty black between the mark leaving
+     and the page arriving, which reads as a second, blank hero.
+     linear, not the house ease-out: the house curve clears most of its
+     opacity in the first third, which would have the hero most of the
+     way visible while the mark is still on screen. A constant fade
+     keeps the backdrop denser than the mark throughout, so the mark
+     dissolves into the black instead of floating over the page. */
+  animation: boot-clear-mizu 620ms linear 2750ms forwards;
+}
+
+/* visibility alongside opacity — a fully transparent pane would still
+   be swallowing clicks in the window before React unmounts it.
+   visibility holds `visible` across the whole interval and only flips
+   at the end, so pairing the two doesn't blank the fade. */
+@keyframes boot-clear-mizu {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* Everything that gets scanned, so it leaves as one object once the
+   pass is done. The fade finishes at 2.95s, exactly when the backdrop
+   starts its own — the mark is never on screen over the live page. */
+.boot-core-mizu {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: boot-mark-out-mizu 300ms cubic-bezier(0.16,1,0.3,1) 2550ms forwards;
+}
+
+@keyframes boot-mark-out-mizu {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* The scan area. The wireframe copy sits in normal flow and sets the
+   box; everything else is absolutely positioned over it, so the beam's
+   top: 0 → 100% and the solid copy's bottom inset resolve against the
+   same height and stay locked together for free. */
+.boot-scan-mizu {
+  position: relative;
+}
+
+.boot-stage-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.boot-glyph-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(6rem, 15vw, 10.5rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.boot-kana-mizu {
+  margin-top: 30px;
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  /* Offsets the trailing letter-spacing so the pair sits optically
+     centred under the glyph. */
+  padding-left: 0.5em;
+}
+
+/* Unresolved: outline only. A wireframe filling in solid is what sells
+   the pass as a scan rather than a wipe. */
+.boot-stage-dim-mizu .boot-glyph-mizu {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(250, 250, 250, 0.26);
+}
+
+.boot-stage-dim-mizu .boot-kana-mizu {
+  color: transparent;
+  -webkit-text-stroke: 0.6px rgba(250, 250, 250, 0.32);
+}
+
+@supports not (-webkit-text-stroke: 1px #000) {
+  .boot-stage-dim-mizu .boot-glyph-mizu,
+  .boot-stage-dim-mizu .boot-kana-mizu { color: rgba(250, 250, 250, 0.1); }
+}
+
+/* Resolved: solid, with just enough bloom to read as lit rather than
+   painted. Clipped to whatever the beam has already crossed. */
+.boot-stage-lit-mizu {
+  position: absolute;
+  inset: 0;
+  /* Only the bottom edge clips — that edge IS the scan line. The other
+     three are pushed 70% outside the box so they never cut the glyph's
+     halo. clip-path is applied after filter, so a box-tight clip slices
+     the drop-shadow off square and draws a hard glowing rectangle
+     around the mark. */
+  clip-path: inset(-70% -70% 100% -70%);
+  /* Resolve, then bloom the instant the beam clears the mark. */
+  animation: boot-resolve-mizu 1900ms linear 250ms forwards,
+             boot-glow-mizu 400ms cubic-bezier(0.16,1,0.3,1) 2150ms forwards;
+}
+
+/* Completing the pass is the payoff, so the resolved mark flares and
+   then holds lit while it fades.
+   Every keyframe carries the same two drop-shadows: filter lists only
+   interpolate when their functions match one for one, and a list that
+   grows mid-animation snaps instead of ramping. */
+@keyframes boot-glow-mizu {
+  0% {
+    /* Releases the bottom edge too: the pass is finished, so there is
+       no scan line left for it to represent — only a cut through the
+       halo under the kana. */
+    clip-path: inset(-70%);
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0))
+            drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+  60% {
+    clip-path: inset(-70%);
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.58))
+            drop-shadow(0 0 34px rgba(255, 255, 255, 0.28));
+  }
+  100% {
+    clip-path: inset(-70%);
+    filter: drop-shadow(0 0 11px rgba(255, 255, 255, 0.44))
+            drop-shadow(0 0 26px rgba(255, 255, 255, 0.22));
+  }
+}
+
+.boot-stage-lit-mizu .boot-glyph-mizu {
+  color: rgba(250, 250, 250, 0.98);
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.15);
+}
+
+.boot-stage-lit-mizu .boot-kana-mizu {
+  color: rgba(250, 250, 250, 0.94);
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.13);
+}
+
+@keyframes boot-resolve-mizu {
+  to { clip-path: inset(-70% -70% 0 -70%); }
+}
+
+/* The beam runs at constant velocity — the house easing decelerates,
+   and a scan that crawls to a stop reads as a stall rather than a
+   machine finishing. It carries the same duration and delay as the
+   solid copy, so the edge of the reveal never separates from the light
+   that is supposed to be causing it. */
+.boot-beam-mizu {
+  position: absolute;
+  left: -9%;
+  right: -9%;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(250, 250, 250, 0.95) 16%,
+    #ffffff 50%,
+    rgba(250, 250, 250, 0.95) 84%,
+    transparent
+  );
+  box-shadow:
+    0 0 12px 1px rgba(255, 255, 255, 0.45),
+    0 0 40px 6px rgba(255, 255, 255, 0.14);
+  opacity: 0;
+  animation: boot-beam-mizu 1900ms linear 250ms forwards;
+}
+
+@keyframes boot-beam-mizu {
+  0%   { top: 0; opacity: 0; }
+  7%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Raster lines across the scanned area, on only while the pass runs. */
+.boot-lines-mizu {
+  position: absolute;
+  inset: -6% -9%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  /* Faded off at the edges. Ending the raster on a hard rectangle drew
+     a visible box around the mark that read as a stray container. */
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 45%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 45%, transparent 100%);
+  opacity: 0;
+  /* Clears exactly as the pass ends, so the bloom lands on a clean
+     mark rather than through raster. */
+  animation: boot-lines-mizu 1900ms cubic-bezier(0.16,1,0.3,1) 250ms forwards;
+}
+
+@keyframes boot-lines-mizu {
+  12%  { opacity: 1; }
+  74%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.boot-rule-mizu {
+  position: relative;
+  width: min(200px, 38vw);
+  height: 1px;
+  margin-top: 26px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.boot-rule-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 250, 250, 0.7);
+  transform: scaleX(0);
+  transform-origin: left center;
+  /* Matched to the beam, so the rule completing *is* the scan
+     completing rather than an unrelated progress guess. */
+  animation: boot-rule-mizu 1900ms linear 250ms forwards;
+}
+
+@keyframes boot-rule-mizu {
+  to { transform: scaleX(1); }
+}
 
 /* ══════════════════════════════════════════════════
    Notch navbar
@@ -450,22 +709,6 @@ body::after {
   .hero-strip { margin-bottom: 32px; gap: 9px; }
 }
 
-/* ── Ripple field 水 — hero domain glyph ────────── */
-@keyframes rippleBreath {
-  0%, 100% { opacity: 0.45; transform: scale(1); }
-  50%      { opacity: 0.9;  transform: scale(1.03); }
-}
-.ripple-breath { animation: rippleBreath 6s ease-in-out infinite; transform-origin: center; }
-
-@keyframes rippleOut {
-  0%   { r: 6;  opacity: 0;    stroke-width: 1.6; }
-  12%  { opacity: 0.75; }
-  100% { r: 46; opacity: 0;    stroke-width: 0.4; }
-}
-.ripple-ring   { animation: rippleOut 5.6s cubic-bezier(0.16,1,0.3,1) infinite; }
-.ripple-ring.r2 { animation-delay: 1.85s; }
-.ripple-ring.r3 { animation-delay: 3.7s; }
-
 /* ══════════════════════════════════════════════════
    -mizu additions
    ══════════════════════════════════════════════════ */
@@ -483,66 +726,184 @@ body::after {
 .work-grid-mizu {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  /* Column gap runs wider than the row gap: horizontally the images of
+     two cards sit side by side with nothing but this between them, so
+     it has to be wide enough to read as a break. */
+  /* Row gap runs deeper than the column gap now: the card's cast falls
+     ~100px below it, and without the room the next row clips it into a
+     hard line instead of letting it fade out. */
+  gap: 68px 56px;
 }
 
+/* Grid items default to min-width:auto, which floors the track at the
+   content's min-content width and lets a long unbroken word push the
+   track wider than its share. */
+.work-grid-mizu > * {
+  min-width: 0;
+}
+
+/* No border and square corners — the card is a slab lifted off the
+   band, and separation comes from the shadow underneath it plus the
+   grid gap rather than from a drawn edge. */
 .work-card-mizu {
   position: relative;
   display: flex;
   flex-direction: column;
+  /* The card is a <button>, and a button's width:auto is shrink-to-fit
+     rather than fill-the-container — it sizes to its content and
+     overflows its grid track, spilling over the next card. Pinning the
+     width makes it obey the track. */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 100%;
   min-height: 470px;
+  text-align: left;
   text-decoration: none;
   overflow: hidden;
-  border-radius: 20px;
-  border: 1px solid rgba(163, 163, 163, 0.16);
-  background: #0a0a0a;
-  transition: border-color 200ms cubic-bezier(0.16,1,0.3,1),
-              background 200ms cubic-bezier(0.16,1,0.3,1);
+  border: none;
+  border-radius: 0;
+  background: #0d0d0d;
+  cursor: pointer;
+  padding: 0;
+  /* Three stacked casts rather than one: a tight contact shadow that
+     anchors the bottom edge, a mid spread, and a wide diffuse one. All
+     offset straight down so the light reads as overhead and the slab
+     reads as floating above the band instead of drawn onto it. */
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.55),
+    0 16px 30px rgba(0, 0, 0, 0.5),
+    0 36px 64px rgba(0, 0, 0, 0.42);
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              box-shadow 200ms cubic-bezier(0.16,1,0.3,1),
+              transform 200ms cubic-bezier(0.16,1,0.3,1);
 }
 
+/* Lifts further and the shadow spreads with it, as a real object's
+   would when it rises off a surface. */
 .work-card-mizu:hover {
-  border-color: rgba(212, 212, 216, 0.34);
-  background: #0d0d0d;
+  background: #111111;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.58),
+    0 26px 46px rgba(0, 0, 0, 0.55),
+    0 54px 92px rgba(0, 0, 0, 0.5);
+  transform: translateY(-6px);
+}
+
+/* ── Hover takeover ────────────────────────────── */
+/* On hover the card's content blurs back and the project's glyph falls
+   from the top edge to the centre.
+
+   The blur is backdrop-filter on a full-card veil rather than filter on
+   the content itself: filter blurs each element in isolation, so the
+   screenshot's edges would bleed to transparent and halo against the
+   card boundary. Sampling the backdrop keeps the blur uniform right to
+   the edges.
+
+   The tint is doing real work, not decoration — Bacsal, Eye2Wear and
+   HirNa have near-white covers, and a blurred white screenshot would
+   swallow a white glyph without it.
+
+   container-type: size makes the veil a size query container, which is
+   what lets the glyph travel a distance measured against the card
+   (cqh) rather than against its own font size. */
+.work-card-veil-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(8, 8, 8, 0.62);
+  -webkit-backdrop-filter: blur(16px) saturate(0.75);
+  backdrop-filter: blur(16px) saturate(0.75);
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Without backdrop-filter the tint alone has to keep the glyph legible
+   over a bright cover, so it goes most of the way to opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .work-card-veil-mizu { background: rgba(8, 8, 8, 0.92); }
+}
+
+.work-card-mizu:hover .work-card-veil-mizu {
+  opacity: 1;
+}
+
+.work-card-glyph-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(3.2rem, 4.6vw, 4.8rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: rgba(250, 250, 250, 0.97);
+  /* Rests at 15% of the card's height; -50cqh would be the top edge. */
+  transform: translateY(-35cqh);
+  opacity: 0;
+  transition: transform 520ms cubic-bezier(0.16,1,0.3,1),
+              opacity 300ms cubic-bezier(0.16,1,0.3,1) 60ms;
+}
+
+.work-card-mizu:hover .work-card-glyph-mizu {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 /* ── Preview ───────────────────────────────────── */
+/* Flush to the card's top and sides. The card's own overflow:hidden
+   clips it to the outer radius, so the top corners still round. */
 .work-card-shot-mizu {
   position: relative;
-  height: 232px;
-  margin: 16px 16px 0;
-  border-radius: 12px;
+  height: 244px;
+  margin: 0;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-/* Kill the placeholder's own frame — the crop frame provides it. */
+/* Kill the placeholder's own frame — the crop frame provides it.
+   The box matches the card exactly: an oversized box (this was 118%
+   wide, pulled -9% left) bleeds past both card edges, and two
+   neighbours then throw 9% each into the column gap and overlap. The
+   zoomed-in crop comes from object-fit below instead, which stays
+   inside the box. */
 .work-card-shot-mizu .ph-mizu {
   border: none;
   border-radius: 0;
   aspect-ratio: auto;
-  width: 118%;
-  height: auto;
-  min-height: 100%;
-  margin-left: -9%;
+  width: 100%;
+  height: 100%;
+  margin-left: 0;
   align-items: flex-start;
 }
 
+/* Top-anchored cover: the shot reads as a window onto the upper part
+   of a taller screen rather than a letterboxed thumbnail. */
 .work-card-shot-mizu img {
-  height: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
   object-position: top center;
 }
 
 .work-card-shot-mizu figure { height: 100%; }
 
-/* Fades the crop into the card rather than ending on a hard edge. */
+/* Fades the crop into the card rather than ending on a hard edge.
+   Matches the card surface, not the page. */
 .work-card-shot-mizu::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
   height: 64px;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent, rgba(10, 10, 10, 0.85));
+  background: linear-gradient(to bottom, transparent, rgba(13, 13, 13, 0.92));
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.work-card-mizu:hover .work-card-shot-mizu::after {
+  background: linear-gradient(to bottom, transparent, rgba(17, 17, 17, 0.92));
 }
 
 /* ── Title block ───────────────────────────────── */
@@ -899,51 +1260,6 @@ body::after {
    stay in true chronological order.
    ══════════════════════════════════════════════════ */
 
-/* ── Record line ───────────────────────────────── */
-.hack-record-mizu {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 clamp(14px, 2.4vw, 30px);
-  padding: 20px 0 22px;
-  border-top: 1px solid rgba(161, 161, 170, 0.24);
-  border-bottom: 1px solid rgba(161, 161, 170, 0.24);
-  margin: 0;
-}
-
-.hack-record-cell-mizu {
-  display: inline-flex;
-  align-items: baseline;
-  gap: clamp(14px, 2.4vw, 30px);
-}
-
-.hack-record-sep-mizu {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
-  color: rgba(161, 161, 170, 0.4);
-  user-select: none;
-}
-
-.hack-record-cell-mizu dt {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.95);
-}
-
-.hack-record-cell-mizu dd {
-  margin: 0 0 0 9px;
-  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
-  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  color: rgba(250, 250, 250, 0.97);
-}
-
 /* ── Year band ─────────────────────────────────── */
 .hack-year-mizu {
   display: flex;
@@ -1178,7 +1494,6 @@ body::after {
 
 @media (max-width: 640px) {
   .hack-year-mizu { padding: 34px 0 20px; }
-  .hack-record-cell-mizu dd { font-size: 1.4rem; }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1272,31 +1587,84 @@ body::after {
   flex-direction: column;
 }
 
+/* Lightbox stage: fixed 16:9 frame, image contained inside it so
+   nothing is cropped. Off-ratio photos letterbox against the darker
+   backdrop, which is what makes the letterboxing read as deliberate. */
 .hkd-stage-mizu {
   position: relative;
   flex: none;
   aspect-ratio: 16 / 9;
   overflow: hidden;
+  background: #030303;
 }
 
 .hkd-stage-mizu .ph-mizu {
   border: none;
   border-radius: 0;
   height: 100%;
+  background: none;
 }
 
-/* Caption rides over the image rather than taking height from it. */
-.hkd-caption-mizu {
+/* ── Stage navigation ──────────────────────────── */
+.hkd-nav-mizu {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 40px 22px 16px;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: rgba(250, 250, 250, 0.92);
-  background: linear-gradient(to bottom, transparent, rgba(3, 3, 3, 0.86));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms, border-color 200ms, color 200ms;
+}
+
+.hkd-nav-mizu.is-prev { left: 14px; }
+.hkd-nav-mizu.is-next { right: 14px; }
+
+/* Revealed on hover or keyboard focus — they sit over the photo, so
+   they stay out of the way until wanted. */
+.hkd-stage-mizu:hover .hkd-nav-mizu,
+.hkd-nav-mizu:focus-visible { opacity: 1; }
+
+.hkd-nav-mizu:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.hkd-count-mizu {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(5, 5, 5, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(250, 250, 250, 0.88);
+  font-variant-numeric: tabular-nums;
   pointer-events: none;
+}
+
+/* Touch has no hover — keep the arrows visible. */
+@media (hover: none) {
+  .hkd-nav-mizu { opacity: 1; }
 }
 
 .hkd-carousel-mizu {
@@ -1308,7 +1676,14 @@ body::after {
   padding: 16px 20px 18px;
   border-top: 1px solid rgba(161, 161, 170, 0.18);
   background: #050505;
+
+  /* Scrolls, but without a visible bar — the thumbnails already read as
+     a strip, and the stage arrows cover navigation. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.hkd-carousel-mizu::-webkit-scrollbar { display: none; }
 
 .hkd-thumb-mizu {
   flex: 0 0 128px;
@@ -1619,27 +1994,43 @@ body::after {
 }
 
 /* ══════════════════════════════════════════════════
-   Contact — statement + channel directory
+   Contact — panel closer
+
+   One rounded panel: mono kicker, oversized two-tone
+   headline, centred copy, paired CTAs. Ported from the
+   Misaki deck hero.
    ══════════════════════════════════════════════════ */
 
-.contact-strip-mizu {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 30px;
+.contact-panel-mizu {
+  position: relative;
+  border-radius: clamp(18px, 2.4vw, 28px);
+  border: 1px solid rgba(163, 163, 163, 0.16);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.038) 0%,
+    rgba(255, 255, 255, 0.012) 55%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  padding: clamp(44px, 7.5vw, 96px) clamp(22px, 5vw, 72px);
+  text-align: center;
+  overflow: hidden;
 }
 
-.contact-status-mizu {
-  display: inline-flex;
+/* ── Kicker ────────────────────────────────────── */
+.contact-kicker-mizu {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 9px;
-  flex-shrink: 0;
+  justify-content: center;
+  gap: 0 10px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(240, 240, 245, 0.94);
+  color: rgba(228, 228, 231, 0.9);
+  line-height: 1.7;
+  margin-bottom: clamp(26px, 3.4vw, 40px);
 }
 
 .contact-dot-mizu {
@@ -1648,132 +2039,190 @@ body::after {
   border-radius: 50%;
   background: rgba(74, 222, 128, 0.95);
   flex-shrink: 0;
+  margin-right: 2px;
 }
 
-.contact-strip-rule-mizu {
-  flex: 1;
-  height: 1px;
-  background: rgba(161, 161, 170, 0.22);
-}
+.contact-kicker-dot-mizu { color: rgba(161, 161, 170, 0.5); }
 
-.contact-where-mizu {
-  flex-shrink: 0;
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.92);
-}
-
+/* ── Headline ──────────────────────────────────────
+   One sentence at two weights: the lead in white, the
+   tail dropped to grey. Blocks rather than inline so
+   the break is structural, not a <br>. */
 .contact-claim-mizu {
   font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
-  font-size: clamp(2.1rem, 6.4vw, 4.4rem);
+  font-size: clamp(2.1rem, 7vw, 4.8rem);
   font-weight: 900;
   letter-spacing: -0.042em;
   line-height: 0.98;
-  color: #f5f5f5;
-  margin-bottom: 22px;
+  margin-bottom: clamp(24px, 3vw, 36px);
 }
 
+.contact-claim-lead-mizu,
+.contact-claim-tail-mizu { display: block; }
+
+.contact-claim-lead-mizu { color: #f5f5f5; }
+.contact-claim-tail-mizu { color: rgba(130, 130, 138, 0.95); }
+
+/* ── Copy ──────────────────────────────────────── */
 .contact-lede-mizu {
-  font-size: clamp(0.98rem, 1.5vw, 1.12rem);
-  line-height: 1.7;
-  color: rgba(212, 212, 216, 0.84);
-  max-width: 40ch;
-  margin-bottom: 48px;
+  font-size: clamp(0.96rem, 1.5vw, 1.1rem);
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.82);
+  max-width: 46ch;
+  margin: 0 auto clamp(32px, 4vw, 48px);
 }
 
-/* ── Directory ─────────────────────────────────────
-   One row per channel, all the same shape. The address
-   itself is the content — not hidden behind a label. */
-.contact-dir-mizu { border-top: 1px solid rgba(161, 161, 170, 0.22); }
+/* ── CTAs ──────────────────────────────────────── */
+.contact-cta-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
 
-.contact-row-mizu {
+@media (max-width: 560px) {
+  .contact-cta-mizu > a { width: 100%; justify-content: center; }
+  .contact-kicker-mizu { font-size: 0.66rem; letter-spacing: 0.12em; }
+}
+
+/* ══════════════════════════════════════════════════
+   Experience & education — logo-led panels
+
+   Two panels, split by a hairline. Each is anchored by
+   the organisation's mark at real size and reads
+   top-down. No chart: there are two facts here and
+   they should be read, not plotted.
+   ══════════════════════════════════════════════════ */
+
+.org-grid-mizu {
   display: grid;
-  grid-template-columns: 128px 1fr auto;
-  align-items: center;
-  gap: 20px;
-  padding: 22px 12px 22px 4px;
-  border-bottom: 1px solid rgba(161, 161, 170, 0.18);
-  text-decoration: none;
-  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
-              padding-left 200ms cubic-bezier(0.16,1,0.3,1);
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 0;
 }
 
-.contact-row-mizu:hover {
-  background: rgba(255, 255, 255, 0.035);
-  padding-left: 16px;
+/* The divider goes on the second cell, not between grid tracks — the
+   grid's direct children are .reveal wrappers, so this targets the
+   wrapper rather than the panel inside it. */
+.org-grid-mizu > * + * {
+  border-left: 1px solid rgba(161, 161, 170, 0.2);
+  padding-left: clamp(28px, 4.5vw, 60px);
 }
 
-.contact-row-label-mizu {
+.org-grid-mizu > :first-child { padding-right: clamp(28px, 4.5vw, 60px); }
+
+.org-panel-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ── Logo ──────────────────────────────────────────
+   Bare transparent mark — a frame would box something
+   with no edges, same treatment as the About portrait. */
+.org-logo-mizu {
+  width: clamp(84px, 9vw, 116px);
+  margin-bottom: 26px;
+}
+
+.org-logo-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+/* ── Head ──────────────────────────────────────── */
+.org-kind-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.9);
+  color: rgba(161, 161, 170, 0.92);
+  margin-bottom: 12px;
 }
 
-.contact-row-value-mizu {
-  font-size: clamp(0.95rem, 1.9vw, 1.24rem);
-  font-weight: 600;
-  letter-spacing: -0.018em;
-  color: rgba(240, 240, 245, 0.94);
-  min-width: 0;
-  overflow-wrap: anywhere;
-  transition: color 200ms cubic-bezier(0.16,1,0.3,1);
+.org-note-mizu { color: rgba(161, 161, 170, 0.62); }
+
+.org-name-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.24rem, 2.3vw, 1.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  color: rgba(250, 250, 250, 0.97);
+  margin-bottom: 7px;
 }
 
-.contact-row-mizu:hover .contact-row-value-mizu { color: #fff; }
+.org-title-mizu {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(212, 212, 216, 0.86);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
 
-.contact-row-arrow-mizu {
+/* ── Meta ──────────────────────────────────────── */
+.org-meta-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid rgba(161, 161, 170, 0.18);
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.73rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+
+.org-period-mizu { color: rgba(240, 240, 245, 0.92); font-weight: 600; }
+.org-place-mizu  { color: rgba(161, 161, 170, 0.9); }
+
+.org-body-mizu {
+  font-size: 0.93rem;
+  line-height: 1.78;
+  color: rgba(212, 212, 216, 0.84);
+  margin-top: 20px;
+}
+
+.org-links-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: 20px;
+}
+
+.org-link-mizu {
   display: inline-flex;
-  color: rgba(161, 161, 170, 0.7);
-  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
-              transform 200ms cubic-bezier(0.16,1,0.3,1);
+  align-items: center;
+  gap: 7px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(228, 228, 231, 0.9);
+  text-decoration: none;
+  transition: color 170ms;
 }
 
-.contact-row-mizu:hover .contact-row-arrow-mizu {
-  color: #fff;
-  transform: translateX(4px);
-}
+.org-link-mizu svg { opacity: 0.6; transition: opacity 170ms, transform 170ms; }
+.org-link-mizu:hover { color: #fff; }
+.org-link-mizu:hover svg { opacity: 1; transform: translateX(2px); }
 
-@media (max-width: 620px) {
-  .contact-row-mizu {
-    grid-template-columns: 1fr auto;
-    gap: 4px 16px;
-    padding: 18px 8px 18px 4px;
+@media (max-width: 820px) {
+  .org-grid-mizu { grid-template-columns: 1fr; }
+
+  .org-grid-mizu > :first-child {
+    padding-right: 0;
+    padding-bottom: 40px;
   }
-  .contact-row-label-mizu { grid-column: 1 / -1; }
-  .contact-row-mizu:hover { padding-left: 10px; }
-  .contact-strip-mizu { flex-wrap: wrap; gap: 10px 14px; }
-  .contact-strip-rule-mizu { display: none; }
-}
 
-/* ── Timeline (experience / education) ─────────── */
-.tl-mizu {
-  position: relative;
-  padding-left: 28px;
-  border-left: 1px solid rgba(161, 161, 170, 0.26);
-}
-
-.tl-item-mizu { position: relative; padding-bottom: 34px; }
-.tl-item-mizu:last-child { padding-bottom: 0; }
-
-.tl-dot-mizu {
-  position: absolute;
-  left: -34px;
-  top: 5px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  border: 1px solid rgba(212, 212, 216, 0.55);
-  background: #050505;
-}
-
-.tl-dot-mizu.now {
-  background: rgba(250, 250, 250, 0.95);
-  border-color: rgba(250, 250, 250, 0.95);
+  .org-grid-mizu > * + * {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(161, 161, 170, 0.2);
+    padding-top: 40px;
+  }
 }
 
 /* ── Media placeholder ─────────────────────────── */
@@ -2066,13 +2515,14 @@ body::after {
 
 /* ── Responsive ────────────────────────────────── */
 @media (max-width: 1180px) {
-  .work-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .work-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px 40px; }
 }
 
 @media (max-width: 720px) {
-  .work-grid-mizu { grid-template-columns: 1fr; gap: 18px; }
+  /* One column — every gap is a row gap here, so it carries the cast. */
+  .work-grid-mizu { grid-template-columns: 1fr; gap: 48px; }
   .work-card-mizu { min-height: 400px; }
-  .work-card-shot-mizu { height: 200px; margin: 12px 12px 0; }
+  .work-card-shot-mizu { height: 210px; }
   .work-card-body-mizu { padding: 24px 22px; }
   .work-card-name-mizu { font-size: 1.28rem; }
   .work-card-ribbon-mizu { top: 20px; right: 20px; }
@@ -2111,8 +2561,7 @@ body::after {
 
   .reveal { opacity: 1 !important; transform: none !important; }
   .hero-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
-  .ripple-breath, .ripple-ring, .badge-dot-anim { animation: none !important; }
-  .ripple-ring { opacity: 0.35 !important; }
+  .badge-dot-anim { animation: none !important; }
   .pdlg-mizu[open], .pdlg-mizu[open]::backdrop { animation: none !important; }
   .hkd-mizu[open], .hkd-mizu[open]::backdrop { animation: none !important; }
   .notch-menu-mizu { animation: none !important; }

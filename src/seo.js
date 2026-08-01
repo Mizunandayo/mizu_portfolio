@@ -1,5 +1,4 @@
 import { PROFILE, SITE } from './data/profile.js'
-import { PROJECTS, bySlug } from './data/projects.js'
 
 /* Shared by the runtime <Seo> component and the build-time prerenderer,
    so a route's tags cannot drift between the two. */
@@ -27,37 +26,17 @@ export function metaFor(path) {
     }
   }
 
-  const slug = path.replace('/work/', '').replace(/\/$/, '')
-  const p = bySlug(slug)
-  if (!p) {
-    return {
-      title:       `Not found — ${PROFILE.name}`,
-      description: 'That page does not exist.',
-      path,
-      image:       `${SITE.url}/og/default.png`,
-      jsonLd:      null,
-    }
-  }
-
   return {
-    title:       `${p.name} ${p.kanji} — ${p.tagline} | ${PROFILE.name}`,
-    description: p.summary,
+    title:       `Not found — ${PROFILE.name}`,
+    description: 'That page does not exist.',
     path,
-    image:       `${SITE.url}/og/${p.slug}.png`,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'CreativeWork',
-      name: `${p.name} — ${p.tagline}`,
-      description: p.summary,
-      url: `${SITE.url}${path}`,
-      dateCreated: p.period.start,
-      creator: { '@type': 'Person', name: PROFILE.name, url: SITE.url },
-      keywords: p.stack.flatMap((g) => g.items.map((i) => i.name)).join(', '),
-    },
+    image:       `${SITE.url}/og/default.png`,
+    jsonLd:      null,
   }
 }
 
-export const ALL_ROUTES = ['/', ...PROJECTS.map((p) => `/work/${p.slug}`)]
+/* One page. Projects and hackathons are dialogs, not routes. */
+export const ALL_ROUTES = ['/']
 
 /** Escapes text for safe interpolation into an HTML attribute. */
 const esc = (s = '') =>

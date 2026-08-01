@@ -1,6 +1,6 @@
-import { PROFILE} from '../../data/profile.js'
-import { StarField, PerspectiveGrid, Spotlight, RippleField } from '../shared/Backdrop.jsx'
-import { StatBar, Pill, GitHubIcon, ArrowIcon } from '../shared/primitives.jsx'
+import { PROFILE } from '../../data/profile.js'
+import { StarField, PerspectiveGrid, Spotlight } from '../shared/Backdrop.jsx'
+import { Pill, GitHubIcon, ArrowIcon } from '../shared/primitives.jsx'
 
 export default function Hero() {
   const scrollTo = (sel) => (e) => {
@@ -12,7 +12,6 @@ export default function Hero() {
     <section id="hero" className="relative overflow-hidden" style={{ minHeight: '100dvh', background: '#050505' }}>
       <StarField />
       <PerspectiveGrid />
-      <RippleField />
       <Spotlight />
 
       <div

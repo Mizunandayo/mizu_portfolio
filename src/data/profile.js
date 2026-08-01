@@ -48,8 +48,7 @@ export const PROFILE = {
 
   availability: {
     status:    'Open to work',
-    headline:  'Open to software and AI engineering roles.',
-    locations: 'Taguig +2',
+    headline:  'Open to software engineering roles.',
     modes:     ['On-site', 'Hybrid', 'Remote'],
   },
 
@@ -93,7 +92,7 @@ export const CHANNELS = [
 /* Site-level constants. */
 export const SITE = {
   url:   'https://mizu-portfolio.vercel.app',
-  title: 'Francis Daniel Genese - Software Engineer & AI Engineer',
+  title: 'Francis Daniel Genese — Software Engineer',
   description:
     'Software engineer building AI-powered applications and scalable systems. Nine shipped ' +
     'projects across agentic AI, LLM platforms, computer vision and full-stack web.',

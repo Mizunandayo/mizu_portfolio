@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import {
-  HACKATHON_YEARS, HACKATHON_RECORD, HACKATHON_COUNT, PODIUM_COUNT, monthOf,
+  HACKATHON_YEARS, HACKATHON_RECORD, PODIUM_COUNT, monthOf,
 } from '../../data/hackathons.js'
+import { mediaFor } from '../../data/hackathonMedia.js'
 import { bySlug, liveUrl } from '../../data/projects.js'
 import { SectionShell, ExternalIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
@@ -9,7 +10,7 @@ import { Reveal } from '../../hooks/useScrollReveal.jsx'
 import HackathonDialog from './HackathonDialog.jsx'
 
 /* ══════════════════════════════════════════════════
-   Hackathons — editorial archive.
+   Hackathons - editorial archive.
 
    Newest first, banded by year. Podium finishes are
    the featured entries: wider lead image, larger
@@ -21,13 +22,6 @@ import HackathonDialog from './HackathonDialog.jsx'
    so it still works as a direct outbound link.
    ══════════════════════════════════════════════════ */
 
-const RECORD = [
-  ['Entered',  HACKATHON_RECORD.entered],
-  ['Podium',   HACKATHON_RECORD.podium],
-  ['Projects', HACKATHON_RECORD.projects],
-  ['Months',   HACKATHON_RECORD.months],
-]
-
 export default function Hackathons() {
   const [open, setOpen] = useState(null)
 
@@ -36,21 +30,12 @@ export default function Hackathons() {
       id="hackathons"
       alt
       eyebrow="Hackathons"
-      claim={`${HACKATHON_COUNT} hackathons across ${HACKATHON_RECORD.months} months.`}
-      copy={`Placed at the first attempt, and ${PODIUM_COUNT} podium finishes since — with ${HACKATHON_RECORD.peakMonth} entered inside a single month at the peak.`}
+      /* Deliberately not a number: the copy line below already carries
+         the counts, so a numeric headline would say the same thing
+         twice. This carries the attitude. */
+      claim="We keep on building!"
+      copy={`Placed at the first attempt, and ${PODIUM_COUNT} podium finishes since - with ${HACKATHON_RECORD.peakMonth} entered inside a single month at the peak.`}
     >
-      <Reveal>
-        <dl className="hack-record-mizu">
-          {RECORD.map(([label, value], i) => (
-            <div className="hack-record-cell-mizu" key={label}>
-              {i > 0 && <span className="hack-record-sep-mizu" aria-hidden="true">///</span>}
-              <dt>{label}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </Reveal>
-
       {HACKATHON_YEARS.map((band) => (
         <section key={band.year} className="hack-band-mizu" aria-label={band.year}>
           <Reveal>
@@ -78,9 +63,10 @@ export default function Hackathons() {
 
 function Entry({ hackathon: h, onOpen }) {
   const featured = Boolean(h.placement)
-  const lead = h.media?.[0]
+  const media = mediaFor(h.id, h.captions)
+  const lead = media[0]
 
-  /* The project line opens the deployed app, not the case study —
+  /* The project line opens the deployed app, not the case study -
      `liveUrl` reads the link flagged `primary: true` in projects.js. */
   const project = h.slug ? bySlug(h.slug) : null
   const url = project ? liveUrl(project) : null
@@ -102,23 +88,22 @@ function Entry({ hackathon: h, onOpen }) {
         type="button"
         className="hack-open-mizu"
         onClick={onOpen}
-        aria-label={`${h.title} — open details and gallery`}
+        aria-label={`${h.title} - open details and gallery`}
       />
 
       {lead && (
         <div className="hack-lead-mizu">
           <ImagePlaceholder
-            base={`/hackathons/${h.id}`}
-            src={lead.src}
+            url={lead.url}
             cap={lead.cap}
             alt={`${h.title} — ${lead.cap}`}
             ratio="16/9"
             showCaption={false}
             label={lead.cap}
           />
-          {h.media.length > 1 && (
+          {media.length > 1 && (
             <span className="hack-count-mizu" aria-hidden="true">
-              {h.media.length} photos
+              {media.length} photos
             </span>
           )}
         </div>
@@ -143,7 +128,7 @@ function Entry({ hackathon: h, onOpen }) {
             target="_blank"
             rel="noopener noreferrer"
             className="hack-project-mizu"
-            aria-label={`${h.project} — opens the live project in a new tab`}
+            aria-label={`${h.project} - opens the live project in a new tab`}
           >
             {h.project}
             <ExternalIcon />

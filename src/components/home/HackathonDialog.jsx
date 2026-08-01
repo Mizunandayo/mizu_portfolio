@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { bySlug, liveUrl } from '../../data/projects.js'
 import { monthOf } from '../../data/hackathons.js'
+import { mediaFor } from '../../data/hackathonMedia.js'
 import { Pill, GitHubIcon, PlayIcon, ExternalIcon, ArrowIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
 
@@ -31,10 +32,16 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
   const [active, setActive] = useState(0)
 
   const project = h.slug ? bySlug(h.slug) : null
-  const media = h.media || []
+  const media = mediaFor(h.id, h.captions)
   const current = media[active]
+  const many = media.length > 1
 
   const close = useCallback(() => onClose(), [onClose])
+
+  const step = useCallback(
+    (d) => setActive((i) => (i + d + media.length) % media.length),
+    [media.length]
+  )
 
   useEffect(() => {
     const el = ref.current
@@ -43,6 +50,14 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
 
     const onCancel = (e) => { e.preventDefault(); close() }
     el.addEventListener('cancel', onCancel)
+
+    /* Arrow keys step the gallery, as in any lightbox. */
+    const onKey = (e) => {
+      if (media.length < 2) return
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1) }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); step(-1) }
+    }
+    el.addEventListener('keydown', onKey)
 
     const prevOverflow = document.body.style.overflow
     const prevPad = document.body.style.paddingRight
@@ -54,11 +69,12 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
 
     return () => {
       el.removeEventListener('cancel', onCancel)
+      el.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
       document.body.style.paddingRight = prevPad
       if (el.open) el.close()
     }
-  }, [close])
+  }, [close, step, media.length])
 
   return (
     <dialog
@@ -81,24 +97,52 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
         <div className="hkd-gallery-mizu">
           {current && (
             <div className="hkd-stage-mizu">
+              {/* `contain`, not `cover` — the whole photo has to be
+                  visible. Off-ratio images letterbox against the stage
+                  rather than losing their top and bottom to a crop. */}
               <ImagePlaceholder
-                base={`/hackathons/${h.id}`}
-                src={current.src}
+                url={current.url}
                 cap={current.cap}
                 alt={`${h.title} — ${current.cap}`}
                 fill
+                fit="contain"
                 showCaption={false}
                 label={current.cap}
               />
-              {current.cap && <span className="hkd-caption-mizu">{current.cap}</span>}
+
+              {many && (
+                <>
+                  <button
+                    type="button"
+                    className="hkd-nav-mizu is-prev"
+                    onClick={() => step(-1)}
+                    aria-label="Previous image"
+                  >
+                    <Chevron dir="left" />
+                  </button>
+                  <button
+                    type="button"
+                    className="hkd-nav-mizu is-next"
+                    onClick={() => step(1)}
+                    aria-label="Next image"
+                  >
+                    <Chevron dir="right" />
+                  </button>
+
+                  <span className="hkd-count-mizu" aria-hidden="true">
+                    {active + 1} / {media.length}
+                  </span>
+                </>
+              )}
+
             </div>
           )}
 
-          {media.length > 1 && (
+          {many && (
             <div className="hkd-carousel-mizu" role="group" aria-label="Gallery thumbnails">
               {media.map((m, i) => (
                 <button
-                  key={m.src}
+                  key={m.key}
                   type="button"
                   className={`hkd-thumb-mizu${i === active ? ' is-active' : ''}`}
                   onClick={() => setActive(i)}
@@ -106,8 +150,7 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
                   aria-current={i === active ? 'true' : undefined}
                 >
                   <ImagePlaceholder
-                    base={`/hackathons/${h.id}`}
-                    src={m.src}
+                    url={m.url}
                     cap=""
                     alt=""
                     ratio="16/9"
@@ -167,3 +210,11 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
     </dialog>
   )
 }
+
+const Chevron = ({ dir }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+       style={{ transform: dir === 'left' ? 'rotate(180deg)' : undefined }}>
+    <path d="M9 5l7 7-7 7" />
+  </svg>
+)

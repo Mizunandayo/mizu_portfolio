@@ -1,8 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
-import { bySlug, formatPeriod } from '../../data/projects.js'
-import { metaFor } from '../../seo.js'
-import { applyMeta } from '../Seo.jsx'
+import { formatPeriod } from '../../data/projects.js'
 import { Layers, Pill, ArrowIcon, GitHubIcon, PlayIcon, ExternalIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder, YouTubePlaceholder } from '../shared/placeholders.jsx'
 import TechIcon from '../shared/TechIcon.jsx'
@@ -11,15 +8,15 @@ import TechIcon from '../shared/TechIcon.jsx'
    Project dialog.
 
    Image → title → summary → links → tech stack →
-   gallery. Highlights, architecture and the stat bar
-   stay on the standalone /work/<slug> page, linked
-   from the footer.
+   gallery. This is the whole case study now: the
+   standalone /work/<slug> pages were removed, so there
+   is nothing further to link to.
 
-   Native <dialog> + showModal(): focus trapping, ESC,
-   top-layer stacking above the fixed nav, inert
-   background and focus restore to the triggering card
-   all come free. Body scroll lock, backdrop-click and
-   scroll containment are handled explicitly.
+   Local state, not a route — same as the hackathon
+   dialog. Native <dialog> + showModal() gives focus
+   trapping, ESC, top-layer stacking above the fixed
+   nav and focus restore to the card; body scroll lock,
+   backdrop-click and scroll containment are explicit.
    ══════════════════════════════════════════════════ */
 
 const LINK_ICON = {
@@ -28,25 +25,17 @@ const LINK_ICON = {
   demo:  <ExternalIcon />,
 }
 
-export default function ProjectDialog() {
-  const { slug } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
+export default function ProjectDialog({ project: p, onClose }) {
   const ref = useRef(null)
   const scrollRef = useRef(null)
 
-  const background = location.state?.background
-  const project = bySlug(slug)
-
-  const close = useCallback(() => navigate(-1), [navigate])
+  const close = useCallback(() => onClose(), [onClose])
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     if (!el.open) el.showModal()
 
-    /* ESC fires `cancel`; route it through history so the URL always
-       matches what is on screen. */
     const onCancel = (e) => { e.preventDefault(); close() }
     el.addEventListener('cancel', onCancel)
 
@@ -66,17 +55,10 @@ export default function ProjectDialog() {
     }
   }, [close])
 
-  useEffect(() => {
-    if (!project) return
-    applyMeta(metaFor(`/work/${slug}`))
-    return () => applyMeta(metaFor(background?.pathname || '/'))
-  }, [slug, project, background?.pathname])
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [p.slug])
 
-  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [slug])
+  if (!p) return null
 
-  if (!project) return null
-
-  const p = project
   const cover = p.media?.[0]
   /* The cover already leads the dialog — don't repeat it below. */
   const gallery = (p.media || []).slice(1)
@@ -97,7 +79,7 @@ export default function ProjectDialog() {
         </button>
 
         <div className="pdlg-scroll-mizu" ref={scrollRef}>
-          {/* 1 — Cover image */}
+          {/* 1 — Cover */}
           {cover && (
             <div className="pdlg-cover-mizu">
               {cover.yt ? (
@@ -171,10 +153,6 @@ export default function ProjectDialog() {
               <p className="micro-label font-bold uppercase text-zinc-300/90 pdlg-eyebrow-mizu">
                 Gallery
               </p>
-              {/* Uniform 16:9 regardless of each item's authored `ratio`.
-                  A mixed grid leaves rows ragged and captions on different
-                  baselines; YouTube facades are 16:9 already, so forcing the
-                  images to match makes the whole grid line up. */}
               <div className="pdlg-gallery-mizu">
                 {gallery.map((m) =>
                   m.yt ? (
@@ -186,13 +164,6 @@ export default function ProjectDialog() {
               </div>
             </section>
           )}
-
-          <div className="pdlg-foot-mizu">
-            <Link to={`/work/${p.slug}`} className="pdlg-full-mizu" onClick={close}>
-              Read the full case study
-              <ArrowIcon />
-            </Link>
-          </div>
         </div>
       </div>
     </dialog>
