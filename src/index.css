@@ -1,0 +1,615 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════
+   Mizu 水 — design system
+   Ported from mitsu-site/src/index.css. Tokens, type
+   scale, motion curve and component shells are kept
+   verbatim; -mizu classes are portfolio additions.
+   ══════════════════════════════════════════════════ */
+
+/* ── Reset / Base ──────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Poppins', system-ui, sans-serif;
+  background: #050505;
+  color: rgba(255,255,255,0.92);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Global grain overlay (fixed, never scrolls) ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.022;
+}
+
+/* ── Scroll reveal ─────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms cubic-bezier(0.16,1,0.3,1), transform 700ms cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-d1 { transition-delay: 80ms; }
+.reveal-d2 { transition-delay: 160ms; }
+.reveal-d3 { transition-delay: 240ms; }
+.reveal-d4 { transition-delay: 320ms; }
+.reveal-d5 { transition-delay: 400ms; }
+.reveal-d6 { transition-delay: 480ms; }
+
+/* ── Glass ─────────────────────────────────────── */
+.nav-glass {
+  background: rgba(5,5,5,0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.glass-panel {
+  background: rgba(38, 38, 38, 0.35);
+  border: 1px solid rgba(163, 163, 163, 0.22);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+}
+
+/* ── Type helpers ──────────────────────────────── */
+.small-copy   { font-size: 0.84rem; line-height: 1.55; }
+.micro-label  { font-size: 0.76rem; letter-spacing: 0.1em; }
+.prose-col    { max-width: 58ch; }
+.num-mono     { font-variant-numeric: tabular-nums; letter-spacing: -0.06em; line-height: 1; }
+
+.section-alt { background: #070707; }
+
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 99px; }
+
+/* ── Premium card — double-bezel shell ─────────── */
+.card-shell {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(163,163,163,0.22);
+  border-radius: 20px;
+  padding: 2px;
+}
+.card-core {
+  background: rgba(39,39,42,0.28);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.06);
+}
+
+/* ── Hero entrance ─────────────────────────────── */
+@keyframes heroUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-enter { animation: heroUp 1s cubic-bezier(0.16,1,0.3,1) both; }
+
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.badge-dot-anim { animation: pulseDot 2.2s ease-in-out infinite; }
+
+/* ── Hero data strip — Swiss-industrial spec header ──
+   No container, no radius, no blur. Structure comes
+   from the two hairline rules and mono tracking alone. */
+.hero-strip {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-strip-rule {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 212, 216, 0.34) 18%,
+    rgba(212, 212, 216, 0.34) 82%,
+    transparent 100%
+  );
+}
+
+.hero-strip-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 0 clamp(8px, 1.4vw, 16px);
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.hero-strip-primary {
+  font-size: clamp(0.54rem, 1.35vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: clamp(0.08em, 0.3vw, 0.18em);
+  color: rgba(244, 244, 245, 0.94);
+}
+
+.hero-strip-slash {
+  font-size: clamp(0.5rem, 1.2vw, 0.68rem);
+  letter-spacing: 0.06em;
+  color: rgba(161, 161, 170, 0.45);
+  user-select: none;
+}
+
+@media (max-width: 560px) {
+  .hero-strip { margin-bottom: 32px; gap: 9px; }
+}
+
+/* ── Ripple field 水 — hero domain glyph ────────── */
+@keyframes rippleBreath {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%      { opacity: 0.9;  transform: scale(1.03); }
+}
+.ripple-breath { animation: rippleBreath 6s ease-in-out infinite; transform-origin: center; }
+
+@keyframes rippleOut {
+  0%   { r: 6;  opacity: 0;    stroke-width: 1.6; }
+  12%  { opacity: 0.75; }
+  100% { r: 46; opacity: 0;    stroke-width: 0.4; }
+}
+.ripple-ring   { animation: rippleOut 5.6s cubic-bezier(0.16,1,0.3,1) infinite; }
+.ripple-ring.r2 { animation-delay: 1.85s; }
+.ripple-ring.r3 { animation-delay: 3.7s; }
+
+/* ══════════════════════════════════════════════════
+   -mizu additions
+   ══════════════════════════════════════════════════ */
+
+/* ── Work grid card ────────────────────────────── */
+.work-card-mizu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  transition: border-color 170ms ease, background 170ms ease;
+}
+
+.work-card-mizu:hover .work-card-core-mizu {
+  border-color: rgba(212, 212, 216, 0.38);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.work-card-core-mizu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  transition: border-color 170ms ease, background 170ms ease;
+}
+
+.work-card-body-mizu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 20px 22px 22px;
+}
+
+.work-card-ribbon-mizu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 5px 9px;
+  border-radius: 5px;
+  border: 1px solid rgba(212, 212, 216, 0.34);
+  background: rgba(5, 5, 5, 0.78);
+  backdrop-filter: blur(8px);
+  color: rgba(250, 250, 250, 0.96);
+  white-space: nowrap;
+}
+
+/* ── Stack / certification layers ──────────────── */
+.stack-layers-mizu {
+  border-top: 1px solid rgba(161, 161, 170, 0.24);
+  margin-top: 12px;
+}
+
+.stack-layer-mizu {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.18);
+}
+
+.sl-cat-mizu {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.84);
+  padding-top: 8px;
+}
+
+.sl-cat-note-mizu {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(161, 161, 170, 0.85);
+  line-height: 1.5;
+}
+
+.sl-cards-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.si-mizu {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(161, 161, 170, 0.28);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 180ms cubic-bezier(0.16,1,0.3,1), background 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.si-mizu:hover {
+  border-color: rgba(212, 212, 216, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.si-icon-mizu {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              filter 180ms cubic-bezier(0.16,1,0.3,1),
+              opacity 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Brand marks carry their own colour inline (set by TechIcon from the
+   generated data). Held slightly back at rest so 53 logos don't shout
+   over the type, then brought to full on row hover. */
+.si-icon-mizu.is-brand { opacity: 0.88; }
+.si-mizu:hover .si-icon-mizu.is-brand { opacity: 1; filter: saturate(1.12) brightness(1.06); }
+
+/* Category glyphs stay neutral — they represent a kind of thing, not a
+   brand. Stroked outlines read lighter than solid silhouettes, so they
+   sit at a higher alpha to match visual weight. */
+.si-icon-mizu.is-glyph { color: rgba(228, 228, 231, 0.8); }
+.si-mizu:hover .si-icon-mizu.is-glyph { color: rgba(250, 250, 250, 0.95); }
+
+.si-text-mizu { display: flex; flex-direction: column; line-height: 1.15; gap: 4px; }
+
+.si-role-mizu {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.si-name-mizu {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(250, 250, 250, 0.96);
+}
+
+.si-ver-mizu {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.88);
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+
+/* ── Highlight / architecture journey rows ─────── */
+.arch-wrap-mizu {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(163, 163, 163, 0.22);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.arch-jstep-mizu {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 0 20px;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid rgba(161, 161, 170, 0.24);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 170ms ease;
+}
+
+.arch-jstep-mizu:hover { border-color: rgba(212, 212, 216, 0.38); }
+
+.arch-jstep-num-mizu {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: rgba(228, 228, 231, 0.14);
+  padding-top: 2px;
+}
+
+.arch-jstep-headline-mizu {
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(250, 250, 250, 0.96);
+  margin-bottom: 8px;
+  line-height: 1.32;
+}
+
+.arch-jstep-desc-mizu {
+  font-size: 0.9rem;
+  line-height: 1.68;
+  color: rgba(212, 212, 216, 0.84);
+  margin-bottom: 10px;
+}
+
+.arch-jstep-tech-mizu {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.arch-jconn-mizu { display: flex; align-items: center; gap: 14px; padding: 4px 20px; }
+
+.arch-jconn-track-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.arch-jconn-vline-mizu { width: 1px; height: 14px; background: rgba(161, 161, 170, 0.28); }
+.arch-jconn-arr-mizu   { line-height: 0; color: rgba(161, 161, 170, 0.8); padding: 2px 0; }
+
+/* Semantic stage accents — the only colour in the system. */
+.an-cyan-mizu    { border-color: rgba(56, 189, 248, 0.35);  background: rgba(56, 189, 248, 0.07); }
+.an-emerald-mizu { border-color: rgba(74, 222, 128, 0.34);  background: rgba(74, 222, 128, 0.07); }
+.an-violet-mizu  { border-color: rgba(192, 132, 252, 0.34); background: rgba(192, 132, 252, 0.07); }
+.an-blue-mizu    { border-color: rgba(96, 165, 250, 0.34);  background: rgba(96, 165, 250, 0.07); }
+
+/* ── Certification badge cards ─────────────────────
+   Flat panel siblings of the Awards cards directly
+   above. Equal height, credential ID pinned to the
+   bottom edge so the grid keeps a baseline. */
+.cert-card-mizu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(163, 163, 163, 0.22);
+  border-radius: 12px;
+  padding: 22px 22px 18px;
+  transition: border-color 170ms ease, background 170ms ease;
+}
+
+.cert-card-mizu:hover {
+  border-color: rgba(212, 212, 216, 0.38);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Badge frame. Contained, not cropped — a clipped credential mark
+   looks broken. Reads as a deliberate frame once a real
+   transparent-PNG badge lands inside it. */
+.cert-badge-mizu {
+  width: 100%;
+  max-width: 124px;
+  margin: 0 auto 20px;
+}
+
+.cert-badge-mizu .ph-mizu {
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.02) 0px,
+      rgba(255,255,255,0.02) 1px,
+      transparent 1px,
+      transparent 9px
+    ),
+    rgba(255, 255, 255, 0.025);
+  padding: 10px;
+}
+
+.cert-issuer-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.95);
+  margin-bottom: 8px;
+}
+
+.cert-name-mizu {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  color: rgba(250, 250, 250, 0.96);
+  margin-bottom: 10px;
+}
+
+.cert-dates-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 7px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.73rem;
+  letter-spacing: 0.02em;
+  color: rgba(212, 212, 216, 0.86);
+  line-height: 1.6;
+}
+
+.cert-sep-mizu { color: rgba(161, 161, 170, 0.6); }
+
+.cert-id-mizu {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid rgba(161, 161, 170, 0.2);
+}
+
+.cert-id-label-mizu {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.85);
+  margin-bottom: 5px;
+}
+
+.cert-id-value-mizu {
+  display: block;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: rgba(212, 212, 216, 0.82);
+  word-break: break-all;
+}
+
+@media (max-width: 480px) {
+  .cert-badge-mizu { max-width: 104px; margin-bottom: 16px; }
+  .cert-card-mizu  { padding: 18px 18px 16px; }
+}
+
+/* ── Timeline (experience / education) ─────────── */
+.tl-mizu {
+  position: relative;
+  padding-left: 28px;
+  border-left: 1px solid rgba(161, 161, 170, 0.26);
+}
+
+.tl-item-mizu { position: relative; padding-bottom: 34px; }
+.tl-item-mizu:last-child { padding-bottom: 0; }
+
+.tl-dot-mizu {
+  position: absolute;
+  left: -34px;
+  top: 5px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 212, 216, 0.55);
+  background: #050505;
+}
+
+.tl-dot-mizu.now {
+  background: rgba(250, 250, 250, 0.95);
+  border-color: rgba(250, 250, 250, 0.95);
+}
+
+/* ── Media placeholder ─────────────────────────── */
+.ph-mizu {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(161, 161, 170, 0.26);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.022) 0px,
+      rgba(255,255,255,0.022) 1px,
+      transparent 1px,
+      transparent 9px
+    ),
+    rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-label-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+  text-align: center;
+  padding: 12px;
+  line-height: 1.7;
+}
+
+/* ── Focus + skip link ─────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(125, 211, 252, 0.9);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip-mizu {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  background: #fafafa;
+  color: #050505;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 12px 20px;
+  border-radius: 0 0 8px 0;
+}
+.skip-mizu:focus { left: 0; }
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 980px) {
+  .stack-layer-mizu { grid-template-columns: 1fr; gap: 12px; padding: 18px 0; }
+  .sl-cat-mizu { padding-top: 0; }
+}
+
+@media (max-width: 860px) {
+  .arch-wrap-mizu { padding: 20px; }
+}
+
+@media (max-width: 640px) {
+  .arch-jstep-mizu { grid-template-columns: 40px 1fr; gap: 0 14px; padding: 16px; }
+  .arch-jstep-num-mizu { font-size: 1.55rem; }
+  .arch-jstep-headline-mizu { font-size: 0.92rem; }
+  .arch-jstep-desc-mizu { font-size: 0.82rem; }
+  .arch-jstep-tech-mizu { font-size: 0.74rem; }
+  .si-name-mizu { font-size: 0.88rem; }
+}
+
+/* ── Reduced motion ────────────────────────────────
+   Mitsu shipped without this. Everything that moves
+   on its own is stopped; reveals resolve to visible. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .hero-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .ripple-breath, .ripple-ring, .badge-dot-anim { animation: none !important; }
+  .ripple-ring { opacity: 0.35 !important; }
+}
