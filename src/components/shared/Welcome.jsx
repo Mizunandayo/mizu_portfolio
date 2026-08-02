@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
+import { HERO_SOUND } from '../../events.js'
 import Ticket from './Ticket.jsx'
 
 /* ══════════════════════════════════════════════════
@@ -156,8 +157,12 @@ export default function Welcome({ show, onPickTrack }) {
     }
   }, [open])
 
+  /* Set synchronously by close() before the exit animation starts, so
+     finish() still knows which button was pressed 460ms later. */
+  const discardRef = useRef(false)
+
   const finish = useCallback(() => {
-    if (pick) onPickTrack?.(pick)
+    if (pick && !discardRef.current) onPickTrack?.(pick)
     setOpen(false)
     setClosing(false)
     try {
@@ -168,11 +173,29 @@ export default function Welcome({ show, onPickTrack }) {
   }, [pick, onPickTrack])
 
   /* Dip, then leave. The panel plays its exit before it is unmounted,
-     so the close is deferred by exactly the animation's length. */
-  const close = useCallback(() => {
+     so the close is deferred by exactly the animation's length.
+
+     `discard === true` rather than a plain truthy check: passing this
+     straight to onClick would hand it a click event, and every event
+     object is truthy — which would silently throw away a chosen track
+     on the Enter button too. */
+  const close = useCallback((discard = false) => {
     if (closing) return
+    discardRef.current = discard === true
     audioRef.current?.pause()
     stopPreview()
+
+    /* Turning down the playlist turns up the hero instead. Dispatched
+       here rather than in finish(): unmuting media needs user
+       activation, and this call stack has it — 460ms later, after the
+       exit animation, is a different stack with no gesture behind it.
+
+       An event rather than a prop because Hero sits inside the Home
+       route; wiring a callback down to it would thread through App,
+       Routes and Home for one boolean that fires once. */
+    if (discard === true) {
+      window.dispatchEvent(new CustomEvent(HERO_SOUND))
+    }
 
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (still) {
@@ -189,6 +212,27 @@ export default function Welcome({ show, onPickTrack }) {
     if (!el) return
     if (open && !el.open) el.showModal()
     if (!open && el.open) el.close()
+  }, [open])
+
+  /* Scroll lock. showModal() makes the page behind inert to clicks but
+     does not stop the wheel from scrolling it, so the page slides
+     around under the blurred backdrop. Same <html> class Boot uses.
+
+     Unlike Boot's, this cleanup does run: the effect keys on `open`,
+     so flipping it to false fires the teardown even though the
+     component itself is never unmounted. */
+  useEffect(() => {
+    if (!open) return
+    const root = document.documentElement
+    /* Hiding overflow takes the scrollbar with it and the page behind
+       jumps sideways by its width. Hand that width back as padding. */
+    const gutter = window.innerWidth - root.clientWidth
+    root.style.setProperty('--wc-gutter', `${gutter}px`)
+    root.classList.add('wc-open-mizu')
+    return () => {
+      root.classList.remove('wc-open-mizu')
+      root.style.removeProperty('--wc-gutter')
+    }
   }, [open])
 
   /* Try the voice the moment the panel opens. A rejected promise here
@@ -219,9 +263,13 @@ export default function Welcome({ show, onPickTrack }) {
       ref={ref}
       className={`wc-mizu${closing ? ' is-closing' : ''}`}
       aria-labelledby="wc-title"
+      /* Esc keeps a chosen track, and with nothing chosen behaves as
+         the discard button does — Enter is disabled in that state, so
+         Esc is the keyboard's only way out and should land somewhere
+         identical rather than somewhere subtly different. */
       onCancel={(e) => {
         e.preventDefault()
-        close()
+        close(!pick)
       }}
     >
       <div className="wc-body-mizu">
@@ -418,15 +466,27 @@ export default function Welcome({ show, onPickTrack }) {
             </div>
 
             <div className="wc-cta-mizu">
-              <button type="button" className="wc-enter-mizu" onClick={close}>
+              <button
+                type="button"
+                className="wc-enter-mizu"
+                onClick={() => close(false)}
+                /* Enter carries a track in; leaving without one is what
+                   the button beside it is for. The two paths stay
+                   distinct rather than Enter quietly meaning both. */
+                disabled={!pick}
+              >
                 <span className="wc-enter-kanji-mizu" aria-hidden="true">
                   入
                 </span>
                 Enter
               </button>
 
-              <button type="button" className="wc-skip-mizu" onClick={close}>
-                Skip
+              <button
+                type="button"
+                className="wc-skip-mizu"
+                onClick={() => close(true)}
+              >
+                Continue without chosen music
               </button>
             </div>
           </div>

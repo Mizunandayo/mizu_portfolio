@@ -63,6 +63,13 @@ body::after {
 
 html.booting-mizu { overflow: hidden; }
 
+/* Held open by the greeting. Separate class from the loader's so that
+   whichever clears first cannot unlock the page for the other. */
+html.wc-open-mizu {
+  overflow: hidden;
+  padding-right: var(--wc-gutter, 0px);
+}
+
 .boot-mizu {
   position: fixed;
   inset: 0;
@@ -3347,6 +3354,8 @@ html.booting-mizu { overflow: hidden; }
 }
 
 /* ── Personal plate ──────────────────────────────── */
+/* All three backdrops are stacked here and cross-faded. Only the one
+   carrying .is-on is visible; the rest sit underneath at zero. */
 .hero-gif-mizu {
   position: absolute;
   inset: 0;
@@ -3356,6 +3365,47 @@ html.booting-mizu { overflow: hidden; }
   object-fit: cover;
   object-position: center;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hero-gif-mizu.is-on { opacity: 1; }
+
+/* ── Rotation timer ──────────────────────────────
+   Along the very bottom edge of the hero, above the
+   scrim so the fill is not dimmed by it. */
+.hero-rail-mizu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  height: 3px;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hero-rail-fill-mizu {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(250, 250, 250, 0.88);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: hero-rail-mizu var(--dur, 6000ms) linear forwards;
+}
+
+/* The video's bar reports real playback instead of running a timer of
+   its own. herobg.mp4 is 47 MB with its index at the end, so it stalls
+   to buffer — a timed bar would march on while the picture sat still,
+   and would reach the end well before onEnded fired. */
+.hero-rail-fill-mizu.is-live {
+  animation: none;
+  transition: transform 260ms linear;
+}
+
+@keyframes hero-rail-mizu {
+  to { transform: scaleX(1); }
 }
 
 .hero-gif-scrim-mizu {
@@ -3477,6 +3527,7 @@ html.booting-mizu { overflow: hidden; }
 
 /* ── Recruiter: the centred column ───────────────── */
 .mode-recruiter .hero-gif-mizu,
+.mode-recruiter .hero-rail-mizu,
 .mode-recruiter .hero-gif-scrim-mizu { display: none; }
 
 .mode-recruiter .hero-fx-mizu { display: block; }
@@ -5690,7 +5741,17 @@ html.booting-mizu { overflow: hidden; }
               transform 180ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.wc-enter-mizu:hover { background: #fff; transform: translateY(-2px); }
+.wc-enter-mizu:hover:not(:disabled) {
+  background: #fff;
+  transform: translateY(-2px);
+}
+
+/* Dimmed, not hidden — it has to stay visible for the disabled state to
+   read as "pick one first" rather than as a missing button. */
+.wc-enter-mizu:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+}
 
 .wc-enter-kanji-mizu {
   font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
@@ -5698,12 +5759,14 @@ html.booting-mizu { overflow: hidden; }
   font-weight: 800;
 }
 
+/* No longer a dismissal but a real choice — "continue without music"
+   is a sentence, so it is set as one rather than as tracked-out mono
+   caps, which at this length read as shouting. */
 .wc-skip-mizu {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.64rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.82rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: -0.005em;
   color: rgba(161, 161, 170, 0.9);
   padding: 8px 2px;
   cursor: pointer;

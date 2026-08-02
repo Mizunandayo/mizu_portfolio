@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PROFILE } from "../../data/profile.js";
 import { StarField, PerspectiveGrid, Spotlight } from "../shared/Backdrop.jsx";
-import { Pill, GitHubIcon, ArrowIcon } from "../shared/primitives.jsx";
+import {
+  Pill,
+  GitHubIcon,
+  LinkedInIcon,
+  ArrowIcon,
+} from "../shared/primitives.jsx";
+import { HERO_SOUND } from "../../events.js";
 
 /* ══════════════════════════════════════════════════
    Hero — two presentations of one block.
@@ -17,8 +23,24 @@ import { Pill, GitHubIcon, ArrowIcon } from "../shared/primitives.jsx";
    the mode switch at all.
    ══════════════════════════════════════════════════ */
 
-/* Cycled by the switch at the top-left. Only the first carries sound;
-   the other two are silent by nature. */
+/* One pass of heropersonal.gif: 42 frames, 280 centiseconds of delay
+   summed from its Graphic Control Extensions.
+
+   Measured from the file because nothing in the DOM reports a GIF's
+   animation — no event, no property, not even a frame count. Re-measure
+   this if the file is ever re-exported. */
+const GIF_LOOP = 2800;
+
+/* The still holds for a flat six seconds. The GIF holds for exactly
+   three passes instead, expressed as the multiple rather than the
+   8400 it works out to, so the hand-over lands on a loop boundary
+   even if the file is re-exported at a different length. */
+const HOLD = 6000;
+const GIF_HOLD = GIF_LOOP * 3;
+
+/* The rotation, in order. Each backdrop hands over to the next: the
+   video when it ends, the other two after `ms`. Only the video carries
+   sound; the other two are silent by nature. */
 const LAYERS = [
   {
     id: "video",
@@ -27,23 +49,60 @@ const LAYERS = [
     src: "/profile/herobg.mp4",
     sound: true,
   },
-  { id: "gif", label: "GIF", kind: "image", src: "/profile/heropersonal.gif" },
   {
     id: "image",
     label: "Image",
     kind: "image",
-    src: "/profile/worksbackground.jpg",
+    src: "/profile/bgheroes.png",
+    ms: HOLD,
+  },
+  {
+    id: "gif",
+    label: "GIF",
+    kind: "image",
+    src: "/profile/heropersonal.gif",
+    ms: GIF_HOLD,
   },
 ];
+
+/* Swapped in to restart the GIF. Every layer stays mounted so the 47 MB
+   video is never re-fetched, but a hidden GIF keeps animating — by the
+   time its turn came round again it would be part-way through a loop.
+   Assigning a different src and then the original forces a fresh decode
+   from frame one, served from cache rather than the network. */
+const BLANK =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 export default function Hero() {
   const [bg, setBg] = useState(0);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [progress, setProgress] = useState(0);
   const videoRef = useRef(null);
-  const triedRef = useRef(false);
+  const gifRef = useRef(null);
+
+  /* Read once. An auto-rotating backdrop is exactly the kind of motion
+     this setting is asking to be spared, so the rotation stops and the
+     video loops in place instead. */
+  const [still] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 
   const layer = LAYERS[bg];
+  const isVideo = layer.kind === "video";
+
+  const next = useCallback(() => setBg((i) => (i + 1) % LAYERS.length), []);
+
+  /* Hand-over for the two timed backdrops. The video does not appear
+     here — it announces its own end through onEnded, which is accurate
+     where a timer would only be a guess at the file's length. */
+  useEffect(() => {
+    if (isVideo || still) return;
+    const t = window.setTimeout(next, layer.ms);
+    return () => clearTimeout(t);
+  }, [bg, isVideo, layer.ms, next, still]);
 
   /* Volume is set on the element rather than in the markup — React
      would otherwise reset it to the attribute on every render. Muting
@@ -54,27 +113,58 @@ export default function Hero() {
   }, [volume, bg]);
 
   /* Sound is on by default, but a browser refuses to autoplay audible
-     media until the page has been interacted with. So: try it audible,
-     and only if that is refused fall back to muted — the background
-     still plays either way, and the speaker button is then sitting
-     right there to turn it on. Guarded by a ref so the retry cannot
-     re-trigger this effect. */
-  useEffect(() => {
-    triedRef.current = false;
-  }, [bg]);
-
+     media until the page has been interacted with — so try it audible
+     and fall back to muted when refused. The backdrop still plays
+     either way, and the speaker button is right there to turn it on. */
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !layer.sound || triedRef.current) return;
-    triedRef.current = true;
-    v.volume = 1;
-    v.muted = false;
+    if (!v) return;
+
+    if (!isVideo) {
+      v.pause();
+      return;
+    }
+
+    /* Rewound on arrival: the element is never unmounted, so it is
+       still sitting on its last frame from the previous rotation. */
+    v.currentTime = 0;
     v.play().catch(() => {
       v.muted = true;
       setMuted(true);
       v.play().catch(() => {});
     });
-  }, [bg, layer.sound]);
+  }, [bg, isVideo]);
+
+  /* Back to frame one, for the reason given at BLANK. */
+  useEffect(() => {
+    const g = gifRef.current;
+    if (!g || layer.id !== "gif" || still) return;
+    const real = g.src;
+    g.src = BLANK;
+    g.src = real;
+  }, [bg, layer.id, still]);
+
+  /* The greeting fires this when the visitor declines the playlist.
+     It arrives inside that click's call stack, so the user activation
+     the first autoplay attempt lacked is present now and this play()
+     is allowed to be audible.
+
+     State is set as well as the element: if the backdrop is currently
+     the GIF or the still, there is no <video> to unmute yet — this
+     makes sure sound is on when they switch back to it. */
+  useEffect(() => {
+    const on = () => {
+      setVolume(1);
+      setMuted(false);
+      const v = videoRef.current;
+      if (!v) return;
+      v.volume = 1;
+      v.muted = false;
+      v.play().catch(() => {});
+    };
+    window.addEventListener(HERO_SOUND, on);
+    return () => window.removeEventListener(HERO_SOUND, on);
+  }, []);
 
   const scrollTo = (sel) => (e) => {
     e.preventDefault();
@@ -86,34 +176,63 @@ export default function Hero() {
   return (
     <section id="hero" className="hero-sec-mizu">
       {/* Personal plate. Decorative, and the generated backdrop below
-          is switched off with it so the two never stack. */}
-      {layer.kind === "video" ? (
-        <video
-          /* Keyed on src: without it React reuses the element and only
-             swaps the attribute, which leaves the previous frame on
-             screen until the new file has buffered. */
-          key={layer.src}
-          ref={videoRef}
-          className="hero-gif-mizu"
-          src={layer.src}
-          autoPlay
-          muted={!layer.sound || muted}
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          tabIndex={-1}
-        />
-      ) : (
-        <img
-          className="hero-gif-mizu"
-          src={layer.src}
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-        />
+          is switched off with it so the two never stack.
+
+          All three stay mounted and cross-fade on opacity. Rendering
+          only the active one would unmount the video on every rotation
+          and re-fetch 47 MB when its turn came round, and would leave
+          the outgoing backdrop on screen until the incoming file had
+          decoded — which reads as a stall, not a cut. */}
+      {LAYERS.map((l, i) =>
+        l.kind === "video" ? (
+          <video
+            key={l.id}
+            ref={videoRef}
+            className={`hero-gif-mizu${i === bg ? " is-on" : ""}`}
+            src={l.src}
+            muted={muted}
+            loop={still}
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            tabIndex={-1}
+            onEnded={still ? undefined : next}
+            onTimeUpdate={(e) => {
+              const v = e.currentTarget;
+              if (v.duration) setProgress(v.currentTime / v.duration);
+            }}
+          />
+        ) : (
+          <img
+            key={l.id}
+            ref={l.id === "gif" ? gifRef : undefined}
+            className={`hero-gif-mizu${i === bg ? " is-on" : ""}`}
+            src={l.src}
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+          />
+        )
       )}
       <span className="hero-gif-scrim-mizu" aria-hidden="true" />
+
+      {/* Timer along the very bottom edge. */}
+      {!still && (
+        <div className="hero-rail-mizu" aria-hidden="true">
+          <i
+            /* Remounted on every hand-over, which is what restarts the
+               fill animation — a CSS animation otherwise needs a
+               reflow hack to replay. */
+            key={bg}
+            className={`hero-rail-fill-mizu${isVideo ? " is-live" : ""}`}
+            style={
+              isVideo
+                ? { transform: `scaleX(${progress})` }
+                : { "--dur": `${layer.ms}ms` }
+            }
+          />
+        </div>
+      )}
 
       {/* ── Backdrop switch ── */}
       <div className="hero-bg-ctl-mizu">
@@ -226,6 +345,13 @@ export default function Hero() {
           <Pill href={PROFILE.contact.github} external>
             <GitHubIcon />
             GitHub
+          </Pill>
+
+          {/* Same source as the contact section and the footer — the URL
+              is declared once in PROFILE, so all three cannot drift. */}
+          <Pill href={PROFILE.contact.linkedin} external>
+            <LinkedInIcon />
+            LinkedIn
           </Pill>
         </div>
       </div>
