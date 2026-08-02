@@ -714,52 +714,153 @@ html.booting-mizu { overflow: hidden; }
    ══════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════
-   Work grid card
-
-   Tall panel: a preview inset at the top and cropped
-   by its frame, open dark space beneath it, then the
-   title block resting on the bottom edge. The preview
-   is scaled past its frame so it reads as a window
-   onto a larger screen, not a contained thumbnail.
+   Work — vertical poster spread under a torii
    ══════════════════════════════════════════════════ */
 
-.work-grid-mizu {
+.wk-page-mizu {
+  position: relative;
+  z-index: 10;
+  padding: 128px 0;
+  background: #050505;
+}
+
+.wk-inner-mizu {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── Masthead ──────────────────────────────────────
+   Label over a rule on each flank, title between. The
+   rules are separate elements rather than borders so
+   they can sit under the text and stop short of the
+   title instead of running the full column. */
+.wk-masthead-mizu {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: clamp(16px, 4vw, 54px);
+  margin-bottom: clamp(28px, 5vw, 56px);
+}
+
+.wk-mast-side-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.wk-mast-right-mizu { align-items: flex-end; text-align: right; }
+
+.wk-mast-label-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.wk-mast-rule-mizu {
+  width: 100%;
+  height: 2px;
+  background: rgba(250, 250, 250, 0.85);
+}
+
+.wk-mast-title-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  line-height: 1;
+  color: #fafafa;
+  white-space: nowrap;
+}
+
+.wk-mast-en-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+/* ── Torii ─────────────────────────────────────────
+   The gate stands over the whole spread: head in the
+   clear air above the plates, pillars dropping the
+   full height behind them. */
+.wk-shrine-mizu {
+  position: relative;
+  padding-top: clamp(78px, 11vw, 150px);
+}
+
+.wk-torii-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: rgba(250, 250, 250, 0.22);
+}
+
+.wk-torii-head-mizu {
+  display: block;
+  width: 100%;
+  height: clamp(96px, 13vw, 178px);
+}
+
+/* Continue the pillars from the foot of the head to the floor of the
+   spread. Two CSS rules rather than a taller SVG: stretching one
+   graphic over a grid this tall would flatten the beams into lines. */
+.wk-pillar-mizu {
+  position: absolute;
+  top: clamp(78px, 11vw, 150px);
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+
+/* ── Cards ─────────────────────────────────────── */
+.wk-grid-mizu {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  /* Column gap runs wider than the row gap: horizontally the images of
-     two cards sit side by side with nothing but this between them, so
-     it has to be wide enough to read as a break. */
-  /* Row gap runs deeper than the column gap now: the card's cast falls
+  /* Row gap runs deeper than the column gap: the card's cast falls
      ~100px below it, and without the room the next row clips it into a
      hard line instead of letting it fade out. */
   gap: 68px 56px;
 }
 
-/* Grid items default to min-width:auto, which floors the track at the
-   content's min-content width and lets a long unbroken word push the
-   track wider than its share. */
-.work-grid-mizu > * {
-  min-width: 0;
-}
+.wk-grid-mizu > * { min-width: 0; }
 
 /* No border and square corners — the card is a slab lifted off the
    band, and separation comes from the shadow underneath it plus the
    grid gap rather than from a drawn edge. */
-.work-card-mizu {
+.wk-card-mizu {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* The card is a <button>, and a button's width:auto is shrink-to-fit
-     rather than fill-the-container — it sizes to its content and
-     overflows its grid track, spilling over the next card. Pinning the
-     width makes it obey the track. */
+  /* A <button> sizes to its content rather than filling its container,
+     so without this the card ignores its grid track and spills over
+     the neighbouring one. */
   width: 100%;
   max-width: 100%;
   min-width: 0;
   height: 100%;
   min-height: 470px;
   text-align: left;
-  text-decoration: none;
   overflow: hidden;
   border: none;
   border-radius: 0;
@@ -781,7 +882,7 @@ html.booting-mizu { overflow: hidden; }
 
 /* Lifts further and the shadow spreads with it, as a real object's
    would when it rises off a surface. */
-.work-card-mizu:hover {
+.wk-card-mizu:hover {
   background: #111111;
   box-shadow:
     0 6px 14px rgba(0, 0, 0, 0.58),
@@ -790,24 +891,74 @@ html.booting-mizu { overflow: hidden; }
   transform: translateY(-6px);
 }
 
+.wk-ribbon-mizu {
+  position: absolute;
+  top: 26px;
+  right: 26px;
+  z-index: 2;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 5px 9px;
+  border-radius: 5px;
+  border: 1px solid rgba(212, 212, 216, 0.34);
+  background: rgba(5, 5, 5, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: rgba(250, 250, 250, 0.96);
+  white-space: nowrap;
+}
+
+/* ── Preview ───────────────────────────────────── */
+.wk-shot-mizu {
+  position: relative;
+  display: block;
+  height: 244px;
+  margin: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wk-shot-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  margin-left: 0;
+  align-items: flex-start;
+}
+
+/* Top-anchored cover: the shot reads as a window onto the upper part
+   of a taller screen rather than a letterboxed thumbnail. */
+.wk-shot-mizu img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.wk-shot-mizu figure { height: 100%; }
+
+/* Fades the crop into the card rather than ending on a hard edge.
+   Matches the card surface, not the page. */
+.wk-shot-mizu::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 64px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(13, 13, 13, 0.92));
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wk-card-mizu:hover .wk-shot-mizu::after {
+  background: linear-gradient(to bottom, transparent, rgba(17, 17, 17, 0.92));
+}
+
 /* ── Hover takeover ────────────────────────────── */
-/* On hover the card's content blurs back and the project's glyph falls
-   from the top edge to the centre.
-
-   The blur is backdrop-filter on a full-card veil rather than filter on
-   the content itself: filter blurs each element in isolation, so the
-   screenshot's edges would bleed to transparent and halo against the
-   card boundary. Sampling the backdrop keeps the blur uniform right to
-   the edges.
-
-   The tint is doing real work, not decoration — Bacsal, Eye2Wear and
-   HirNa have near-white covers, and a blurred white screenshot would
-   swallow a white glyph without it.
-
-   container-type: size makes the veil a size query container, which is
-   what lets the glyph travel a distance measured against the card
-   (cqh) rather than against its own font size. */
-.work-card-veil-mizu {
+.wk-veil-mizu {
   position: absolute;
   inset: 0;
   z-index: 4;
@@ -823,98 +974,44 @@ html.booting-mizu { overflow: hidden; }
   transition: opacity 300ms cubic-bezier(0.16,1,0.3,1);
 }
 
-/* Without backdrop-filter the tint alone has to keep the glyph legible
+/* Without a backdrop blur the tint alone has to keep the glyph legible
    over a bright cover, so it goes most of the way to opaque. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .work-card-veil-mizu { background: rgba(8, 8, 8, 0.92); }
+  .wk-veil-mizu { background: rgba(8, 8, 8, 0.92); }
 }
 
-.work-card-mizu:hover .work-card-veil-mizu {
-  opacity: 1;
-}
+.wk-card-mizu:hover .wk-veil-mizu { opacity: 1; }
 
-.work-card-glyph-mizu {
-  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
-  font-size: clamp(3.2rem, 4.6vw, 4.8rem);
+.wk-glyph-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
   font-weight: 800;
   letter-spacing: 0.06em;
   line-height: 1;
   color: rgba(250, 250, 250, 0.97);
-  /* Rests at 15% of the card's height; -50cqh would be the top edge. */
+  /* Rests at 15% of the card's height; -50cqh would be the top edge.
+     cqh, not %, so the drop is measured against the card rather than
+     the glyph's own font size. */
   transform: translateY(-35cqh);
   opacity: 0;
   transition: transform 520ms cubic-bezier(0.16,1,0.3,1),
               opacity 300ms cubic-bezier(0.16,1,0.3,1) 60ms;
 }
 
-.work-card-mizu:hover .work-card-glyph-mizu {
+.wk-card-mizu:hover .wk-glyph-mizu {
   transform: translateY(0);
   opacity: 1;
 }
 
-/* ── Preview ───────────────────────────────────── */
-/* Flush to the card's top and sides. The card's own overflow:hidden
-   clips it to the outer radius, so the top corners still round. */
-.work-card-shot-mizu {
-  position: relative;
-  height: 244px;
-  margin: 0;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* Kill the placeholder's own frame — the crop frame provides it.
-   The box matches the card exactly: an oversized box (this was 118%
-   wide, pulled -9% left) bleeds past both card edges, and two
-   neighbours then throw 9% each into the column gap and overlap. The
-   zoomed-in crop comes from object-fit below instead, which stays
-   inside the box. */
-.work-card-shot-mizu .ph-mizu {
-  border: none;
-  border-radius: 0;
-  aspect-ratio: auto;
-  width: 100%;
-  height: 100%;
-  margin-left: 0;
-  align-items: flex-start;
-}
-
-/* Top-anchored cover: the shot reads as a window onto the upper part
-   of a taller screen rather than a letterboxed thumbnail. */
-.work-card-shot-mizu img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
-  object-position: top center;
-}
-
-.work-card-shot-mizu figure { height: 100%; }
-
-/* Fades the crop into the card rather than ending on a hard edge.
-   Matches the card surface, not the page. */
-.work-card-shot-mizu::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 64px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, rgba(13, 13, 13, 0.92));
-  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
-}
-
-.work-card-mizu:hover .work-card-shot-mizu::after {
-  background: linear-gradient(to bottom, transparent, rgba(17, 17, 17, 0.92));
-}
-
 /* ── Title block ───────────────────────────────── */
-.work-card-body-mizu {
+.wk-body-mizu {
   display: flex;
   flex-direction: column;
   margin-top: auto;
   padding: 28px 26px 28px;
 }
 
-.work-card-meta-mizu {
+.wk-meta-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.69rem;
   font-weight: 600;
@@ -925,7 +1022,7 @@ html.booting-mizu { overflow: hidden; }
   margin-bottom: 12px;
 }
 
-.work-card-name-mizu {
+.wk-name-mizu {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -938,34 +1035,61 @@ html.booting-mizu { overflow: hidden; }
   margin-bottom: 8px;
 }
 
-.work-card-kanji-mizu {
+.wk-kanji-mizu {
   font-size: 1.05rem;
   font-weight: 700;
   color: rgba(113, 113, 122, 0.95);
 }
 
-.work-card-desc-mizu {
+.wk-desc-mizu {
   font-size: 0.93rem;
   line-height: 1.6;
   color: rgba(212, 212, 216, 0.8);
 }
 
-.work-card-ribbon-mizu {
-  position: absolute;
-  top: 26px;
-  right: 26px;
-  z-index: 2;
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 5px 9px;
-  border-radius: 5px;
-  border: 1px solid rgba(212, 212, 216, 0.34);
-  background: rgba(5, 5, 5, 0.78);
-  backdrop-filter: blur(8px);
-  color: rgba(250, 250, 250, 0.96);
-  white-space: nowrap;
+/* ── Display word ──────────────────────────────── */
+.wk-display-mizu {
+  margin: clamp(38px, 6vw, 76px) 0 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(3.4rem, 17vw, 12rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 0.82;
+  text-align: center;
+  color: #fafafa;
+}
+
+.wk-lede-mizu {
+  max-width: 52rem;
+  margin: 20px auto 0;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: rgba(212, 212, 216, 0.84);
+}
+
+@media (max-width: 980px) {
+  .wk-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px 40px; }
+}
+
+@media (max-width: 760px) {
+  .wk-page-mizu { padding: 96px 0; }
+  .wk-inner-mizu { padding: 0 20px; }
+
+  .wk-masthead-mizu {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 18px;
+  }
+  .wk-mast-side-mizu { width: 100%; align-items: center; text-align: center; }
+  .wk-mast-right-mizu { align-items: center; text-align: center; }
+  .wk-mast-label-mizu { white-space: normal; }
+}
+
+@media (max-width: 560px) {
+  .wk-grid-mizu { grid-template-columns: 1fr; gap: 48px; }
+  /* One column leaves no room between the pillars for a plate, so the
+     gate steps aside and only its head stays. */
+  .wk-pillar-mizu { display: none; }
 }
 
 /* ── Stack / certification layers ──────────────── */
@@ -1143,110 +1267,334 @@ html.booting-mizu { overflow: hidden; }
 .an-violet-mizu  { border-color: rgba(192, 132, 252, 0.34); background: rgba(192, 132, 252, 0.07); }
 .an-blue-mizu    { border-color: rgba(96, 165, 250, 0.34);  background: rgba(96, 165, 250, 0.07); }
 
-/* ── Certification badge cards ─────────────────────
-   Flat panel siblings of the hackathon cards directly
-   above. Equal height, credential ID pinned to the
-   bottom edge so the grid keeps a baseline. */
-.cert-card-mizu {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(163, 163, 163, 0.22);
-  border-radius: 12px;
-  padding: 22px 22px 18px;
-  transition: border-color 170ms ease, background 170ms ease;
+/* ══════════════════════════════════════════════════
+   Certifications — manga page
+
+   Ink is light on a dark sheet rather than black on
+   white: the reference page is printed dark, and a
+   white sheet dropped into this site would read as a
+   broken section rather than a deliberate one.
+   ══════════════════════════════════════════════════ */
+
+.mg-page-mizu {
+  position: relative;
+  z-index: 10;
+  padding: 128px 0;
+  background: #070707;
 }
 
-.cert-card-mizu:hover {
-  border-color: rgba(212, 212, 216, 0.38);
-  background: rgba(255, 255, 255, 0.05);
+.mg-sheet-mizu {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(26px, 4vw, 54px);
+  border: 2px solid rgba(250, 250, 250, 0.9);
+  /* Screentone. 4px dot pitch is the smallest that still reads as
+     halftone rather than as noise once the grain overlay lands on
+     top of it. */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
-/* Badge frame. Contained, not cropped — a clipped credential mark
-   looks broken. Reads as a deliberate frame once a real
-   transparent-PNG badge lands inside it. */
-.cert-badge-mizu {
-  width: 100%;
-  max-width: 124px;
-  margin: 0 auto 20px;
+/* Saw strip, matching the spiked block on the reference's title. */
+.mg-saw-mizu {
+  position: absolute;
+  top: -2px;
+  left: clamp(26px, 4vw, 54px);
+  width: clamp(90px, 16vw, 190px);
+  height: 13px;
+  background: rgba(250, 250, 250, 0.9);
+  -webkit-mask-image: conic-gradient(from -45deg at 50% 100%, #000 0 90deg, transparent 0);
+  mask-image: conic-gradient(from -45deg at 50% 100%, #000 0 90deg, transparent 0);
+  -webkit-mask-size: 15px 100%;
+  mask-size: 15px 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
 }
 
-.cert-badge-mizu .ph-mizu {
-  border-radius: 12px;
-  background:
-    repeating-linear-gradient(
-      135deg,
-      rgba(255,255,255,0.02) 0px,
-      rgba(255,255,255,0.02) 1px,
-      transparent 1px,
-      transparent 9px
-    ),
-    rgba(255, 255, 255, 0.025);
-  padding: 10px;
+/* ── Title block ───────────────────────────────── */
+.mg-head-mizu {
+  position: relative;
+  text-align: center;
+  padding: 16px 0 26px;
+  margin-bottom: 28px;
+  border-bottom: 2px solid rgba(250, 250, 250, 0.9);
 }
 
-.cert-issuer-mizu {
+/* Radial speed lines. Masked to a soft ellipse so they die out before
+   they reach the rule rather than ending on a hard edge. */
+.mg-burst-mizu {
+  position: absolute;
+  inset: -40% -10% 0;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 100%,
+    rgba(255, 255, 255, 0.085) 0deg 0.9deg,
+    transparent 0.9deg 4.2deg
+  );
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 100%, #000, transparent 72%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 100%, #000, transparent 72%);
+}
+
+.mg-kicker-mizu {
+  position: relative;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.95);
-  margin-bottom: 8px;
-}
-
-.cert-name-mizu {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.4;
-  color: rgba(250, 250, 250, 0.96);
+  color: rgba(212, 212, 216, 0.8);
   margin-bottom: 10px;
 }
 
-.cert-dates-mizu {
+.mg-title-mizu {
+  position: relative;
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(2.6rem, 9vw, 6.4rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+  color: #fafafa;
+  /* Hard offset shadow, the way a manga logo is trapped against the
+     art behind it. No blur — blur reads as glow, not print. */
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.9);
+}
+
+.mg-kana-mizu {
+  position: relative;
+  margin-top: 12px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: 0.5em;
+  /* letter-spacing trails after the last glyph; pull it back so the
+     run sits optically centred under the logo. */
+  text-indent: 0.5em;
+  color: rgba(244, 244, 245, 0.92);
+}
+
+.mg-lede-mizu {
+  max-width: 44rem;
+  margin: 0 auto 30px;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.84);
+}
+
+/* ── Talisman grid ─────────────────────────────────
+   Every ofuda identical. grid-auto-rows: 1fr levels
+   the rows against each other, and h-full on the item
+   pushes that height down into the talisman, so a
+   long credential name cannot make one taller than
+   its neighbours. */
+.mg-grid-mizu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 14px;
+}
+
+.mg-grid-mizu > * { min-width: 0; }
+
+/* The notched head of an ofuda. Held in a custom property because the
+   ink and the paper are two boxes that must carry exactly the same
+   silhouette — see the component for why a border cannot do this. */
+.mg-fuda-mizu {
+  --fuda: polygon(50% 0, 100% 7%, 100% 100%, 0 100%, 0 7%);
+
+  height: 100%;
+  padding: 2px;
+  clip-path: var(--fuda);
+  background: rgba(250, 250, 250, 0.88);
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.mg-fuda-mizu:hover { background: #fff; }
+
+.mg-fuda-body-mizu {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  clip-path: var(--fuda);
+  background: #0b0b0b;
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.mg-fuda-mizu:hover .mg-fuda-body-mizu { background: #101010; }
+
+/* ── Head ──────────────────────────────────────────
+   Sits under the point, where a real talisman carries
+   its shrine mark. Padding clears the notch so the
+   number never rides up into the taper. */
+.mg-fuda-head-mizu {
+  flex-shrink: 0;
+  padding: 26px 0 7px;
+  text-align: center;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.22);
+}
+
+.mg-fuda-no-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: rgba(212, 212, 216, 0.72);
+}
+
+/* ── Art ───────────────────────────────────────── */
+.mg-art-mizu {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 132px;
+  padding: 16px 30px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.22);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 5px 5px;
+}
+
+.mg-art-mizu .ph-mizu {
+  border: none;
+  border-radius: 0;
+  background: none;
+  max-width: 118px;
+  margin: 0 auto;
+}
+
+/* Vertical kanji down the left edge, the way an ofuda carries its
+   dedication. Upright orientation, not rotated — a rotated line reads
+   as turned Latin text rather than tategaki. */
+.mg-vstrip-mizu {
+  position: absolute;
+  left: 9px;
+  top: 12px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: rgba(212, 212, 216, 0.5);
+  pointer-events: none;
+}
+
+.mg-seal-mizu {
+  position: absolute;
+  right: 9px;
+  bottom: 10px;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: rgba(250, 250, 250, 0.82);
+  border: 1.5px solid rgba(250, 250, 250, 0.5);
+  /* Off-square on purpose: a hand-pressed seal never lands straight. */
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+/* ── Caption ───────────────────────────────────── */
+.mg-cap-mizu {
+  padding: 12px 13px 13px;
+}
+
+.mg-name-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: #fafafa;
+  margin-bottom: 6px;
+}
+
+
+.mg-meta-mizu {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 7px;
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.73rem;
-  letter-spacing: 0.02em;
-  color: rgba(212, 212, 216, 0.86);
-  line-height: 1.6;
-}
-
-.cert-sep-mizu { color: rgba(161, 161, 170, 0.6); }
-
-.cert-id-mizu {
-  margin-top: auto;
-  padding-top: 14px;
-  border-top: 1px solid rgba(161, 161, 170, 0.2);
-}
-
-.cert-id-label-mizu {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.85);
-  margin-bottom: 5px;
-}
-
-.cert-id-value-mizu {
-  display: block;
+  gap: 0 6px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.68rem;
+  line-height: 1.6;
+  color: rgba(212, 212, 216, 0.85);
+  margin-bottom: 8px;
+}
+
+.mg-dot-mizu { color: rgba(161, 161, 170, 0.55); }
+.mg-exp-mizu { color: rgba(161, 161, 170, 0.8); }
+
+.mg-id-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(250, 250, 250, 0.18);
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
   line-height: 1.5;
-  color: rgba(212, 212, 216, 0.82);
+  color: rgba(212, 212, 216, 0.7);
   word-break: break-all;
 }
 
-@media (max-width: 480px) {
-  .cert-badge-mizu { max-width: 104px; margin-bottom: 16px; }
-  .cert-card-mizu  { padding: 18px 18px 16px; }
+.mg-id-label-mizu {
+  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+/* ── Credits ───────────────────────────────────── */
+.mg-credits-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 2px solid rgba(250, 250, 250, 0.9);
+}
+
+.mg-credit-line-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+  color: rgba(212, 212, 216, 0.82);
+}
+
+.mg-credit-line-mizu:last-of-type { margin-bottom: 18px; }
+
+/* Folio, the way a volume count sits at the foot of the page. */
+.mg-folio-mizu {
+  margin-top: 20px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: rgba(161, 161, 170, 0.75);
+}
+
+@media (max-width: 1100px) {
+  .mg-grid-mizu { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .mg-page-mizu { padding: 96px 0; }
+  .mg-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .mg-sheet-mizu { padding: 20px 16px; }
+  .mg-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mg-title-mizu { text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.9); }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1260,58 +1608,132 @@ html.booting-mizu { overflow: hidden; }
    stay in true chronological order.
    ══════════════════════════════════════════════════ */
 
-/* ── Year band ─────────────────────────────────── */
-.hack-year-mizu {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 46px 0 26px;
+/* ── Poster grid ───────────────────────────────────
+   Two year columns flanking a vertical spine. The
+   spine sizes to its own content (auto) so the columns
+   split whatever is left evenly and stay equal even
+   though one holds more entries than the other. */
+.hack-poster-mizu {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  /* stretch, not start — the spine has to inherit the full row height
+     or the sticky inside it has nothing to travel along. */
+  align-items: stretch;
+  gap: 0;
 }
 
-.hack-year-num-mizu {
+.hack-col-mizu { min-width: 0; }
+
+.hack-col-a-mizu { padding-right: clamp(18px, 3vw, 44px); }
+.hack-col-b-mizu { padding-left: clamp(18px, 3vw, 44px); }
+
+/* ── Spine ─────────────────────────────────────────
+   Tategaki: vertical-rl sets the flow, upright keeps
+   each kana on its feet rather than rotating the line
+   on its side, which is what makes it read as Japanese
+   typesetting instead of turned Latin text. */
+.hack-spine-mizu {
+  display: flex;
+  justify-content: center;
+  padding: 0 clamp(14px, 2.2vw, 30px);
+  border-left: 1px solid rgba(161, 161, 170, 0.18);
+  border-right: 1px solid rgba(161, 161, 170, 0.18);
+}
+
+.hack-spine-stick-mizu {
+  position: sticky;
+  top: clamp(110px, 20vh, 190px);
+  height: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 0;
+}
+
+.hack-spine-word-mizu {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.9rem, 3.6vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  color: rgba(250, 250, 250, 0.96);
+  /* letter-spacing adds a trailing gap below the last kana in vertical
+     flow; pulling it back re-centres the run against the rule. */
+  margin-bottom: -0.2em;
+}
+
+.hack-spine-rule-mizu {
+  width: 1px;
+  height: clamp(40px, 8vh, 90px);
+  background: linear-gradient(
+    to bottom,
+    rgba(161, 161, 170, 0.55),
+    rgba(161, 161, 170, 0.06)
+  );
+}
+
+.hack-spine-num-mizu {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: rgba(161, 161, 170, 0.75);
+}
+
+/* ── Column head ───────────────────────────────── */
+.hack-colhead-mizu {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 0 16px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.24);
+}
+
+/* Not the ghosted year of the old band list — here it is the column's
+   own title and has to hold its side of the composition. */
+.hack-colyear-mizu {
   font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
-  font-size: clamp(2.1rem, 5vw, 3rem);
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
   font-weight: 900;
   letter-spacing: -0.045em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: rgba(228, 228, 231, 0.15);
-  flex-shrink: 0;
+  color: rgba(250, 250, 250, 0.92);
 }
 
-.hack-year-rule-mizu {
-  flex: 1;
-  height: 1px;
-  background: rgba(161, 161, 170, 0.2);
-}
-
-.hack-year-count-mizu {
+.hack-colcount-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(161, 161, 170, 0.9);
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Entry ─────────────────────────────────────────
-   Image column left, text right. The featured variant
-   widens the image and boxes the whole entry. */
+   Stacked: lead image over text. The old side-by-side
+   grid needed ~700px, which a poster column no longer
+   has. The featured variant boxes the whole entry. */
 .hack-entry-mizu {
   position: relative;
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 0 32px;
-  padding: 30px 0;
+  grid-template-columns: 1fr;
+  gap: 16px 0;
+  padding: 26px 0;
   border-top: 1px solid rgba(161, 161, 170, 0.16);
 }
 
 .hack-entry-mizu.is-featured {
-  grid-template-columns: 400px 1fr;
-  gap: 0 38px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.03);
-  padding: 30px 32px;
+  padding: 22px;
   margin: 20px 0;
 }
 
@@ -1482,18 +1904,54 @@ html.booting-mizu { overflow: hidden; }
 .hack-cross-mizu.bl { bottom: -7px; left: -7px; }
 .hack-cross-mizu.br { bottom: -7px; right: -7px; }
 
+/* Three columns need roughly 900px before the entries get squeezed.
+   Below that the poster folds into one run with the spine turned back
+   to horizontal and pulled to the top, where it reads as a section
+   mark rather than a divider between columns that no longer exist. */
 @media (max-width: 900px) {
-  .hack-entry-mizu,
-  .hack-entry-mizu.is-featured {
-    grid-template-columns: 1fr;
-    gap: 22px 0;
+  .hack-poster-mizu { grid-template-columns: 1fr; }
+
+  .hack-col-a-mizu,
+  .hack-col-b-mizu { padding: 0; }
+
+  .hack-spine-mizu {
+    order: -1;
+    border: none;
+    border-bottom: 1px solid rgba(161, 161, 170, 0.18);
+    padding: 0 0 26px;
+    margin-bottom: 8px;
   }
-  .hack-entry-mizu.is-featured { padding: 24px 22px; }
+
+  .hack-spine-stick-mizu {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hack-spine-word-mizu,
+  .hack-spine-num-mizu {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    margin-bottom: 0;
+  }
+
+  .hack-spine-rule-mizu {
+    width: clamp(30px, 12vw, 80px);
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      rgba(161, 161, 170, 0.55),
+      rgba(161, 161, 170, 0.06)
+    );
+  }
+
   .hack-lead-mizu { max-width: 520px; }
 }
 
 @media (max-width: 640px) {
-  .hack-year-mizu { padding: 34px 0 20px; }
+  .hack-colhead-mizu { padding-bottom: 12px; }
+  .hack-entry-mizu.is-featured { padding: 18px; }
 }
 
 /* ══════════════════════════════════════════════════
@@ -1880,6 +2338,42 @@ html.booting-mizu { overflow: hidden; }
    internally, because centred body copy is hard to
    read at any measure.
    ══════════════════════════════════════════════════ */
+
+/* ── Backdrop ──────────────────────────────────────
+   The plate is a hard diagonal split, black one side
+   and near-white the other. Dropped in raw it would
+   swallow the copy on the bright half, so it sits
+   under two scrims: a flat wash holding the whole
+   frame down, and a radial pool darkening the centre
+   where the portrait and prose actually land. What
+   survives is the 死 / 生活 split and the blossoms
+   read as atmosphere rather than as a photo. */
+.about-bg-mizu {
+  background-color: #070707;
+}
+
+.about-bg-mizu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 68% 56% at 50% 46%, rgba(7, 7, 7, 0.88), rgba(7, 7, 7, 0) 72%),
+    linear-gradient(rgba(7, 7, 7, 0.8), rgba(7, 7, 7, 0.8)),
+    url('/profile/aboutbg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Content has to be lifted over the backdrop explicitly — the pseudo
+   element is a later sibling in paint order and would otherwise sit on
+   top of the portrait. */
+.about-inner-mizu {
+  position: relative;
+  z-index: 1;
+}
 
 /* ── Portrait ──────────────────────────────────────
    Bare. The image is a transparent cut-out, so it
@@ -2514,20 +3008,6 @@ html.booting-mizu { overflow: hidden; }
 .skip-mizu:focus { left: 0; }
 
 /* ── Responsive ────────────────────────────────── */
-@media (max-width: 1180px) {
-  .work-grid-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px 40px; }
-}
-
-@media (max-width: 720px) {
-  /* One column — every gap is a row gap here, so it carries the cast. */
-  .work-grid-mizu { grid-template-columns: 1fr; gap: 48px; }
-  .work-card-mizu { min-height: 400px; }
-  .work-card-shot-mizu { height: 210px; }
-  .work-card-body-mizu { padding: 24px 22px; }
-  .work-card-name-mizu { font-size: 1.28rem; }
-  .work-card-ribbon-mizu { top: 20px; right: 20px; }
-}
-
 @media (max-width: 980px) {
   .stack-layer-mizu { grid-template-columns: 1fr; gap: 12px; padding: 18px 0; }
   .sl-cat-mizu { padding-top: 0; }

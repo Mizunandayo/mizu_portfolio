@@ -14,12 +14,16 @@ import { Reveal } from '../../hooks/useScrollReveal.jsx'
 
    Built without SectionShell so the portrait can sit
    between the eyebrow and the claim.
+
+   The band carries a photographic backdrop, scrimmed
+   hard in the middle where the copy sits — see
+   .about-bg-mizu for why it has to be that heavy.
    ══════════════════════════════════════════════════ */
 
 export default function About() {
   return (
-    <section id="about" className="relative py-32 z-10" style={{ background: '#070707' }}>
-      <div className="max-w-[1100px] mx-auto px-8">
+    <section id="about" className="relative py-32 z-10 about-bg-mizu">
+      <div className="about-inner-mizu max-w-[1100px] mx-auto px-8">
         <Reveal>
           <p className="micro-label font-bold uppercase text-zinc-300/90 text-center mb-11">
             About

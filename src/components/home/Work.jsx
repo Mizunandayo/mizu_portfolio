@@ -1,32 +1,113 @@
 import { useState } from 'react'
 import { ORDERED, formatPeriod } from '../../data/projects.js'
-import { SectionShell, ArrowIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
 import { Reveal } from '../../hooks/useScrollReveal.jsx'
 import ProjectDialog from '../deck/ProjectDialog.jsx'
+
+/* ══════════════════════════════════════════════════
+   Work — vertical poster spread.
+
+   Built without SectionShell, the same way About and
+   Certifications are: the rule/title/rule masthead and
+   the display word under the plates are a composition
+   of their own and would fight the shell's stack.
+
+   A torii stands over the whole spread — head in clear
+   air above the plates, pillars running the full drop
+   behind them. The head is an SVG and the pillars are
+   CSS rules rather than one stretched graphic, so the
+   beams keep their proportions no matter how tall the
+   grid gets while the pillars still reach the floor.
+   ══════════════════════════════════════════════════ */
+
+/* Pillar x-positions, shared by the SVG and the CSS rules that
+   continue them. Changing one without the other breaks the join. */
+const PILLAR = { left: '22%', right: '78%' }
 
 export default function Work() {
   const [open, setOpen] = useState(null)
 
   return (
-    <SectionShell
-      id="work"
-      wide
-      center
-      eyebrow="Selected work"
-      claim="Nine shipped projects: agentic AI, computer vision, and full-stack platforms."
-      copy="Five of them built solo in eight days or less for international hackathons. Open any card for the summary, gallery, stack and links."
-    >
-      <div className="work-grid-mizu">
-        {ORDERED.map((p, i) => (
-          <Reveal key={p.slug} delay={Math.min((i % 3) + 1, 6)} className="h-full">
-            <Card project={p} onOpen={() => setOpen(p)} />
-          </Reveal>
-        ))}
+    <section id="work" className="wk-page-mizu">
+      <div className="wk-inner-mizu">
+        <header className="wk-masthead-mizu">
+          <div className="wk-mast-side-mizu">
+            <span className="wk-mast-label-mizu">Selected work</span>
+            <span className="wk-mast-rule-mizu" aria-hidden="true" />
+          </div>
+
+          <h2 className="wk-mast-title-mizu">
+            作品
+            <span className="wk-mast-en-mizu">Selected Work</span>
+          </h2>
+
+          <div className="wk-mast-side-mizu wk-mast-right-mizu">
+            <span className="wk-mast-label-mizu">
+              {ORDERED.length} shipped · five solo in ≤8 days
+            </span>
+            <span className="wk-mast-rule-mizu" aria-hidden="true" />
+          </div>
+        </header>
+
+        <div className="wk-shrine-mizu">
+          <Torii />
+
+          <div className="wk-grid-mizu">
+            {ORDERED.map((p, i) => (
+              <Reveal key={p.slug} delay={Math.min((i % 3) + 1, 6)} className="h-full">
+                <Card project={p} onOpen={() => setOpen(p)} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        {/* Decorative twin of the masthead heading — the accessible
+            title is already up top, and repeating it here would just
+            announce the section twice. */}
+        <p className="wk-display-mizu" aria-hidden="true">WORKS</p>
+
+        <p className="wk-lede-mizu">
+          Agentic AI, computer vision and full-stack platforms. Five were built
+          solo in eight days or less for international hackathons. Open any plate
+          for the summary, gallery, stack and links.
+        </p>
       </div>
 
       {open && <ProjectDialog project={open} onClose={() => setOpen(null)} />}
-    </SectionShell>
+    </section>
+  )
+}
+
+/* Stroke-only torii. vector-effect keeps every beam the same weight in
+   screen pixels — without it the strokes scale with the viewBox and the
+   gate thickens to a slab on a wide viewport. */
+function Torii() {
+  return (
+    <div className="wk-torii-mizu" aria-hidden="true">
+      <svg className="wk-torii-head-mizu" viewBox="0 0 100 34" preserveAspectRatio="none">
+        <g
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        >
+          {/* kasagi — the top beam, overhanging and swept up at the ends */}
+          <path d="M1 8.4 Q 50 1.6 99 8.4" strokeWidth="4" vectorEffect="non-scaling-stroke" />
+          {/* shimaki — the second beam sitting under it */}
+          <path d="M6 13.6 Q 50 8.9 94 13.6" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+          {/* nuki — the tie beam through the pillars */}
+          <path d="M12 25 H 88" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+          {/* gakuzuka — the short strut between them */}
+          <path d="M50 14 V 25" strokeWidth="1.8" vectorEffect="non-scaling-stroke" />
+          {/* hashira — pillar heads, continued below in CSS */}
+          <path d="M22 12 V 34" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+          <path d="M78 12 V 34" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+        </g>
+      </svg>
+
+      <span className="wk-pillar-mizu" style={{ left: PILLAR.left }} />
+      <span className="wk-pillar-mizu" style={{ left: PILLAR.right }} />
+    </div>
   )
 }
 
@@ -36,20 +117,19 @@ function Card({ project: p, onOpen }) {
       type="button"
       onClick={onOpen}
       aria-label={`${p.name} — ${p.tagline}. Opens project details.`}
-      className="work-card-mizu"
+      className="wk-card-mizu"
     >
-      {p.award && <span className="work-card-ribbon-mizu">{p.award}</span>}
+      {p.award && <span className="wk-ribbon-mizu">{p.award}</span>}
 
-      {/* Hover takeover. Decorative only — the glyph is already in the
-          title below, so it stays out of the accessibility tree. */}
-      <span className="work-card-veil-mizu" aria-hidden="true">
-        <span className="work-card-glyph-mizu">{p.kanji}</span>
+      {/* Hover takeover: the content blurs back and the project's glyph
+          falls from the top edge to the centre. */}
+      <span className="wk-veil-mizu" aria-hidden="true">
+        <span className="wk-glyph-mizu">{p.kanji}</span>
       </span>
 
-      {/* Preview is flush to the card's top and sides; the image is
-          scaled past the frame so it reads as a window onto a larger
-          screen rather than a contained thumbnail. */}
-      <div className="work-card-shot-mizu">
+      {/* Preview is flush to the card's top and sides; the crop comes
+          from object-fit so it stays inside the box. */}
+      <span className="wk-shot-mizu">
         <ImagePlaceholder
           slug={p.slug}
           src={p.media[0].src}
@@ -59,20 +139,20 @@ function Card({ project: p, onOpen }) {
           showCaption={false}
           label={p.name}
         />
-      </div>
+      </span>
 
-      <div className="work-card-body-mizu">
-        <div className="work-card-meta-mizu">
+      <span className="wk-body-mizu">
+        <span className="wk-meta-mizu">
           {p.event} · {formatPeriod(p.period)}
-        </div>
+        </span>
 
-        <h3 className="work-card-name-mizu">
+        <span className="wk-name-mizu">
           {p.name}
-          <span className="work-card-kanji-mizu">{p.kanji}</span>
-        </h3>
+          <span className="wk-kanji-mizu">{p.kanji}</span>
+        </span>
 
-        <p className="work-card-desc-mizu">{p.tagline}</p>
-      </div>
+        <span className="wk-desc-mizu">{p.tagline}</span>
+      </span>
     </button>
   )
 }

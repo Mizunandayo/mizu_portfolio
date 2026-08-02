@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  HACKATHON_YEARS, HACKATHON_RECORD, PODIUM_COUNT, monthOf,
+  HACKATHON_YEARS, HACKATHON_RECORD, HACKATHON_COUNT, PODIUM_COUNT, monthOf,
 } from '../../data/hackathons.js'
 import { mediaFor } from '../../data/hackathonMedia.js'
 import { bySlug, liveUrl } from '../../data/projects.js'
@@ -10,11 +10,13 @@ import { Reveal } from '../../hooks/useScrollReveal.jsx'
 import HackathonDialog from './HackathonDialog.jsx'
 
 /* ══════════════════════════════════════════════════
-   Hackathons - editorial archive.
+   Hackathons - vertical poster archive.
 
-   Newest first, banded by year. Podium finishes are
-   the featured entries: wider lead image, larger
-   headline, framed with crosshair register marks.
+   Laid out as a Japanese poster: a tategaki spine
+   running down the centre with a year column either
+   side, oldest on the left. Podium finishes are the
+   featured entries: framed, with crosshair register
+   marks.
 
    Each entry opens a dialog carrying the full gallery
    and links. The whole entry is the hit target via an
@@ -22,27 +24,29 @@ import HackathonDialog from './HackathonDialog.jsx'
    so it still works as a direct outbound link.
    ══════════════════════════════════════════════════ */
 
+/* Oldest first, then alternating sides — so today that reads 2025 on
+   the left and 2026 on the right, and a future year lands on the
+   opposite side rather than breaking the composition. */
+function columns() {
+  const chrono = [...HACKATHON_YEARS].sort((a, b) => Number(a.year) - Number(b.year))
+  return [
+    chrono.filter((_, i) => i % 2 === 0),
+    chrono.filter((_, i) => i % 2 === 1),
+  ]
+}
+
 export default function Hackathons() {
   const [open, setOpen] = useState(null)
+  const [left, right] = columns()
 
-  return (
-    <SectionShell
-      id="hackathons"
-      alt
-      eyebrow="Hackathons"
-      /* Deliberately not a number: the copy line below already carries
-         the counts, so a numeric headline would say the same thing
-         twice. This carries the attitude. */
-      claim="We keep on building!"
-      copy={`Placed at the first attempt, and ${PODIUM_COUNT} podium finishes since - with ${HACKATHON_RECORD.peakMonth} entered inside a single month at the peak.`}
-    >
-      {HACKATHON_YEARS.map((band) => (
-        <section key={band.year} className="hack-band-mizu" aria-label={band.year}>
+  const column = (bands, side) => (
+    <div className={`hack-col-mizu hack-col-${side}-mizu`}>
+      {bands.map((band) => (
+        <section key={band.year} aria-label={String(band.year)}>
           <Reveal>
-            <div className="hack-year-mizu">
-              <span className="hack-year-num-mizu">{band.year}</span>
-              <span className="hack-year-rule-mizu" aria-hidden="true" />
-              <span className="hack-year-count-mizu">
+            <div className="hack-colhead-mizu">
+              <span className="hack-colyear-mizu">{band.year}</span>
+              <span className="hack-colcount-mizu">
                 {band.items.length} {band.items.length === 1 ? 'entry' : 'entries'}
               </span>
             </div>
@@ -55,6 +59,37 @@ export default function Hackathons() {
           ))}
         </section>
       ))}
+    </div>
+  )
+
+  return (
+    <SectionShell
+      id="hackathons"
+      alt
+      wide
+      eyebrow="Hackathons"
+      /* Deliberately not a number: the copy line below already carries
+         the counts, so a numeric headline would say the same thing
+         twice. This carries the attitude. */
+      claim="We keep on building!"
+      copy={`Placed at the first attempt, and ${PODIUM_COUNT} podium finishes since - with ${HACKATHON_RECORD.peakMonth} entered inside a single month at the peak.`}
+    >
+      <div className="hack-poster-mizu">
+        {column(left, 'a')}
+
+        {/* Decorative: the section is already announced by its heading,
+            and a screen reader reading "ハッカソン" mid-run would only
+            repeat it in a language it is not set to. */}
+        <div className="hack-spine-mizu" aria-hidden="true">
+          <div className="hack-spine-stick-mizu">
+            <span className="hack-spine-word-mizu">ハッカソン</span>
+            <span className="hack-spine-rule-mizu" />
+            <span className="hack-spine-num-mizu">{HACKATHON_COUNT}</span>
+          </div>
+        </div>
+
+        {column(right, 'b')}
+      </div>
 
       {open && <HackathonDialog hackathon={open} onClose={() => setOpen(null)} />}
     </SectionShell>
