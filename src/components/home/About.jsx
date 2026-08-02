@@ -25,9 +25,10 @@ export default function About() {
     <section id="about" className="relative py-32 z-10 about-bg-mizu">
       <div className="about-inner-mizu max-w-[1100px] mx-auto px-8">
         <Reveal>
-          <p className="micro-label font-bold uppercase text-zinc-300/90 text-center mb-11">
-            About
-          </p>
+          <header className="ab-head-mizu">
+            <p className="ab-kicker-mizu">About</p>
+            <p className="ab-kana-mizu" aria-hidden="true">自己紹介</p>
+          </header>
         </Reveal>
 
         {/* ── Portrait ── */}
@@ -60,16 +61,22 @@ export default function About() {
           ))}
         </div>
 
-        {/* ── Skills ── */}
+        {/* ── Skills ──
+            Set as a shinamono-gaki — the itemised list on a shop's
+            board — with each line numbered in kanji rather than
+            digits. */}
         <Reveal delay={4}>
           <div className="about-skills-mizu">
-            <span className="about-skills-label-mizu">Top skills</span>
+            <span className="about-skills-label-mizu">
+              Top skills
+              <span className="ab-skills-kana-mizu" aria-hidden="true">品書</span>
+            </span>
 
             <ul className="about-skills-list-mizu">
               {PROFILE.topSkills.map((s, i) => (
                 <li key={s}>
-                  <span className="about-skill-num-mizu">
-                    {String(i + 1).padStart(2, '0')}
+                  <span className="about-skill-num-mizu" aria-hidden="true">
+                    {'一二三四五六七八九十'[i] ?? i + 1}
                   </span>
                   {s}
                 </li>

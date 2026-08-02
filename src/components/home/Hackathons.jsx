@@ -128,7 +128,7 @@ export default function Hackathons() {
           {/* Deliberately not a number: the line below already carries
               the counts, so a numeric headline would say the same thing
               twice. This carries the attitude. */}
-          <h2 className="hk-claim-mizu">We keep on building!</h2>
+          <h2 className="hk-claim-mizu">Relentless execution!</h2>
 
           <p className="hk-copy-mizu">
             Placed at the first attempt, and {PODIUM_COUNT} podium finishes

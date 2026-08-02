@@ -4826,3 +4826,165 @@ html.booting-mizu { overflow: hidden; }
   width: 100%;
   height: auto;
 }
+
+/* ══════════════════════════════════════════════════
+   About — Japanese typography
+
+   Everything except the portrait. The cut-out sits on
+   the band untouched; only the type around it changes.
+   ══════════════════════════════════════════════════ */
+
+.ab-head-mizu {
+  text-align: center;
+  margin-bottom: clamp(30px, 4vw, 46px);
+}
+
+.ab-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.85);
+  margin-bottom: 16px;
+}
+
+.ab-kana-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.5rem, 3.6vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  line-height: 1;
+  color: rgba(244, 244, 245, 0.55);
+}
+
+/* Claim in mincho, and larger — it is the sentence the rest of the
+   page is evidence for, so it should carry like a section title
+   rather than sit at body-adjacent weight. */
+.about-claim-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.7rem, 4.6vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.16;
+  max-width: 22ch;
+}
+
+/* Hairline above the prose, the way a run of body text sits under a
+   rule on a printed page. */
+.about-body-mizu {
+  position: relative;
+  padding-top: clamp(26px, 3.4vw, 40px);
+}
+
+.about-body-mizu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(80px, 14vw, 170px);
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(212, 212, 216, 0.5),
+    transparent
+  );
+}
+
+/* ── Skills as a shinamono-gaki ─────────────────── */
+.about-skills-label-mizu {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ab-skills-kana-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: none;
+  color: rgba(244, 244, 245, 0.5);
+}
+
+/* Kanji numerals are wider and heavier than the digits they replace,
+   so the column they sit in has to widen with them. */
+.about-skill-num-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: rgba(250, 250, 250, 0.62);
+  min-width: 1.4em;
+}
+
+/* ── Recruiter: back to the plain stack ─────────── */
+.mode-recruiter .ab-kana-mizu,
+.mode-recruiter .ab-skills-kana-mizu { display: none; }
+
+.mode-recruiter .ab-head-mizu { margin-bottom: 2.75rem; }
+
+.mode-recruiter .ab-kicker-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.1em;
+  text-indent: 0;
+  margin-bottom: 0;
+}
+
+.mode-recruiter .about-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3.6vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.038em;
+  line-height: 1.12;
+  max-width: 24ch;
+}
+
+.mode-recruiter .about-body-mizu { padding-top: 0; }
+.mode-recruiter .about-body-mizu::before { display: none; }
+
+/* ── Recruiter: no closing plate ─────────────────
+   Same call as the section breaks and the contact
+   video — recruiter mode carries no ambient imagery,
+   and a 1400px closing artwork is a long scroll past
+   the last thing a hiring manager needs. */
+.mode-recruiter .end-plate-mizu { display: none; }
+
+/* ── Recruiter: compact hackathon entries ────────
+   Back to the original side-by-side grid. The poster
+   layout stacks the lead image above the text because
+   a column is too narrow to sit them side by side —
+   but in one full-width column that same stack gives
+   every one of the nine entries a ~700px image, and
+   the section becomes an unreasonable scroll. */
+.mode-recruiter .hack-entry-mizu {
+  grid-template-columns: 300px 1fr;
+  gap: 0 32px;
+  padding: 30px 0;
+}
+
+.mode-recruiter .hack-entry-mizu.is-featured {
+  grid-template-columns: 400px 1fr;
+  gap: 0 38px;
+  padding: 30px 32px;
+}
+
+/* Below this there is no room for two columns, so it folds back to the
+   stack — which is what the original layout did at the same width. */
+@media (max-width: 900px) {
+  .mode-recruiter .hack-entry-mizu,
+  .mode-recruiter .hack-entry-mizu.is-featured {
+    grid-template-columns: 1fr;
+    gap: 22px 0;
+  }
+
+  .mode-recruiter .hack-entry-mizu.is-featured { padding: 24px 22px; }
+  .mode-recruiter .hack-lead-mizu { max-width: 520px; }
+}

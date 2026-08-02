@@ -21,8 +21,11 @@ export const PROFILE = {
     'production-ready software through modern web technologies, intelligent systems and ' +
     'thoughtful system design.',
 
-  /* The About section's claim. */
-  claim: 'Discipline is to build it and ship it.',
+  /* The About section's claim. Stated as a rule rather than a virtue —
+     "discipline is to build it" describes a quality; this makes a
+     claim the rest of the page then has to back up, and every project
+     below is evidence for it. */
+  claim: 'Every build brings mastery',
 
   about: [
     'Software Engineer building AI-powered applications and scalable software systems. I enjoy ' +
