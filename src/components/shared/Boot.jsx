@@ -21,7 +21,7 @@ const MARK_OUT = 2850
 const FULL = 3450
 const REDUCED = 260
 
-export default function Boot() {
+export default function Boot({ onDone }) {
   const [scanning, setScanning] = useState(true)
   const [gone, setGone] = useState(false)
 
@@ -51,6 +51,7 @@ export default function Boot() {
     const end = setTimeout(() => {
       unlock()
       setGone(true)
+      onDone?.()
     }, skip ? REDUCED : FULL)
 
     return () => {
