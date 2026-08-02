@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
 import { HERO_SOUND } from '../../events.js'
-import Ticket from './Ticket.jsx'
+import Ticket, { ticketStamp } from './Ticket.jsx'
 
 /* ══════════════════════════════════════════════════
    Welcome — 入場券, the guide's greeting as a ticket.
@@ -327,8 +327,12 @@ export default function Welcome({ show, onPickTrack }) {
             <span className="wc-stub-kana-mizu" aria-hidden="true">
               ようこそ
             </span>
+            {/* Safe to read the clock during render: this panel returns
+                null until an effect opens it, so it never renders on the
+                server and the prerendered HTML cannot bake in a stale
+                build date for hydration to disagree with. */}
             <span className="wc-stub-serial-mizu" aria-hidden="true">
-              MZ-2026-09
+              {ticketStamp()}
             </span>
 
             {needsTap && hasVoice && (

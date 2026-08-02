@@ -78,6 +78,14 @@ function stamped(d) {
   return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`
 }
 
+/* The code down the stub: MZ plus the day it was issued. Exported
+   because the greeting prints the same stub, and two hardcoded strings
+   would eventually say different things. */
+export function ticketStamp(d = new Date()) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `MZ-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 /* Greedy wrap. Canvas has no text layout of its own — measureText is
    the only tool, so the lines are built by hand.
 
@@ -141,6 +149,11 @@ function containRect(iw, ih, box) {
 
 /* ── The ticket itself, at 0,0 in logical units ───── */
 function paintTicket(c, { art, name, serial, mode, message }) {
+  /* One instant for both places the date appears. Reading the clock
+     twice would let a ticket issued at midnight print one day on the
+     stub and the next in the body. */
+  const issued = new Date()
+
   c.fillStyle = '#0b0b0c'
   c.fillRect(0, 0, W, H)
 
@@ -179,7 +192,7 @@ function paintTicket(c, { art, name, serial, mode, message }) {
   c.letterSpacing = '0.2em'
   c.fillStyle = 'rgba(250,250,250,0.66)'
   c.textAlign = 'right'
-  c.fillText('MZ-2026-09', STUB - 22, H - 26)
+  c.fillText(ticketStamp(issued), STUB - 22, H - 26)
   c.letterSpacing = '0px'
 
   c.strokeStyle = 'rgba(250,250,250,0.42)'
@@ -272,7 +285,7 @@ function paintTicket(c, { art, name, serial, mode, message }) {
       .forEach((line, i) => c.fillText(line, x, MSG_TOP + i * lh))
   } else {
     const rows = [
-      ['発行日 / ISSUED', stamped(new Date())],
+      ['発行日 / ISSUED', stamped(issued)],
       ['案内 / GUIDE', `${PROFILE.kanji}  ${PROFILE.name.toUpperCase()}`],
       ['席 / SEAT', 'GENERAL ADMISSION — ALL NINE PROJECTS'],
     ]
