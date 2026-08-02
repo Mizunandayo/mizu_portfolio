@@ -1,8 +1,8 @@
 # Mizu 水 — Portfolio Blueprint
 
 **Owner:** Francis Daniel Genese
-**Status:** Built — phases 0–6 complete. Build passes, 10 routes prerendered.
-**Date:** 2026-08-01
+**Status:** Built and shipping. Build passes, 2 routes prerendered, dual presentation modes.
+**Date:** 2026-08-02
 
 ---
 
@@ -10,11 +10,15 @@
 
 A personal engineering portfolio for Francis Daniel Genese, built in the visual language of
 [mitsu-site](../mitsu/mitsu-site/) — the Swiss-industrial dark deck used for the OpenAI Build Week
-submission — but scaled from one project to nine.
+submission — but scaled from one project to nine, and then given a second, Japanese-typographic
+presentation layered on top of it.
 
 **Name:** `Mizu` (水, water). It is the house mark for a family of projects that all flow from it —
 **Mi**tsu, **Mi**nari, **Mi**saki, **Mi**rai, **Mi**wa — and matches the existing GitHub handle
 `Mizunandayo`.
+
+**Target:** software engineering roles. Not AI research roles — the AI work is evidence of range,
+not the pitch.
 
 ---
 
@@ -22,23 +26,26 @@ submission — but scaled from one project to nine.
 
 | # | Decision | Choice | Why |
 |---|---|---|---|
-| 1 | Structure | Home scroll; work cards open a **project dialog**, backed by prerendered routes | Clicking a card never leaves the page. The same URL still resolves to a full standalone case study for deep links and crawlers |
-| 2 | Stack | Vite 5 + React 18 + Tailwind 3 + react-router-dom, prerendered | Mitsu's CSS transfers 1:1; prerender buys real SEO and link previews without a framework change |
-| 3 | Media | Placeholder-first | Ships today, sharpens as assets land; identical to Mitsu's approach |
+| 1 | Structure | One page. Projects and hackathons open as **dialogs** | No standalone case-study routes. A card click never leaves the page |
+| 2 | Presentation | **Two modes** — Personal and Recruiter — over one DOM | §4. The Japanese layer is expressive; a hiring manager gets the plain version |
+| 3 | Stack | Vite 5 + React 18 + Tailwind 3 + react-router-dom, prerendered | Mitsu's CSS transfers 1:1; prerender buys real SEO without a framework change |
+| 4 | Media | Placeholder-first | Ships today, sharpens as assets land |
 
-**Explicitly not doing:** Next.js (Tailwind v4 token migration cost for no gain here), Astro (new
-framework), a CMS, dark/light toggle (the design is committed to dark), blog, analytics dashboard.
+**Explicitly not doing:** Next.js, Astro, a CMS, a light theme, blog, analytics dashboard, a
+JS animation library (Framer Motion / GSAP / three.js all declined — see §3.9).
 
-**No résumé PDF.** The portfolio *is* the résumé — there is no "Download CV" button anywhere. This
-raises the bar on §6.3 Certifications and §6.4 Contact: they have to carry everything a recruiter
-would otherwise open a PDF to find (credential IDs, dates, education, availability).
+**No résumé PDF.** The portfolio *is* the résumé — no "Download CV" button anywhere. This raises the
+bar on Certifications and Contact: they carry everything a recruiter would otherwise open a PDF to
+find (credential IDs, dates, education, availability).
+
+**Case-study pages were removed.** `pages/Project.jsx`, `deck/DeckHero.jsx` and `deck/blocks.jsx` are
+gone; prerender dropped from 10 routes to 2. Consequence to be aware of: the `highlights` and
+`architecture` fields in `projects.js` are **no longer rendered anywhere**, and there are no
+shareable per-project URLs.
 
 ---
 
-## 3. Design system — inherited from Mitsu
-
-Everything in this section is lifted verbatim from `mitsu-site/src/index.css` and
-`tailwind.config.js`. It is a working, coherent system; the portfolio does not redesign it.
+## 3. Design system
 
 ### 3.1 Canvas & texture
 
@@ -48,6 +55,7 @@ section-alt     #070707        alternating bands
 grain           fixed SVG fractalNoise, baseFrequency 0.9, numOctaves 4
                 opacity 0.022, z-index 9999, pointer-events none, never scrolls
 scrollbar       4px, rgba(255,255,255,0.14), transparent track
+scrollbar-gutter: stable on <html>   ← see §4.3
 ```
 
 ### 3.2 Type
@@ -56,21 +64,17 @@ scrollbar       4px, rgba(255,255,255,0.14), transparent track
 |---|---|---|
 | Body / UI | Poppins | 400 500 600 700 800 |
 | Display wordmark | Outfit | 700 800 900 |
+| **Japanese + display serif** | **Shippori Mincho** | **500 800** |
 | Labels, specs, data strips | SF Mono → Cascadia Code → JetBrains Mono → ui-monospace | 600 |
 
 Scale is fluid throughout — `clamp()` on every display size, never fixed px for headlines.
 
-```
-hero wordmark    clamp(4rem, 11vw, 8.4rem)   weight 900, tracking -0.035em, line-height 0.9
-section claim    clamp(1.35rem, 3.2vw, 2.25rem)  weight 900, tracking -0.035em
-feature name     clamp(1.55rem, 2.6vw, 2.1rem)   weight 800, tracking -0.04em
-body             0.9rem / 1.7
-small-copy       0.84rem / 1.55
-micro-label      0.76rem, letter-spacing 0.1em, uppercase, weight 600
-big number       clamp(2rem, 4.2vw, 3rem)    weight 900, tracking -0.05em, tabular-nums
-```
+**Shippori Mincho** carries the entire Japanese layer: every kanji and kana, plus the oversized Latin
+display words (`WORKS`, section claims in personal mode). Google serves CJK families in unicode-range
+chunks, so only the blocks containing glyphs actually used are downloaded — the full face is never
+fetched.
 
-### 3.3 Color
+### 3.3 Colour
 
 Near-monochrome. White and zinc at varying alpha carry the entire interface.
 
@@ -79,764 +83,526 @@ text primary     rgba(250,250,250,0.96)
 text body        rgba(212,212,216,0.84)
 text muted       rgba(161,161,170,0.85)
 surface          rgba(255,255,255,0.03)
-surface raised   rgba(39,39,42,0.28)
 border hairline  rgba(163,163,163,0.22)
 border hover     rgba(212,212,216,0.38)
 ```
 
-**Accent discipline — the rule that makes the design work.** Color is never decorative. It appears
-only to encode meaning in architecture diagrams and pipeline states:
+**Accent discipline.** Colour is never decorative. Three carve-outs, all deliberate:
 
-| Token | Value | Means |
+| Where | What | Why |
 |---|---|---|
-| cyan | `56,189,248` | perceive / input stage |
-| emerald | `74,222,128` | fast / local / deterministic path |
-| violet | `192,132,252` | LLM / reasoning stage |
-| blue | `96,165,250` | connector, data transport |
+| Architecture diagrams | cyan / emerald / violet / blue stage accents | Encodes pipeline meaning |
+| Technology icons | Real brand hex (§3.6) | A grey Python is harder to scan, not cleaner |
+| Boot glitch (retired), hover glitch (retired) | magenta / cyan chromatic split | Both removed at request; noted so the rule isn't re-litigated |
 
-Nine projects is exactly the situation where a portfolio starts assigning each project a brand colour
-and turns into a fruit salad. **Projects do not get colours.** They get typography and a kanji glyph.
-
-**One carve-out: technology icons** (§3.6) render in their real brand colours. Brand marks are
-recognised by their colour — a grey Python or a grey React is harder to scan, not cleaner. The rule
-survives because the two never share a surface: stage accents appear only inside architecture
-diagrams on deck pages, brand colours only inside `.si-mizu` chips in a stack list. Nothing else on
-the site is coloured.
+**Projects do not get colours.** They get typography and a kanji glyph.
 
 ### 3.4 Motion
 
 ```
-easing          cubic-bezier(0.16, 1, 0.3, 1)     — the only easing curve in the system
+easing          cubic-bezier(0.16, 1, 0.3, 1)     — the house curve
 reveal          opacity 0→1, translateY(24px)→0, 700ms
 stagger         reveal-d1..d6 = 80ms increments
-hero entrance   translateY(28px), 1000ms, per-element animationDelay 0.05s → 0.62s
 ```
 
-Driven by `useScrollReveal()` + the `<Reveal>` wrapper — `IntersectionObserver`, `unobserve` after
-first fire, `rootMargin: '0px 0px -40px 0px'`. No animation library.
+**Two deliberate departures from the house curve**, both for the same reason: the curve covers most
+of its distance in the first third, which reads as *settling*. Anything representing work in progress
+must be `linear` or it reads as stalling.
 
-### 3.5 Components
+- Boot scan beam + its reveal clip — `1.9s linear`
+- Boot backdrop fade — `620ms linear`
 
-| Class | Spec |
-|---|---|
-| `.nav-glass` | `rgba(5,5,5,0.72)` + `blur(20px) saturate(150%)` |
-| `.glass-panel` | `rgba(38,38,38,0.35)`, 1px `rgba(163,163,163,0.22)`, `blur(16px) saturate(130%)` |
-| `.card-shell` / `.card-core` | Double bezel — outer r20 + 2px pad, inner r18 + `inset 0 1px 1px rgba(255,255,255,0.06)` |
-| Flat panel | `rgba(255,255,255,0.03)` + 1px `rgba(163,163,163,0.22)` + r12 + 26–28px pad |
-| `.prose-col` | `max-width: 58ch` |
+`<Reveal>` is `IntersectionObserver`, `unobserve` after first fire. No animation library.
+
+### 3.5 Japanese layer techniques
+
+The patterns that recur across the personal-mode sections. Worth knowing before touching any of them.
+
+**Tategaki (vertical writing)** — `writing-mode: vertical-rl` **plus** `text-orientation: upright`.
+Without the second, the line is merely rotated on its side and reads as turned Latin text rather than
+Japanese typesetting.
+
+**Silhouettes that carry a border** — `clip-path` cuts away the very corners a `border` is meant to
+draw. Any shaped panel is therefore **two nested boxes sharing one clip**: outer is the ink with 1–2px
+padding, inner is the surface. Used by the ofuda talismans (§6.7) and the floating dock (§5.2).
+
+**Outlined type** — `color: transparent` + `-webkit-text-stroke`, always with an `@supports` fallback
+to a faint solid fill. Without the fallback an unsupported browser renders *nothing*, not a degraded
+version.
+
+**Distance measured against a container** — `container-type: size` on the parent, then `cqh` units.
+A percentage translate resolves against the element's own box, which for a glyph means its font size,
+not the card. Used by the work-card hover glyph (`translateY(-35cqh)`).
 
 ### 3.6 Technology icons
 
 Brand marks are generated from `simple-icons` (a **devDependency**) into
-[src/data/icons.js](src/data/icons.js) by [scripts/gen-icons.mjs](scripts/gen-icons.mjs). Nothing
-from the package reaches the runtime bundle — only the path strings actually rendered.
+[src/data/icons.js](src/data/icons.js) by [scripts/gen-icons.mjs](scripts/gen-icons.mjs). Nothing from
+the package reaches the runtime bundle — only the path strings actually rendered.
 
 ```
-npm run icons                  # home Stack section + all nine project stacks
-npm run icons -- --stack-only  # home section only, if the bundle needs trimming
+npm run icons                  # all stack categories
 node scripts/find-slug.mjs redis postgres   # look up a slug before mapping it
 ```
 
-**Both icon surfaces are covered by default.** The home Stack section and the per-project stack
-inside the project dialog (§7.1) each render `TechIcon`. Generating for the home section alone —
-which is what `--stack-only` does — leaves every project-only name (Firebase Hosting, Axios, npm,
-Nodemon…) falling through to a category glyph in the dialog.
+Icons carry their real brand colour, corrected against `#050505`:
 
-**Icons carry their real brand colour** — see the carve-out in §3.3. Used raw, though, many would be
-invisible here, so the generator corrects each one against the `#050505` canvas:
+| Case | Treatment |
+|---|---|
+| Contrast ≥ 3.6:1 already | Brand hex untouched |
+| Dark but saturated | Hue + saturation held, **lightness raised** until it clears 3.6:1 |
+| Achromatic (black / white / grey) | Rendered `#E4E4E7` — no hue to preserve |
 
-| Case | Treatment | Count |
+Names with no mark in `simple-icons` fall back to a **stroked category glyph** in neutral zinc — it
+denotes a kind of thing, not a brand, and inventing a colour would imply one that doesn't exist.
+
+Adding a technology: add to `stack.js`, map in `NAME_TO_SLUG`, run `npm run icons`. An unmapped name
+is reported by the generator rather than silently rendering blank.
+
+### 3.7 Code conventions
+
+- **Data-driven sections.** `const ITEMS = [...]`, then map. No hand-repeated JSX.
+- **Namespaced CSS.** `-mizu` suffix on every custom class. Per-section prefixes: `wk-` work,
+  `hk-`/`hack-` hackathons, `mg-` certifications, `tn-` stack, `kj-` experience, `pnav-` dock,
+  `brk-` section breaks, `boot-` loader.
+- **Classes, not inline styles, for anything a mode overrides.** See §3.8 — this is load-bearing.
+- **JSX, not TSX.**
+
+### 3.8 The inline-style trap
+
+**An inline `style={{}}` cannot be overridden by a class.** Four sections had to be rebuilt off
+`SectionShell` because the shell writes its heading type inline, making a mincho headline impossible
+through it: **Work, Certifications, Hackathons, Stack, Experience** now compose their own headers.
+`SectionShell` survives but is no longer used by any section.
+
+Tailwind utilities for layout are fine. Inline styles are fine for values nothing needs to re-set
+(per-element `animationDelay`, one-off aspect ratios).
+
+### 3.9 Dependencies declined
+
+The runtime dependency list is **react, react-dom, react-router-dom**. Three requested components were
+rebuilt rather than installed:
+
+| Wanted | Would have cost | Built instead |
 |---|---|---|
-| Contrast ≥ 3.6:1 already | Brand hex untouched | 37 |
-| Dark but saturated | Hue + saturation held, **lightness raised** until it clears 3.6:1 | 5 |
-| Achromatic (black / white / grey) | Rendered `#E4E4E7` — no hue to preserve | 11 |
-
-The lightened five are `css #663399 → #8A4FC4`, `Cloudinary #3448C5 → #5162D1`,
-`ESLint #4B32C3 → #6B55D3`, `OpenCV #5C3EE8 → #6B50EA`, `Prisma #2D3748 → #586C8D`. The achromatic
-eleven — Next.js, Vercel, Express, shadcn/ui, Socket.IO, MCP, JWT, GitHub, Radix UI, Railway, React
-Three Fiber — are all black or near-black and would have vanished entirely; light zinc is the same
-convention GitHub uses for its own mark on dark backgrounds.
-
-Brand marks sit at `opacity: 0.88` at rest so 53 logos don't shout over the type, going to full with
-a slight saturate/brightness lift on row hover. The generator prints every adjustment it makes, so
-the corrections are auditable rather than silent.
-
-**No empty slots.** `simple-icons` has no mark for OpenAI, Valibot, Langfuse, tree-sitter or React
-Flow, nor for non-products like CSP/HSTS and Server-Sent Events. Those fall back to a **stroked
-category glyph** picked from the item's stack category — code, model, layers, server, database,
-vision, shield, terminal, globe, key, chart, node. Glyphs stay **neutral zinc**: they denote a kind
-of thing, not a brand, and inventing a colour would imply one that doesn't exist. They sit at `0.8`
-alpha rather than `0.62` because an outline reads lighter than a solid silhouette at equal alpha.
-
-Adding a technology: add it to `stack.js`, map it in `NAME_TO_SLUG`, run `npm run icons`. An
-unmapped name is reported by the generator rather than silently rendering blank.
-
-**Coverage:** 111 brand marks. 80% of per-project stack entries resolve to a real logo; the rest are
-either genuinely absent from simple-icons (OpenAI, Valibot, tree-sitter, Recharts, ApexCharts,
-React Flow, Jotai, MuJoCo, Langfuse) or not products at all (CORS, WebSocket, Server-Sent Events,
-LocalStorage, Smart Contracts, APIs).
-
-**Cost:** ~49 KB gzipped for 111 marks — see the budget note in §11.
-
-### 3.7 Section rhythm
-
-Every section is the same shape. This repetition is the design.
-
-```
-<section id="…" className="relative py-32" style={{ background:'#050505' | '#070707' }}>
-  <div className="max-w-[1100px] mx-auto px-8">
-     micro-label eyebrow          ← uppercase mono, 0.1em tracking
-     big claim                    ← clamp display, weight 900
-     supporting copy              ← small-copy, max 58ch
-     ─── hairline rule ───
-     content grid                 ← .map() over a const array
-  </div>
-</section>
-```
-
-### 3.8 Code conventions to preserve
-
-- **Data-driven sections.** Each component opens with `const ITEMS = [...]`, then maps. No JSX
-  hand-repeated per item.
-- **Namespaced CSS.** Mitsu suffixes custom classes `-mitsu`. This portfolio uses `-mizu` for
-  shared/global pieces and `-<slug>` for anything specific to one case study.
-- **Tailwind for layout, inline `style={{}}` for precision.** Mitsu mixes both deliberately —
-  utilities for grid/flex/spacing, inline objects for anything animated, clamped, or alpha-tuned.
-  Keep the split; don't "clean it up" into one or the other.
-- **JSX, not TSX.** Matches Mitsu. No TypeScript.
+| Aceternity `CanvasRevealEffect` | three.js + @react-three/fiber + motion ≈ 220 KB gz | 2D canvas dot matrix, **1 KB** |
+| Framer Motion (`AnimatePresence`) | ~50 KB gz | CSS transitions |
+| Voice narration engine | — | Built, then removed at request |
 
 ---
 
-## 4. What changes for a portfolio
+## 4. The two modes
 
-Mitsu is a pitch deck for a product. A portfolio is a different argument, so five things adapt:
+One set of content, two presentations. **This is the central architectural decision of the site.**
 
-1. **Subject.** The hero is a person, not a product. Wordmark is the name; 水 is the house glyph.
-2. **Repetition at scale.** Mitsu's sections are each bespoke. Nine case studies cannot be — they
-   need a shared deck template driven by one data file, or the site becomes unmaintainable.
-3. **Routing.** New. Mitsu is a single scroll with anchor nav.
-4. **Density gradient.** Home must skim in 90 seconds; decks go deep. Mitsu had no such split.
-5. **No commercial sections.** Market / Revenue / Roadmap are pitch furniture and get dropped.
+### 4.1 How it works
+
+A single class on `<html>`:
+
+```
+personal   (no class)        ← the base. Japanese layer, loader, ambient media
+recruiter  .mode-recruiter   ← overrides only
+```
+
+Recruiter mode is **overrides, never a second DOM**. Both modes render byte-identical markup — same 9
+work cards, 9 hackathons, 11 certs, 120 stack items, same headings. Nothing can drift between them,
+and there is no second tree to keep in sync. Verified: the override block injects no `content:` text
+anywhere.
+
+### 4.2 No flash of the wrong mode
+
+The page prerenders in personal mode, so a recruiter-mode visitor would otherwise watch the full
+Japanese layout paint and then collapse on hydration. An inline script in `<head>` — **before the
+stylesheet** — reads `localStorage` and applies the class pre-paint. `useMode` then *adopts* what is
+already on `<html>` rather than overwriting it. Both storage calls are wrapped for private browsing.
+
+Where two components genuinely differ (the two navs), **both mount and CSS picks one**. A React swap
+would flash the wrong one on every load.
+
+### 4.3 What recruiter mode drops
+
+| Section | Personal | Recruiter |
+|---|---|---|
+| Boot | 3.45s scan sequence | **skipped entirely** |
+| Nav | Floating kanji dock | Notch navbar |
+| Hero | `heropersonal.gif`, bottom-left block, mincho name, outline 水 | Centred column on the generated backdrop |
+| About | Photographic 死/生活 plate | Flat band |
+| Work | Torii, 作品 masthead, giant `WORKS`, hover kanji veil | Plain grid |
+| Experience | Kakejiku scrolls, 職歴/学歴 | Original two-panel layout |
+| Stack | Tansu drawers, kanji plates, drawer notes hidden | Original grouped list, notes shown |
+| Hackathons | Katana spine, two year columns | Single column, newest first |
+| Certifications | Manga page, ofuda talismans | Plain card grid |
+| Contact | Looping video + frosted panel | Flat band |
+| Section breaks | 6 full-bleed banners | **hidden** |
+
+Hiding the banners is not only visual: a lazy-loaded image inside `display: none` is **never
+fetched**, so recruiter mode also spares the ~4.6 MB those two GIFs weigh.
+
+`scrollbar-gutter: stable` on `<html>` exists because the boot overlay locks scroll with
+`overflow: hidden`, which removes the scrollbar and slides every centred element sideways when it
+releases.
+
+### 4.4 Reaching the toggle
+
+Three places, because each mode hides the other's nav:
+
+- Segmented **Personal / Recruiter** switch in the notch bar (recruiter)
+- Same switch inside the burger menu below 900px
+- **職** button at the foot of the floating dock (personal)
+
+Without the third, personal mode is a one-way door.
 
 ---
 
-## 5. Information architecture
+## 5. Navigation
 
-The work grid links **out** to each project's own deployed site, not to these routes. The case-study
-routes still exist and still prerender — they are reached from the Hackathons and Experience sections,
-from deep links, and by crawlers.
+### 5.1 Notch navbar — recruiter mode
 
-```
-/                        Home — the person
-/work/mitsu              ┐
-/work/minari             │
-/work/misaki             │
-/work/mirai              │
-/work/miwa               ├─ 9 case-study decks, one template
-/work/bacsal             │
-/work/galactic-conquest  │
-/work/eye2wear           │
-/work/hirna              ┘
-/404                     Not found, in-theme
-```
+Ported from the vengenceui NotchNavbar. Two 40px side rails and a 64px centre block joined by 50px
+corner slices whose `clip-path` curves between the heights. `display: none` by default, `display: flex`
+under `.mode-recruiter` — **flex, not block**, or the rails collapse.
 
-All ten content routes prerender to static HTML with their own `<title>`, `<meta name=description>`,
-and OG image.
+### 5.2 Floating dock — personal mode
 
-### 5.1 Nav — notch navbar
-
-Ported from the vengenceui **NotchNavbar**, replacing Mitsu's floating pill. Full-width, fixed to
-`top: 0`, built from five slices whose combined silhouette steps down from a thin rail to a taller
-centre block:
+A draggable kanji dock. Docks to any of the four edges; left/right render it as a column, top/bottom
+as a row, so it always reads *along* the edge it is parked on.
 
 ```
-────────────────╮                              ╭────────────────   40px rails
-                 ╲   水 MIZU   ·   nav   ·  ▮   ╱
-                  ╰──────────────────────────╯                     64px centre
-  rail      corner        centre           corner       rail
-  flex-1    50px          flex-1           50px         flex-1
+私 About    作 Work    歴 Experience    技 Stack
+挑 Hackathons    証 Certs    縁 Contact    職 Recruiter mode
 ```
 
-The two corners are `clip-path: path()` on a fixed 50×64 box — `M0 0 H50 V64 C25 64 25 40 0 40 Z`
-on the left, mirrored on the right. Those coordinates are absolute, so **the corner slices must keep
-exactly those dimensions**; they cannot be made responsive by percentage. Every slice carries paired
-0.5px hairlines 3px apart, tracing the full silhouette. Adjacent slices overlap by `-1px` to kill
-subpixel seams.
+**Silhouette:** top corners sweep up to points with the edge dipping between them — a kawara roof.
+Foot chamfered. Nothing on it is a radius. The clip lives on an inner body/face pair, **not the nav**,
+because clip-path would otherwise cut away the rope hanging outside the box.
 
-- **Brand:** `水 MIZU` → `/`, centred in the notch
-- **Left:** Work · About · Experience — **Right:** Stack · Hackathons · Certs
-- **CTA:** `Get in touch`, white pill behind a hairline divider
-- **Case-study pages:** section anchors are replaced by `← All work`, since those sections don't exist there
-- **Below `md`:** links collapse to a hamburger; brand and a compact Contact pill remain
+**Drag:** 6px of travel before a press becomes a drag. Pointer capture is taken **only after** that
+threshold — capturing on pointerdown retargets the click to the nav and silently swallows every link.
+On release it snaps to the nearest edge, clamped to 18–82% along the run. Position persists.
 
-**Four things changed in the port.** The source is a Next.js/TypeScript component, so: `next/link`
-became React Router `Link`; `lucide-react` icons were inlined as SVG rather than adding the
-dependency; `framer-motion`'s mobile-menu transition became a CSS keyframe, matching the rest of the
-site; and the `next-themes` toggle was dropped entirely — §2 commits this design to dark, so there is
-no light mode to toggle. Runtime dependencies are unchanged at three.
+**Rope (suzunoo):** twisted via a −62° repeating gradient on a 6px strip, with a knot and a masked
+tassel. Pull ≥26px to toggle the dock open; it stretches to 62px and springs back. Every rope handler
+calls `stopPropagation` or the pull drags the whole dock instead.
 
-Scrollspy is preserved from the previous nav: an `IntersectionObserver` at `threshold: 0.3` marks the
-active section, which renders at full white and weight 600.
+**Opened:** items animate 34px → **172px**, a *fixed* target — neither `auto` nor `%` is interpolable,
+and either makes the dock jump open instead of sliding. Labels are absolute tooltips when closed and
+inline when open; `position` can't animate, so the fade is delayed 170ms on open and runs immediately
+on close.
 
 ---
 
 ## 6. Home page
 
-| # | Section | id | bg | Content |
-|---|---|---|---|---|
-| 1 | Hero | `hero` | `#050505` | Name, kanji, role strip, stat bar, CTAs |
-| 2 | About | `about` | `#070707` | Three-paragraph summary + top skills |
-| 3 | Work | `work` | `#050505` | 9 project cards → decks |
-| 4 | Experience | `experience` | `#070707` | Bacsal internship + BPSU education |
-| 5 | Stack | `stack` | `#050505` | Aggregate technologies, layered |
-| 6 | Hackathons | `hackathons` | `#070707` | Competition record — §6.5 |
-| 7 | Certifications | `certifications` | `#050505` | 11 certs, grouped by issuer |
-| 8 | Contact | `contact` | `#070707` | Availability + links |
+Section order, with the six full-bleed 3:1 banners between them:
+
+```
+Hero → [break] → About → [break] → Work → [break] → Experience → [break]
+     → Stack → [break] → Hackathons → [break] → Certifications → Contact
+```
+
+### 6.0 Boot sequence — personal mode only
+
+`水` renders twice, stacked: a `-webkit-text-stroke` wireframe and a solid copy clipped to whatever a
+beam has passed over. As the beam travels top to bottom the outline resolves into solid type in its
+wake — glyph and ミズ both.
+
+```
+0.25s   beam enters, scan begins        beam + reveal share 1.9s linear — identical
+2.15s   scan completes, mark blooms      duration and delay, so the reveal edge can
+2.55s   mark fades                       never separate from the light causing it
+2.75s   backdrop fades (620ms linear)
+3.45s   overlay removed, scroll unlocked
+```
+
+The two fades **overlap by 100ms** on purpose. Back to back they left ~450ms of empty black between
+the mark leaving and the page arriving, which read as a second, blank hero.
+
+Everything is CSS animation, so the prerendered HTML shows the loader before a line of JS runs and it
+still clears itself if the bundle never arrives. `z-index: 9998` — under the grain, so the loader
+wears the same film as the site.
+
+**Scroll unlock runs on the timer, not effect cleanup.** `Boot` returns `null` when finished but is
+never unmounted — `App` renders it for the life of the page — so cleanup would never fire and `<html>`
+would keep `overflow: hidden` forever. This was a real bug.
 
 ### 6.1 Hero
 
-Reuses Mitsu's full stack of hero layers:
+Personal is the base: `heropersonal.gif` full-bleed, the whole block set **bottom-left**, name in
+mincho, and 水 as an outline mark centred on the right half (`left: 74%`, `clamp(10rem, 34vw, 31rem)`).
+The generated backdrop (StarField / PerspectiveGrid / Spotlight) switches off so the two never stack.
 
-- `StarField` — 240 canvas dots, `ResizeObserver`-driven redraw · **keep as-is**
-- `PerspectiveGrid` — 80px grid, radial ellipse mask · **keep as-is**
-- Radial spotlight behind the headline · **keep as-is**
-- `LandmarkConstellation` → **replaced by `RippleField`**: concentric 水 ripple rings in muted
-  cyan, reusing the `landmark-breath` 6s breathing animation. Same slot, same opacity (0.5), same
-  position (`right: 6%`, `top: 16%`).
+Scrim is weighted, not flat — bottom to 94%, left to 88%, falling away toward the top-right. A wash
+heavy enough for the copy would kill the plate everywhere else.
 
-Data strip (`.hero-strip`, hairline rules + mono uppercase, no container):
+**Trap:** `.hero-strip` centres itself with `margin: 0 auto`, and auto margins **beat** the flex
+container's `align-items: flex-start`. Zeroing them is what actually moves it left.
 
-```
-SOFTWARE ENGINEER  ///  AI ENGINEER  ///  LIMAY, PHILIPPINES
-```
+### 6.2 About
 
-Wordmark, mirroring `MITSU 見つ`:
+Portrait cut-out on a photographic plate (`aboutbg.jpg`, a hard diagonal 死/生活 split). The plate sits
+under **two** scrims: a flat 80% wash plus a radial pool to 88% centred where the copy lands. Net
+~20% at the edges, ~7% behind the text. Content needs an explicit `z-index: 1` — the backdrop is a
+`::before`, which paints after its parent.
 
-```
-FRANCIS DANIEL GENESE   水
-   Outfit 900, #f5f5f5      rgba(113,113,122,0.95), weight 800
-```
+### 6.3 Work — poster spread under a torii
 
-Subtitle → `Agentic AI · LLM Applications · Intelligent Systems`
-One-liner → condensed from the LinkedIn About, ≤ 2 sentences, max-width 540.
+Masthead is `rule + label / 作品 / label + rule`. Nine tall plates in three columns. Giant `WORKS`
+below, then the lede.
 
-CTAs → `View the work` (white pill, scrolls to `#work`) · `GitHub` (ghost pill, `Mizunandayo`).
+**The torii** is two pieces, deliberately: an **SVG head** (kasagi, shimaki, nuki, gakuzuka) plus
+**two CSS rules** continuing the pillars to the floor. One stretched SVG over a grid this tall would
+flatten the beams into flat lines. Pillar x-positions live in a single `PILLAR` constant shared by
+both. Strokes use `vector-effect="non-scaling-stroke"` or the gate thickens to a slab on a wide
+viewport.
 
-Stat bar — 4 cells, bordered glass grid, max-width 600:
+**Cards** are levitating slabs: no border, square corners, `#0d0d0d`, three stacked downward shadows
+(4px contact / 16px mid / 36px diffuse), lifting to 6px on hover. Row gap runs **deeper** than the
+column gap because the cast falls ~100px and a tight row slices it into a hard line.
 
-| Value | Label |
-|---|---|
-| `9` | Projects shipped |
-| `7` | Hackathon awards |
-| `11` | Certifications |
-| `5` | Solo builds in ≤ 8 days |
+**Hover:** content blurs back behind a tinted veil and the project's kanji falls from `-35cqh` to
+centre. The tint is doing real work — three covers are near-white, and blur alone doesn't darken.
 
-Metadata row → `Open to` · `Based in` · `Focus`.
+### 6.4 Experience — kakejiku
 
-### 6.2 Work grid
+Each record hangs as a scroll: cord with a hook, top roller, paper, weighted bottom roller, heading
+headed **履歴** (record), each scroll titled down its right edge in tategaki — **職歴** work history, **学歴** education. Rollers
+**overhang the paper by 13px each side** — without that it reads as a bordered card, not something
+wound on a rod.
 
-Three columns at `lg`, two at `md`, one on mobile. Each card is a `.card-shell` / `.card-core`
-double bezel, and holds:
+The `org-*` panel markup inside is untouched. The scroll is a frame *around* the original, so
+recruiter mode only drops the frame with nothing to restyle back.
 
-```
-┌────────────────────────────┐
-│ ▓▓▓ 16:9 placeholder ▓▓▓   │
-├────────────────────────────┤
-│ MITSU              見つ     │  name + kanji, Outfit 800
-│ OpenAI Build Week          │  micro-label mono
-│ Touchless window control   │  one line, 0.9rem
-│ Python · MediaPipe · GPT   │  3 stack chips max
-│ ⬦ 8 days · Solo            │  footer meta
-└────────────────────────────┘
-```
+### 6.5 Stack — tansu
 
-Hover: border `rgba(163,163,163,0.22)` → `rgba(212,212,216,0.38)`, 170ms. No lift, no scale, no
-glow — Mitsu's hovers are all border-and-background only. The one addition is the CTA: its arrow
-nudges 1.5px up-and-right, the standard outbound cue.
-
-**Cards open the project dialog** (§7.1) rather than navigating. Footers read **View project →**.
-The live-site link lives inside the dialog's Links block, sourced from `liveUrl(project)` — the link
-flagged `primary: true` in `projects.js`, marked explicitly rather than inferred from array order,
-since Mitsu and Mirai each ship two demo URLs and position would silently pick the wrong one.
-
-Order is reverse-chronological by end date, which also front-loads the strongest work:
+Headed **道具箱** (toolbox). Eleven categories become eleven **drawers**: ink label plate with tategaki kanji, drawer face with the
+tools, sunken metal pull, faint grain. A stack of drawers is the one Japanese object that already
+means what the section means.
 
 ```
-mitsu · minari · misaki · mirai · miwa · bacsal · galactic-conquest · hirna · eye2wear
+言語 Languages   知能 AI & Agents   演算 GPU   音声 Speech   視覚 Vision
+採取 Web Data    表 Frontend        裏 Backend  基盤 Data     守護 Security   道具 Tooling
 ```
 
-The last three all end Oct 2025, so they tie-break on start date, most recent first —
-galactic-conquest (Oct) → hirna (Jun) → eye2wear (Feb). Sorting is derived from `period` in
-`projects.js`, not hand-maintained.
+**表 / 裏** — face and reverse — for frontend and backend is the pairing the set is built around.
+Drawers butt against each other sharing one hairline, with a single border around the carcase; a gap
+would read as eleven boxes rather than one chest.
 
-Award-winning projects get a mono ribbon in the card corner (`🥉 2nd RU` / `🥈 1st RU`).
+Category notes are **hidden in personal mode** — a wrapped paragraph in a 132px column stretched every
+drawer to the height of its own description. Recruiter mode restores them.
 
-### 6.3 Certifications
+### 6.6 Hackathons — katana spine
 
-A **badge card grid** — the credential badges are the visual point, so each certification gets a
-card built around its badge image rather than a row in a list.
+Headed **挑戦** (challenge). Two year columns flanking a centre spine, oldest on the left. The spine is **sticky**, so it rides
+down the middle as the columns scroll.
 
-```
-grid  1 / 2 / 3 / 4 cols  (sm / md / lg / xl)
-┌──────────────────────┐
-│      ┌────────┐      │  badge, 1:1, max 124px
-│      │ ▓▓▓▓▓▓ │      │  object-fit: contain — never cropped
-│      └────────┘      │
-│  CERTIPORT           │  mono, uppercase, 0.1em
-│  IT Specialist —     │  0.95rem / 700
-│  Software Development│
-│  Issued Apr 2026 ·   │  mono 0.73rem
-│  Expires Apr 2031    │
-│  ──────────────────  │  pinned to bottom
-│  CREDENTIAL ID       │
-│  e75904b1-498e-4c…   │  mono 0.68rem, break-all
-└──────────────────────┘
-```
+**The katana** replaces the old ハッカソン tategaki. It turns to face the direction of travel —
+`rotate(180deg)` over 560ms when you scroll up — and throws wind only while the page is moving.
 
-Flat panel styling (`rgba(255,255,255,.03)` + hairline + r12, border lifts on hover), matching the
-hackathon cards immediately above it so the two sections read as siblings.
-
-**Data is flat, not grouped by issuer.** Grouping would leave Cisco and PMI as one-card rows.
-Each card carries its own issuer instead, and `CERTS_ORDERED` sorts newest-first off a `sort`
-(`YYYY-MM`) key — adding a certification needs no manual reordering.
-
-`object-fit: contain`, not `cover`: a clipped credential mark looks broken. Non-square images
-letterbox inside the frame rather than cropping.
-
-Below the grid, a ghost pill links out to the **Credly profile**
-(`credly.com/users/francis-daniel-genese`), stored on `PROFILE.contact.credly` alongside the other
-channels. The Credly mark is inlined in `primitives.jsx` from simple-icons and rendered via
-`currentColor`, not Credly orange — §3.3 keeps brand colour to the stack chips.
-
-Badges live in [public/certs/](public/certs/) and follow the same drop-in convention as project
-media — filename comes from the `badge` field, a missing file renders a labelled placeholder, and
-adding the image swaps it in with no code change. The folder README lists all eleven expected
-filenames and notes that transparent PNGs are required (a white background would show as a bright
-block against the dark frame).
-
-### 6.5 Hackathons — competition record
-
-**Not a card grid.** Seven cards at identical weight hides the two things that matter, which the
-data makes obvious once plotted:
+**The wind splits at the point.** The container is a zero-size point at the tip; every streak starts
+stacked there and is thrown outward by its own `--dx` / `--rot`, widest and sharpest at the outside
+(±28px @ ±18°), longest through the middle (55px). `transform-origin: bottom center` so the fan hinges
+at the tip rather than swinging about each line's middle.
 
 ```
-2025-06   🥈 1st Runner-Up    █      ← placed on the first attempt
-2025-10   🥉 2nd Runner-Up    ██     ← two in one month
-2025-12   ·                   █
-2026-06   ·  ·  ·             ███    ← three in a single month
+scroll direction    rAF-throttled, passive listener, 5px slack
+                    (without the slack, trackpad jitter flips the blade continuously)
 ```
 
-Placed at the first attempt, then escalated to three international AI hackathons inside one month.
-A uniform grid flattens both. So the section reads as a **chronological log**, newest first, banded
-by year:
+### 6.7 Certifications — manga page
 
-```
-ENTERED 7  ///  PODIUM 2  ///  PROJECTS 5  ///  MONTHS 13
-────────────────────────────────────────────────────────
+A framed sheet with 4px screentone, a saw-tooth strip biting the top-left, radial speed lines behind
+the title, `CERTIFIED` with a hard 4px offset shadow (no blur — blur reads as glow; manga logos are
+*trapped*), 認定証 beneath, folio 全11枚 at the foot.
 
-2026                                            3 entries
-──────────────────────────────────────────────────────────
- JUN    Transforming Enterprise Through AI              —
-        LABLAB.AI
-        Mirai ミライ — AI-Powered Robot Arm Simulator →
-──────────────────────────────────────────────────────────
- …
+Each credential is an **ofuda** — the pointed paper talisman: notched head via clip-path, ink border
+from the nested-box technique, 認定 down the left edge in tategaki, 証 seal stamped bottom-right at
+−7° because a hand-pressed seal never lands straight. All eleven identical in size.
 
-2025                                            4 entries
-──────────────────────────────────────────────────────────
- DEC    HacKada — AI in UX for Fintech                  —
-        …
-   ┼──────────────────────────────────────────────────┼
-   │ OCT    RAITE 2025 Hackathon      🥉 2nd Runner-Up │
-   │        REGIONAL ASSEMBLY ON IT EDUCATION          │
-   │        Galactic Conquest — Web3 Strategy Game  →  │
-   ┼──────────────────────────────────────────────────┼
-```
+### 6.8 Contact
 
-**A podium is a boxed result; an entry is a log line.** The distinction is structural, not a colour
-change — podium rows get a full frame, side padding, a larger title and crosshair register marks,
-while entries get a single top rule. That means the two wins are found by scanning shape, not by
-reading every row, and it works without reordering the run out of chronology.
+A looping `contactsection.mp4` behind the closing panel. The panel's own fill is a white gradient at
+4%/1%/2%, so the video reads straight through it — rather than making it opaque, it carries
+`backdrop-filter: blur(14px)`, leaving the video sharp *around* the panel and soft *under* the copy.
+Reduced motion hides the video outright.
 
-**The crosshair marks encode a result rather than decorating a card.** Same discipline as the colour
-rule in §3.3: the motif appears only where it means something. Applied to all seven rows it would be
-wallpaper.
+### 6.9 Section breaks
 
-**The record line is entirely derived** from `hackathons.js` — entered, podium, unique projects
-(HirNa! came out of two separate entries and counts once), and the span in months between the first
-and last entry. Nothing to keep in sync.
+Six full-bleed 3:1 bands, mapped by filename to the gap they sit in. `object-fit: cover` rather than
+stretch, height capped at `clamp(190px, 30vh, 430px)` — unbounded 3:1 is 850px tall on a 2560px
+display. All lazy, `aria-hidden`, empty alt.
 
-### 6.4 Contact
-
-The closing section, and — since there is no résumé PDF — the one that has to actually convert. It
-states availability plainly and gives three ways to reach out, nothing more.
-
-Built as a `.card-shell` / `.card-core` double bezel on `#070707`, centered, max-width 760.
-
-```
-                        micro-label   ── OPEN TO WORK ──
-
-                  Let's build something together.        ← claim, Outfit 900
-                                                            clamp(1.35rem, 3.2vw, 2.25rem)
-        Open to software and AI engineering roles.
-        Taguig +2 · On-site · Hybrid · Remote            ← small-copy, muted
-
-        ┌──────────────────────────────────────────┐
-        │  ✉  francisdanielgenese@gmail.com        │    ← primary, white pill
-        └──────────────────────────────────────────┘
-           ⬦ LinkedIn          ⬦ GitHub                 ← ghost pills
-```
-
-| Channel | Value | Treatment |
-|---|---|---|
-| Email | `francisdanielgenese@gmail.com` | Primary CTA — white pill, `mailto:` |
-| LinkedIn | `linkedin.com/in/francis-daniel-genese-141294170` | Ghost pill, new tab |
-| GitHub | `github.com/Mizunandayo` | Ghost pill, new tab |
-
-**No contact form.** A form needs a backend service, can silently fail, and gives a recruiter one
-more step than a `mailto:`. The email is published in plain text and as a link — it also makes the
-address scrapeable by the ATS parsers that read these pages.
-
-Pill styling is Mitsu's hero CTA pair, verbatim: white `#ffffff` on `#050505` for primary
-(hover → `opacity: 0.86`), and `1px rgba(255,255,255,0.18)` + `rgba(255,255,255,0.04)` +
-`blur(8px)` for ghost (hover → border `0.32`, text `#fff`).
-
-All three values live in `profile.js` and are reused by the footer, the JSON-LD `Person` block, and
-the nav CTA — declared once, never duplicated.
+**Three of the six are not 3:1** and crop accordingly: `betweenheroandabout` (2.67:1, ~11%),
+`betweenworksandexperience` (2.02:1, ~33%), `betweenhackathonsandcert` (1.78:1, ~41%).
 
 ---
 
-## 7. Case-study deck template
+## 7. Dialogs
 
-One component, `<ProjectDeck project={…} />`, rendered for all nine routes. Sections render
-conditionally — a project with no architecture data simply omits that block.
+Both use native `<dialog>` + `showModal()` — real focus trapping, ESC, top-layer stacking, inert
+background, no z-index competition.
 
-| # | Block | Source field | Renders if |
-|---|---|---|---|
-| 1 | Deck hero | `name, kanji, event, role, duration, tagline, links, stats` | always |
-| 2 | Overview | `summary` | always |
-| 3 | Highlights | `highlights[]` | always |
-| 4 | Architecture | `architecture[]` | present |
-| 5 | Tech stack | `stack[]` | always |
-| 6 | Media gallery | `media[]` | always (placeholders) |
-| 7 | Links | `links[]` | always |
-| 8 | Prev / next | derived from order | always |
+**Project dialog** — cover → title → meta → summary → links → tech stack with icons → gallery, all
+16:9.
 
-### 7.1 Project dialog
-
-Clicking a work card opens a dialog. `/work/<slug>` therefore renders one of two ways depending on
-how it was reached:
-
-```
-click a card on the site          cold load / shared link / crawler
-        │                                       │
-        ▼                                       ▼
-  URL → /work/mitsu                       URL → /work/mitsu
-  home stays mounted                      standalone page
-  <dialog> opens over it                  prerendered static HTML
-  back / ESC closes it                    full <h1>, meta, JSON-LD
-```
-
-React Router's background-location pattern carries this: a `<Link>` passes
-`state={{ background: location }}`, `App.jsx` keeps the main `<Routes>` pinned to that background
-location, and renders a second `<Routes>` for the dialog on top. No state means no dialog, so cold
-loads, pasted URLs and the prerenderer all get the standalone page.
-
-**The dialog is a digest, not the whole case study.** Five sections:
-
-| Section | Content |
-|---|---|
-| Masthead | Spec strip, wordmark + kanji, tagline, award ribbon, stat bar |
-| Summary | The two-to-three sentence `summary` |
-| Details | Spec table — event, role, built in, period, result |
-| Gallery | All `media[]`, images and YouTube facades, auto-fit grid |
-| Tech stack | `stack[]` through the same `Layers` grammar as the home section |
-| Links | Every `links[]` entry as a pill, live site first |
-
-Highlights and architecture stay on the standalone page, which the dialog footer links to — that
-also keeps the case studies reachable from the work grid.
-
-**Built on native `<dialog>` + `showModal()`**, not a div overlay. That buys focus trapping, ESC,
-top-layer stacking above the fixed nav, `inert` background content and focus restore to the
-triggering card — behaviour that otherwise needs a focus-trap library and is usually got wrong.
-Handled explicitly, because the element does not provide them: body scroll lock with
-scrollbar-gap compensation so the page behind doesn't shift sideways, backdrop-click-to-close, and
-`overscroll-behavior: contain` so scrolling past the panel doesn't chain to the page underneath.
-
-Prev/next swaps content in place with `replace: true`, so closing always returns to where the
-dialog was opened from rather than walking back through every project viewed. The dialog also drives
-the head tags while open and hands them back on close — hence `applyMeta()` being exported from
-`Seo.jsx`, since the host page stays mounted and its own `<Seo>` effect never re-runs.
-
-**Deck hero** reuses `.hero-strip` for the event line —
-`GOOGLE CLOUD RAPID AGENT HACKATHON /// GITLAB /// 8 DAYS` — then the wordmark
-(`MINARI 実成`), tagline, link pills, and a 4-cell stat bar.
-
-**Highlights** map to Mitsu's `.arch-jstep` journey rows: a large ghosted step number
-(`rgba(228,228,231,0.14)`, 2rem, weight 800) in a 52px column, headline + description beside it.
-The LinkedIn bullets already read as ordered steps, so this fits without rewriting.
-
-**Tech stack** maps to `.stack-layer` — 190px uppercase category column, wrapping `.si` cards.
-This is a **1:1 fit**: the LinkedIn entries are already grouped as *Core Languages · AI & SDKs ·
-Backend & Infrastructure · Development Ecosystem*, which is exactly the layer model Mitsu uses.
-
-**Media gallery** — `ImagePlaceholder` / `YouTubePlaceholder` from `components/shared/`. Real files
-dropped into `public/work/<slug>/` are picked up with no code change.
+**Hackathon dialog** — lightbox: `fit="contain"` so nothing is cropped, prev/next chevrons, arrow-key
+nav, `n / m` counter, thumbnail carousel with hidden scrollbar.
 
 ---
 
 ## 8. Data model
 
-Single source of truth: [src/data/projects.js](src/data/projects.js). Every deck, the work grid,
-prev/next, the sitemap, and prerender routes all derive from this array.
+Single source of truth: [src/data/projects.js](src/data/projects.js) — exports `PROJECTS`, `ORDERED`
+(reverse-chron), `bySlug`, `liveUrl`, `formatPeriod`.
 
 ```js
 {
-  slug:      'minari',
-  name:      'Minari',
-  kanji:     '実成',
-  tagline:   'Autonomous flaky-test resolution for GitLab',
-  event:     'Google Cloud Rapid Agent Hackathon — GitLab',
-  role:      'Solo Developer',
-  duration:  '8 days',
-  period:    { start: '2026-05', end: '2026-06' },
-  award:     null,              // '🥈 1st Runner-Up' | '🥉 2nd Runner-Up' | null
-  featured:  true,
-
-  summary:   '…2–3 sentences, ≤ 58ch column…',
-
-  highlights: [
-    { headline: 'Autonomous detect → repair → verify loop',
-      body:     '…', tech: 'LangGraph · Gemini 2.5 Pro' },
-  ],
-
-  architecture: [                            // optional
-    { stage: 'perceive', accent: 'cyan',    name: 'Flakiness detection', detail: '…' },
-    { stage: 'reason',   accent: 'violet',  name: 'Root cause analysis', detail: '…' },
-    { stage: 'act',      accent: 'emerald', name: 'Patch + CI verify',   detail: '…' },
-  ],
-
-  stack: [
-    { category: 'Core Languages', note: '', items: [
-        { name: 'Python', ver: '3.12' }, { name: 'TypeScript' } ] },
-    { category: 'AI & SDKs', items: [
-        { name: 'LangGraph' }, { name: 'Gemini 2.5 Pro' }, { name: 'MCP Adapters' } ] },
-  ],
-
-  stats: [
-    { num: '2', lbl: 'Model routing tiers' },
-    { num: 'SSE', lbl: 'Live agent reasoning' },
-  ],
-
-  media: [
-    { src: 'app.png', cap: 'Agent run view', ratio: '16:9' },
-    { yt:  'ndJ8cZIg4cM', cap: 'Video presentation' },
-  ],
-
-  links: [
-    { kind: 'demo',    label: 'Web App',    url: 'https://minari-eight.vercel.app/' },
-    { kind: 'repo',    label: 'Repository', url: 'https://github.com/Mizunandayo/minari' },
-    { kind: 'video',   label: 'Presentation', url: 'https://youtube.com/watch?v=ndJ8cZIg4cM' },
-    { kind: 'devpost', label: 'DevPost',    url: '…' },
-  ],
-
-  meta: { title: '…', description: '…', ogImage: '/og/minari.png' },
+  slug: 'minari', name: 'Minari', kanji: '実成',
+  tagline: 'Autonomous flaky-test resolution for GitLab',
+  event:   'Google Cloud Rapid Agent Hackathon — GitLab',
+  period:  { start: '2026-05', end: '2026-06' },
+  award:   null,                    // '🥈 1st Runner-Up' | '🥉 2nd Runner-Up' | null
+  summary: '…',
+  highlights: [ … ],                // ⚠ no longer rendered — see §2
+  architecture: [ … ],              // ⚠ no longer rendered — see §2
+  stack: [ { category, items: [{ name, ver, role }] } ],
+  media: [ { src, cap, ratio } | { yt, cap } ],
+  links: [ { kind: 'demo'|'repo'|'video'|'devpost'|'submission', label, url, primary } ],
 }
 ```
 
-Sibling data files: [src/data/profile.js](src/data/profile.js) (identity, about, skills, contact),
-[src/data/hackathons.js](src/data/hackathons.js), [src/data/certifications.js](src/data/certifications.js),
-[src/data/experience.js](src/data/experience.js).
+**Hackathon media is discovered, not declared.** [src/data/hackathonMedia.js](src/data/hackathonMedia.js)
+globs `src/assets/hackathons/*/*.{png,jpg,…}` at build time with `import.meta.glob`. `cover` sorts
+first, then numerically. Declared arrays had drifted to 16 entries against 41 files on disk; a glob
+cannot.
+
+Siblings: `profile.js`, `hackathons.js`, `certifications.js`, `stack.js`, `experience.js`.
 
 ---
 
 ## 9. Content inventory
 
-### 9.1 Projects — 9
+**Projects — 9.** Mitsu 見つ · Minari 実成 · Misaki 見先 · Mirai ミライ · Miwa 美話 · Bacsal Consultancy 事務 ·
+Galactic Conquest 宇宙 🥉 · HirNa! 求人 🥈 · Eye2Wear 眼鏡
 
-| Slug | Name | Event | Period | Award |
-|---|---|---|---|---|
-| `mitsu` | Mitsu 見つ | OpenAI Build Week — Apps for Your Life | Jul 2026 · 8d | — |
-| `minari` | Minari 実成 | Google Cloud Rapid Agent Hackathon — GitLab | May–Jun 2026 · 8d | — |
-| `misaki` | Misaki 見先 | Web Data UNLOCKED — Security & Compliance | May–Jun 2026 · 7d | — |
-| `mirai` | Mirai ミライ | Transforming Enterprise Through AI — Robotics | May 2026 · 8d | — |
-| `miwa` | Miwa 美話 | AMD Developer Hackathon — Agentic Workflows | May 2026 · 7d | — |
-| `bacsal` | Bacsal Consultancy | Internship — Lead Junior SE | Jan–Apr 2026 | — |
-| `galactic-conquest` | Galactic Conquest | RAITE 2025 | Oct 2025 | 🥉 2nd Runner-Up |
-| `hirna` | HirNa! | Byteforward — Final Pitch | Jun–Oct 2025 | 🥈 1st Runner-Up |
-| `eye2wear` | Eye2Wear | Full-stack clinic system | Feb–Oct 2025 | — |
+**Hackathons — 9**, across 2025 (4) and 2026 (5). Two podium finishes; placed on the first attempt.
 
-### 9.2 Hackathons — 7
+**Certifications — 11.** Certiport ×5 · Microsoft ×4 · Cisco ×1 · PMI ×1. All credential IDs verbatim.
 
-**The section is called Hackathons, not Awards.** All seven entries are hackathons — there are no
-non-hackathon honors — and only two carry a podium placement, so labelling the other five as
-"awards" overstated participation and completion certificates. Six of the seven also restate a
-project already in the work grid, which is why there is one section rather than two.
+**Stack — 120 tools across 11 categories.**
 
-Ordering is derived: podium finishes lead, best result first via a `rank` field (finishing position,
-lower is better), then everything else newest-first. Without `rank` the 🥉 sorted above the 🥈
-purely because it was more recent.
-
-
-lablab.ai ×3 (Transforming Enterprise Through AI, Web Data UNLOCKED, AMD Developer — all Jun 2026) ·
-KadaKareer HacKada AI in UX for Fintech (Dec 2025) · Byteforward Final Pitch (Oct 2025) ·
-🥉 RAITE 2025 (Oct 2025) · 🥈 Byteforward 1st Runner-Up (Jun 2025).
-
-*Homie* (KadaKareer) was a qualification-round **concept**, not a build. It stays an award line and
-gets no deck — the Work grid holds shipped projects only.
-
-### 9.3 Certifications — 11
-
-Certiport ×5 · Microsoft ×4 · Cisco ×1 · PMI ×1. All credential IDs are in the source LinkedIn text
-and go into `certifications.js` verbatim.
-
-### 9.4 Experience & education
-
-**Junior Software Engineer** — Bacsal Business Consultancy, Internship, Jan–Apr 2026 (4 mos),
-Mariveles, Bataan, Hybrid.
-**Bataan Peninsula State University** — Network and Web Application, Dec 2022 – Jul 2026.
-
-### 9.5 Content gaps to fill
-
-- Architecture data exists in prose for `mitsu`, `minari`, `misaki`, `mirai`, `miwa`. The other four
-  will render without the architecture block unless written.
-- OG images (`/og/<slug>.png`, 1200×630) — generate from a template, dark canvas + wordmark + kanji.
-- Project screenshots — [public/work/](public/work/), filenames in that folder's README.
-- Certification badges — [public/certs/](public/certs/), 11 square transparent PNGs. Downloadable
-  from Credly (Microsoft, Cisco, PMI) and Certiport; filenames in that folder's README.
+**Experience & education.** Junior Software Engineer, Bacsal Business Consultancy (Internship,
+Jan–Apr 2026, Mariveles, Bataan, Hybrid) · Bataan Peninsula State University, Network and Web
+Application, Dec 2022 – Jul 2026.
 
 ---
 
 ## 10. Project structure
 
-As built:
-
 ```
-mizuportfolio/
-├── Mizu.md
-├── index.html                      ← <!--app-head--> / <!--app-html--> slots
-├── package.json  vite.config.js  tailwind.config.js  postcss.config.js
-├── vercel.json
-├── scripts/
-│   ├── prerender.js                ← 10 routes + 404 + sitemap + robots
-│   ├── gen-icons.mjs               ← simple-icons → src/data/icons.js
-│   └── find-slug.mjs               ← dev helper: search simple-icons
-├── public/
-│   ├── og/                         ← 1200×630, one per route
-│   ├── certs/                      ← 11 badge PNGs + README (filenames listed)
-│   └── work/<slug>/                ← 9 dirs + README on the drop-in convention
-└── src/
-    ├── main.jsx                    ← hydrateRoot when prerendered, createRoot in dev
-    ├── entry-server.jsx            ← StaticRouter + renderToString
-    ├── App.jsx                     ← routes, skip link, ScrollManager
-    ├── seo.js                      ← metaFor() / headFor(), shared runtime + build
-    ├── index.css                   ← Mitsu base + -mizu additions
-    ├── data/
-    │   ├── projects.js             ← 9 projects + ORDERED / siblings / ROUTES
-    │   ├── icons.js                ← GENERATED — do not hand-edit
-    │   ├── profile.js  stack.js  hackathons.js
-    │   └── certifications.js  experience.js
-    ├── hooks/useScrollReveal.jsx   ← Mitsu's, + no-IntersectionObserver fallback
-    ├── components/
-    │   ├── Nav.jsx  Footer.jsx  Seo.jsx
-    │   ├── home/    Hero · About · Work · Experience ·
-    │   │            Stack · Hackathons · Certifications · Contact
-    │   ├── deck/    DeckHero.jsx · blocks.jsx
-    │   └── shared/  primitives.jsx · placeholders.jsx ·
-    │                Backdrop.jsx · TechIcon.jsx
-    └── pages/       Home.jsx · Project.jsx · NotFound.jsx
+src/
+├── App.jsx                    ModeProvider · Boot · both navs · routes
+├── main.jsx                   hydrate if firstElementChild, else render
+├── entry-server.jsx           SSR entry for prerender
+├── index.css                  the entire design system, ~15 KB gz
+├── hooks/
+│   ├── useMode.jsx            personal / recruiter
+│   └── useScrollReveal.jsx    IntersectionObserver + <Reveal>
+├── components/
+│   ├── Nav.jsx                notch navbar (recruiter)
+│   ├── PersonalNav.jsx        floating kanji dock (personal)
+│   ├── Footer.jsx · Seo.jsx
+│   ├── shared/
+│   │   ├── Boot.jsx           水 scan loader
+│   │   ├── ModeToggle.jsx · SectionBreak.jsx
+│   │   ├── Backdrop.jsx       StarField · PerspectiveGrid · Spotlight
+│   │   ├── TechIcon.jsx · placeholders.jsx · primitives.jsx
+│   ├── home/                  Hero About Work Experience Stack
+│   │                          Hackathons Certifications Contact
+│   │                          + HackathonDialog
+│   └── deck/ProjectDialog.jsx
+├── data/                      projects hackathons hackathonMedia
+│                              certifications experience stack profile icons
+└── assets/hackathons/<id>/    cover.png, 01.png … (globbed)
+
+scripts/  prerender.js · gen-icons.mjs · find-slug.mjs
+public/   profile/ · work/ · certs/ · orgs/ · og/
 ```
-
-`SectionShell` earns its place: nine home sections and eight deck blocks share the
-`py-32 / max-w-[1100px] / eyebrow → claim → copy` skeleton. One component, not seventeen copies.
-
-**Two deviations from the plan above**, both consolidation rather than change:
-
-- `shared/` is three files, not six — `primitives.jsx` (SectionShell, MicroLabel, Rule, StatBar,
-  Pill, Chip, Layers, icons), `placeholders.jsx`, `Backdrop.jsx`. Six files averaging 30 lines was
-  more ceremony than the code justified.
-- `deck/` is two files, not eight — `DeckHero.jsx` plus `blocks.jsx` holding the seven body blocks.
-  They are only ever composed together by `pages/Project.jsx`.
-
-`data/stack.js` was added: the Stack section needs a curated aggregate, because a raw union of every
-`projects.js` entry runs to ~120 items and reads as noise.
 
 ---
 
 ## 11. Build, SEO, deploy
 
-**Prerender.** After `vite build`, walk the route list from `projects.js` and emit static HTML per
-route with correct `<title>`, description, canonical, and OG/Twitter tags. `<Seo>` sets tags at
-runtime for client navigation; the prerender bakes them for crawlers and unfurlers.
+```
+npm run dev       vite
+npm run build     client → SSR → prerender → sitemap + robots
+npm run icons     regenerate src/data/icons.js
+```
 
-**Also emitted:** `sitemap.xml`, `robots.txt`, `JSON-LD` — `Person` on home, `CreativeWork` per deck.
+`scripts/prerender.js` builds the client, builds an SSR bundle, renders each route to static HTML,
+then writes `sitemap.xml` and `robots.txt`. **2 routes:** `/` and `/404`.
 
-**Deploy:** Vercel, static output, `dist/`. No server runtime.
+```
+bundle js    127.5 KB gzipped
+bundle css    15.1 KB gzipped
+```
 
-**Budgets:** JS ≤ 130 KB gzipped · LCP < 1.5s on 4G · Lighthouse ≥ 95 across all four categories.
-
-The JS ceiling was originally 120 KB. Reconciling the Stack section against the published project
-stack pages took it from 65 to 120 technologies and the icon set from 53 to 79 brand marks, landing
-the bundle at **120.6 KB** — 0.6 KB over. The ceiling was raised rather than cutting content the
-section exists to show. Two things make that defensible: the page is prerendered, so first paint
-does not wait on JS at all, and the marks are static path data that compresses and caches well.
-
-Extending icon coverage to the per-project stacks in the dialog took it to **128.6 KB** — 111 marks,
-against a 130 KB ceiling. That is close enough that the next stack addition will cross it.
-
-The lever is `src/data/icons.js`, roughly 40% of the bundle. The clean split is by surface, not by
-lazy-loading the whole file: the home Stack section is prerendered and needs its marks synchronously
-or the static HTML ships glyphs and swaps on hydration, but **the dialog is client-only and never
-prerendered**, so the project-only marks can be moved to a second chunk and dynamically imported
-with no SSR consequence. That is the change to make when the ceiling actually binds.
+**Media weight is now the real cost, not JS.** ~10.9 MB of referenced media ships, dominated by
+`contactsection.mp4` (5.3 MB) and the two GIF section breaks (3.0 + 1.6 MB). Recruiter mode avoids
+the GIFs and the video entirely. See §13.
 
 ---
 
 ## 12. Accessibility
 
-The Mitsu system has three known gaps to fix, not inherit:
-
-1. **`prefers-reduced-motion` is unhandled.** Add a global block disabling reveal transforms,
-   `chip-f*` floats, `flow-pulse`, `landmark-breath`, and the hero entrance.
-2. **Decorative canvas/SVG** — `StarField`, `PerspectiveGrid`, `RippleField` all need
-   `aria-hidden="true"` (Mitsu does this correctly; keep it).
-3. **Contrast.** `rgba(161,161,170,0.75)` on `#050505` lands near 4.3:1. Raise muted text to
-   `0.85` alpha minimum for anything that isn't a label.
-
-Plus: skip-to-content link, visible focus rings on the pill nav, real `<nav>`/`<main>`/`<article>`
-landmarks, one `<h1>` per route, `alt` text sourced from `media[].cap`.
+- Native `<dialog>` for both dialogs — focus trap, ESC, inert background for free.
+- Every decorative layer is `aria-hidden`: torii, katana, wind, kanji marks, section breaks, boot,
+  contact video, dock tooltips' twin.
+- One real `<h2>` per section survived every redesign; `<h3>` per record where the old markup had one.
+- Global `:focus-visible` outline — it, not any border, is what makes the borderless work cards
+  keyboard-navigable.
+- `prefers-reduced-motion` zeroes every animation globally; Boot additionally unmounts at 260ms
+  rather than holding an invisible pane for 3.45s, and the contact video is hidden outright.
+- Screen readers get one nav at a time — the hidden one is `display: none` and out of the tree.
 
 ---
 
-## 13. Build phases
+## 13. Known gaps
 
-| Phase | Deliverable |
-|---|---|
-| 0 | Scaffold: Vite + React + Tailwind, Mitsu's `index.css` + config ported, router mounted |
-| 1 | `shared/` primitives — `SectionShell`, `MicroLabel`, `StatBar`, `Pill`, placeholders, `useScrollReveal` |
-| 2 | `data/` — all five files populated from LinkedIn content |
-| 3 | Home: Hero (+ `RippleField`), About, Work grid |
-| 4 | Home: Experience, Stack, Hackathons, Certifications, Contact, Footer |
-| 5 | `ProjectDeck` template + all 8 deck blocks; verify against all 9 projects |
-| 6 | SEO — `<Seo>`, prerender, sitemap, JSON-LD, OG images |
-| 7 | A11y pass, reduced-motion, Lighthouse, responsive audit at 360/768/1024/1440 |
-| 8 | Deploy to Vercel |
+| # | Gap | Note |
+|---|---|---|
+| 1 | **`contactsection.mp4` is 5.3 MB** | Was 290 KB when wired. Re-encode — this is the single heaviest asset on the site |
+| 2 | **27 unreferenced files in `public/profile/` (~6.9 MB)** | `public/` is copied verbatim into `dist/`, so they deploy on every build. Random hashes, `download.png`, spare portraits |
+| 3 | Section-break GIFs are 3.0 MB + 1.6 MB, and only 500px wide | Convert to MP4/WebM — typically 10–20× smaller, and re-export wider to fix the softness |
+| 4 | `heropersonal.gif` is 480×260 | A 4× upscale at 1080p. Soft behind the scrim, but soft |
+| 5 | `highlights` / `architecture` unrendered | §2. Either fold into the project dialog or delete from the data |
+| 6 | OG images | `public/og/` still empty |
+| 7 | Domain undecided | `SITE.url` = `https://mizu-portfolio.vercel.app` |
+| 8 | Nothing pushed since `4e690ef` | The repo is far behind the working tree |
 
 ---
 
-## 14. Open questions
+## 14. Traps found the hard way
 
-**Resolved 2026-08-01**
+Recorded because every one of these cost real time and none is obvious from the code.
 
-| Question | Answer |
-|---|---|
-| Contact method | Email `francisdanielgenese@gmail.com` + LinkedIn + GitHub. Mailto, no form. §6.4 |
-| Résumé PDF | None. The portfolio is the résumé. §2 |
-| Homie | Concept only, qualification round — award line, no deck. §9.2 |
-| Eye2Wear period | Feb 2025 – Oct 2025. §9.1 |
+| Trap | Symptom | Fix |
+|---|---|---|
+| `<Reveal>` wraps children | Wrapped element becomes an **only child** — `:first-child`/`:last-child` match everything; grid spans and `h-full` on the inner element do nothing | Put grid/sizing classes on the `Reveal` wrapper, and test `.parent > :last-child .child` |
+| `<button>` in a grid | `width: auto` on a button is **shrink-to-fit**, not fill — cards ignored their track and overlapped neighbours by 27px | `width: 100%; max-width: 100%; min-width: 0` |
+| Pointer capture on pointerdown | Retargets the following `click` to the capturing element — every dock link silently dead | Capture only *after* the drag threshold |
+| `clip-path` / `overflow` on a parent | Both clip **absolutely-positioned descendants**. Killed the dock's rope twice | Keep the clip off the positioning shell; put it on an inner box |
+| Inline styles | Cannot be overridden by a mode class | Rebuild the component off `SectionShell` (§3.8) |
+| `margin: 0 auto` | **Beats** `align-items: flex-start` on a flex parent | Zero the side margins |
+| Truncate-and-rewrite a CSS block | Silently drops unrelated rules appended after it. Cost the notch-nav visibility rules *and* the hero mark rules on separate occasions | Diff the full selector inventory after any block rewrite |
+| Minifier rewrites | `translate(0,y)` → `translateY(y)`, breaking transform **function-list matching** and dropping animations to matrix interpolation; `::after` → `:after`; `even` → `2n`; whitespace **preserved** inside custom-property values | Use `var()` to block the collapse; write verification against minified forms |
+| React text nodes | `全{n}枚` renders as `全<!-- -->11<!-- -->枚` | Strip `<!-- -->` before matching built HTML |
+| `speechSynthesis` (retired) | `cancel()` + `speak()` in the same tick drops the utterance; `getVoices()` empty on first call | — |
 
-**Still open**
+---
 
-1. **Domain.** Custom domain, or ship on `mizu-portfolio.vercel.app`? Not blocking — it's a Vercel
-   setting that can change any time after launch. Worth deciding before OG images are generated, so
-   the canonical URL baked into them is right.
+## 15. Open questions
+
+1. Domain — buy one, or ship on `*.vercel.app`?
+2. Re-encode the video and GIFs, or accept the weight?
+3. Delete `highlights` / `architecture`, or build them somewhere?
+4. Should recruiter mode be the default for first-time visitors arriving from a job application?

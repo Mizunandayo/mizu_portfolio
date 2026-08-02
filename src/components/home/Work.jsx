@@ -32,7 +32,7 @@ export default function Work() {
       <div className="wk-inner-mizu">
         <header className="wk-masthead-mizu">
           <div className="wk-mast-side-mizu">
-            <span className="wk-mast-label-mizu">Selected work</span>
+            <span className="wk-mast-label-mizu">5/5 Mi-series</span>
             <span className="wk-mast-rule-mizu" aria-hidden="true" />
           </div>
 
@@ -64,7 +64,7 @@ export default function Work() {
         {/* Decorative twin of the masthead heading — the accessible
             title is already up top, and repeating it here would just
             announce the section twice. */}
-        <p className="wk-display-mizu" aria-hidden="true">WORKS</p>
+        <p className="wk-display-mizu" aria-hidden="true">PROJECTS</p>
 
         <p className="wk-lede-mizu">
           Agentic AI, computer vision and full-stack platforms. Five were built

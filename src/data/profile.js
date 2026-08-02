@@ -6,7 +6,7 @@ import { CERT_COUNT } from './certifications.js'
    section, footer, nav CTA and JSON-LD all read from here. */
 
 export const PROFILE = {
-  name:      'Francis Daniel Genese',
+  name:      'Francis Daniel',
   shortName: 'Francis',
   kanji:     '水',
   brand:     'MIZU',

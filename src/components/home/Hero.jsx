@@ -2,6 +2,20 @@ import { PROFILE } from '../../data/profile.js'
 import { StarField, PerspectiveGrid, Spotlight } from '../shared/Backdrop.jsx'
 import { Pill, GitHubIcon, ArrowIcon } from '../shared/primitives.jsx'
 
+/* ══════════════════════════════════════════════════
+   Hero — two presentations of one block.
+
+   Personal is the base: an animated plate behind
+   everything, the whole block set into the bottom-left
+   corner, name in mincho. Recruiter restores the
+   centred column on the generated backdrop.
+
+   Laid out in classes rather than inline styles on
+   purpose — an inline style outranks any class, so a
+   hero written the old way could not be re-composed by
+   the mode switch at all.
+   ══════════════════════════════════════════════════ */
+
 export default function Hero() {
   const scrollTo = (sel) => (e) => {
     e.preventDefault()
@@ -9,21 +23,30 @@ export default function Hero() {
   }
 
   return (
-    <section id="hero" className="relative overflow-hidden" style={{ minHeight: '100dvh', background: '#050505' }}>
-      <StarField />
-      <PerspectiveGrid />
-      <Spotlight />
+    <section id="hero" className="hero-sec-mizu">
+      {/* Personal plate. Decorative, and the generated backdrop below
+          is switched off with it so the two never stack. */}
+      <img
+        className="hero-gif-mizu"
+        src="/profile/heropersonal.gif"
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+      />
+      <span className="hero-gif-scrim-mizu" aria-hidden="true" />
 
-      <div
-        style={{
-          position: 'relative', zIndex: 2,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          minHeight: '100dvh',
-          padding: '100px 32px 60px',
-          textAlign: 'center',
-        }}
-      >
+      {/* Outline mark. Sits after the scrim so it paints over it, and
+          the kanji is already in the nav and title, so it is purely a
+          device here. */}
+      <span className="hero-mark-mizu" aria-hidden="true">{PROFILE.kanji}</span>
+
+      <span className="hero-fx-mizu" aria-hidden="true">
+        <StarField />
+        <PerspectiveGrid />
+        <Spotlight />
+      </span>
+
+      <div className="hero-wrap-mizu">
         {/* Spec strip — hairline rules + mono tracking, no container */}
         <div className="hero-enter hero-strip" style={{ animationDelay: '0.05s' }}>
           <div className="hero-strip-rule" />
@@ -38,110 +61,37 @@ export default function Hero() {
           <div className="hero-strip-rule" />
         </div>
 
-        {/* Wordmark */}
-        <h1
-          className="hero-enter"
-          style={{
-            animationDelay: '0.20s',
-            fontWeight: 900,
-            fontFamily: 'Outfit, Poppins, system-ui, sans-serif',
-            letterSpacing: '-0.035em',
-            lineHeight: 0.92,
-            marginBottom: 18,
-            fontSize: 'clamp(2.5rem,7.4vw,5.6rem)',
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'center',
-            gap: 'clamp(0.5rem,1.8vw,1.4rem)',
-            flexWrap: 'wrap',
-            maxWidth: '15ch',
-          }}
-        >
-          <span style={{ color: '#f5f5f5', letterSpacing: '0.01em' }}>{PROFILE.name}</span>
-          <span style={{ color: 'rgba(113,113,122,0.95)', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            {PROFILE.kanji}
-          </span>
+        <h1 className="hero-enter hero-name-mizu" style={{ animationDelay: '0.20s' }}>
+          <span className="hero-name-latin-mizu">{PROFILE.name}</span>
+          <span className="hero-name-kanji-mizu">{PROFILE.kanji}</span>
         </h1>
 
-        <p
-          className="hero-enter"
-          style={{
-            animationDelay: '0.30s',
-            fontSize: 'clamp(1rem,2.2vw,1.4rem)',
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.55)',
-            letterSpacing: '-0.01em',
-            marginBottom: 14,
-            lineHeight: 1.4,
-          }}
-        >
+        <p className="hero-enter hero-tagline-mizu" style={{ animationDelay: '0.30s' }}>
           {PROFILE.tagline}
         </p>
 
-        <p
-          className="hero-enter"
-          style={{
-            animationDelay: '0.38s',
-            fontSize: 'clamp(0.98rem,1.55vw,1.14rem)',
-            fontWeight: 400,
-            color: 'rgba(212,212,216,0.84)',
-            maxWidth: 560,
-            lineHeight: 1.75,
-            marginBottom: 44,
-          }}
-        >
+        <p className="hero-enter hero-intro-mizu" style={{ animationDelay: '0.38s' }}>
           {PROFILE.intro}
         </p>
 
-        <div
-          className="hero-enter"
-          style={{
-            animationDelay: '0.46s',
-            display: 'flex', gap: 12, flexWrap: 'wrap',
-            justifyContent: 'center', marginBottom: 52,
-          }}
-        >
+        <div className="hero-enter hero-cta-mizu" style={{ animationDelay: '0.46s' }}>
           <Pill href="#work" solid onClick={scrollTo('#work')}>
             View the work
-            <span
-              aria-hidden="true"
-              style={{
-                width: 24, height: 24, borderRadius: '50%',
-                background: 'rgba(0,0,0,0.10)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
+            <span className="hero-cta-dot-mizu" aria-hidden="true">
               <ArrowIcon />
             </span>
           </Pill>
+
           <Pill href={PROFILE.contact.github} external>
             <GitHubIcon />
             GitHub
           </Pill>
         </div>
-
-
-
       </div>
 
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'relative', zIndex: 2,
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 6, paddingBottom: 24, opacity: 0.28,
-        }}
-      >
-        <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.5)' }} />
-        <span
-          style={{
-            fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.16em',
-            textTransform: 'uppercase', color: 'rgba(228,228,231,0.78)',
-          }}
-        >
-          Scroll
-        </span>
+      <div className="hero-scroll-mizu" aria-hidden="true">
+        <div className="hero-scroll-rule-mizu" />
+        <span>Scroll</span>
       </div>
     </section>
   )

@@ -1651,38 +1651,93 @@ html.booting-mizu { overflow: hidden; }
   padding: 8px 0;
 }
 
-.hack-spine-word-mizu {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
-  font-size: clamp(1.9rem, 3.6vw, 3.1rem);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.2em;
-  color: rgba(250, 250, 250, 0.96);
-  /* letter-spacing adds a trailing gap below the last kana in vertical
-     flow; pulling it back re-centres the run against the rule. */
-  margin-bottom: -0.2em;
+/* ── Katana ────────────────────────────────────────
+   Replaces the tategaki spine. It pivots about its own
+   centre so the flip reads as the blade turning over,
+   not the whole column swinging. */
+.hack-katana-mizu {
+  position: relative;
+  display: block;
+  width: clamp(38px, 4.6vw, 68px);
+  transition: transform 560ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.hack-spine-rule-mizu {
+.hack-katana-mizu img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Scrolling up turns the point upward to meet the travel. */
+.hack-spine-mizu.is-up .hack-katana-mizu { transform: rotate(180deg); }
+
+/* Wind rushing past the blade. It travels AGAINST the direction the
+   point is facing — a blade driven downward meets air streaming
+   upward past it. Wind moving the same way the blade moves is the
+   blade drifting on a current, not cutting through one.
+
+   It sits inside the katana, so a flip carries it along and the
+   relation stays true in both directions, and behind the image so the
+   streaks read as passing the blade rather than sitting on it. */
+.hack-wind-mizu {
+  /* A point, not a box. Every streak starts stacked on the tip and is
+     thrown outward by its own animation — air splitting at the edge,
+     rather than a row of parallel lines drifting behind it. */
+  position: absolute;
+  left: 50%;
+  bottom: -2%;
+  width: 0;
+  height: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Only while the page is actually being driven — a blade throwing
+   wind at a standstill reads as a loading spinner. */
+.hack-spine-mizu.is-moving .hack-wind-mizu { opacity: 1; }
+
+.hack-wind-mizu i {
+  position: absolute;
+  bottom: 0;
+  left: -0.5px;
   width: 1px;
-  height: clamp(40px, 8vh, 90px);
+  /* Pivots on the end nearest the blade, so the fan opens from the
+     point rather than swinging about each streak's middle. */
+  transform-origin: bottom center;
   background: linear-gradient(
     to bottom,
-    rgba(161, 161, 170, 0.55),
-    rgba(161, 161, 170, 0.06)
+    transparent,
+    rgba(250, 250, 250, 0.78),
+    transparent
   );
+  animation: hack-wind-mizu 720ms linear infinite;
 }
 
-.hack-spine-num-mizu {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  color: rgba(161, 161, 170, 0.75);
+/* Widest throw and sharpest angle at the outside, longest run through
+   the middle: a wake that opens behind the point. */
+.hack-wind-mizu i:nth-child(1) { --dx: -27px; --rot: -18deg; height: 28px; animation-delay: 0ms; }
+.hack-wind-mizu i:nth-child(2) { --dx: -15px; --rot: -9deg;  height: 44px; animation-delay: 120ms; }
+.hack-wind-mizu i:nth-child(3) { --dx: -5px;  --rot: -3deg;  height: 55px; animation-delay: 250ms; }
+.hack-wind-mizu i:nth-child(4) { --dx: 5px;   --rot: 3deg;   height: 53px; animation-delay: 60ms; }
+.hack-wind-mizu i:nth-child(5) { --dx: 16px;  --rot: 9deg;   height: 42px; animation-delay: 190ms; }
+.hack-wind-mizu i:nth-child(6) { --dx: 28px;  --rot: 18deg;  height: 27px; animation-delay: 310ms; }
+
+/* Local frame: the point is down, so travel is +Y and the split air
+   runs -Y while spreading to its own --dx. rotate stays constant
+   across both frames — it is the streak's angle, not a spin. */
+@keyframes hack-wind-mizu {
+  /* var(), not a literal 0 — the minifier rewrites translate(0, y) to
+     translateY(y), which no longer matches translate(x, y) on the end
+     frame and drops the whole thing to matrix interpolation. A var it
+     cannot evaluate keeps the function lists identical. */
+  0%   { transform: translate(var(--dx0, 0px), 10px) rotate(var(--rot)); opacity: 0; }
+  18%  { opacity: 1; }
+  72%  { opacity: 1; }
+  100% { transform: translate(var(--dx), -74px) rotate(var(--rot)); opacity: 0; }
 }
 
 /* ── Column head ───────────────────────────────── */
@@ -1929,22 +1984,9 @@ html.booting-mizu { overflow: hidden; }
     gap: 16px;
   }
 
-  .hack-spine-word-mizu,
-  .hack-spine-num-mizu {
-    writing-mode: horizontal-tb;
-    text-orientation: mixed;
-    margin-bottom: 0;
-  }
 
-  .hack-spine-rule-mizu {
-    width: clamp(30px, 12vw, 80px);
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      rgba(161, 161, 170, 0.55),
-      rgba(161, 161, 170, 0.06)
-    );
-  }
+  .hack-katana-mizu { width: 34px; }
+
 
   .hack-lead-mizu { max-width: 520px; }
 }
@@ -2495,10 +2537,55 @@ html.booting-mizu { overflow: hidden; }
    Misaki deck hero.
    ══════════════════════════════════════════════════ */
 
+/* ── Video band ────────────────────────────────────
+   The panel's own fill is a near-transparent white
+   gradient, so the video reads straight through it.
+   Rather than making the panel opaque — which would
+   waste the plate entirely — it frosts what is behind
+   it, leaving the video sharp around the panel and
+   soft under the copy. */
+.contact-bg-mizu {
+  background-color: #070707;
+  overflow: hidden;
+}
+
+.contact-video-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.contact-scrim-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 50%, rgba(7, 7, 7, 0.82), rgba(7, 7, 7, 0.55) 74%),
+    linear-gradient(rgba(7, 7, 7, 0.42), rgba(7, 7, 7, 0.42));
+}
+
+.contact-inner-mizu {
+  position: relative;
+  z-index: 2;
+}
+
+/* Autoplaying motion is exactly what this setting asks not to see. The
+   band keeps its base colour, so nothing else has to change. */
+@media (prefers-reduced-motion: reduce) {
+  .contact-video-mizu { display: none; }
+}
+
 .contact-panel-mizu {
   position: relative;
   border-radius: clamp(18px, 2.4vw, 28px);
   border: 1px solid rgba(163, 163, 163, 0.16);
+  -webkit-backdrop-filter: blur(14px) saturate(0.9);
+  backdrop-filter: blur(14px) saturate(0.9);
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.038) 0%,
@@ -3230,4 +3317,1512 @@ html.booting-mizu { overflow: hidden; }
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(161, 161, 170, 0.9);
+}
+
+/* ══════════════════════════════════════════════════
+   Section break — full-bleed 3:1 band
+   ══════════════════════════════════════════════════ */
+
+.brk-mizu {
+  position: relative;
+  /* Above the sections' own z-10 stacking so the band is never tucked
+     under a neighbour's backdrop. */
+  z-index: 10;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  /* 3:1 unbounded is 850px tall on a 2560px display, which turns a
+     divider into a section of its own. The cap wins on wide screens
+     and the ratio governs everywhere else. */
+  max-height: clamp(190px, 30vh, 430px);
+  overflow: hidden;
+  background: #050505;
+  border-top: 1px solid rgba(161, 161, 170, 0.16);
+  border-bottom: 1px solid rgba(161, 161, 170, 0.16);
+}
+
+.brk-mizu img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* cover, not fill: the supplied art is not all 3:1, and stretching
+     would distort it rather than crop it. */
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ── Recruiter: no ambient media ───────────────────
+   display:none on a lazy image is never fetched, so
+   hiding the bands here also spares the 4.6MB they
+   weigh — the point of the mode, not just a visual
+   trim. Same for the video, which stops downloading
+   and stops playing. */
+.mode-recruiter .brk-mizu,
+.mode-recruiter .contact-video-mizu,
+.mode-recruiter .contact-scrim-mizu { display: none; }
+
+/* ══════════════════════════════════════════════════
+   Hero — personal is the base, recruiter re-centres
+   ══════════════════════════════════════════════════ */
+
+.hero-sec-mizu {
+  position: relative;
+  overflow: hidden;
+  min-height: 100dvh;
+  background: #050505;
+}
+
+/* ── Personal plate ──────────────────────────────── */
+.hero-gif-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+.hero-gif-scrim-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Weighted to the bottom-left, because that is where the block sits.
+     A flat wash heavy enough for the copy would kill the plate
+     everywhere else. */
+  background:
+    linear-gradient(to top, rgba(5, 5, 5, 0.94) 0%, rgba(5, 5, 5, 0.62) 38%, rgba(5, 5, 5, 0.28) 70%),
+    linear-gradient(to right, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0.3) 52%, rgba(5, 5, 5, 0.12) 100%);
+}
+
+/* The generated backdrop belongs to recruiter mode — stacking it on
+   the plate just muddies both. */
+.hero-fx-mizu { display: none; }
+
+/* ── Block ───────────────────────────────────────── */
+.hero-wrap-mizu {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 100dvh;
+  padding: 140px clamp(24px, 6vw, 88px) clamp(88px, 12vh, 132px);
+  text-align: left;
+}
+
+.hero-name-mizu {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1.8vw, 1.4rem);
+  max-width: 15ch;
+  margin-bottom: 18px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-weight: 800;
+  font-size: clamp(2.3rem, 6.6vw, 5rem);
+  letter-spacing: 0.01em;
+  line-height: 1.02;
+}
+
+.hero-name-latin-mizu { color: #f5f5f5; }
+
+.hero-name-kanji-mizu {
+  color: rgba(113, 113, 122, 0.95);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hero-tagline-mizu {
+  font-size: clamp(1rem, 2.2vw, 1.4rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.hero-intro-mizu {
+  font-size: clamp(0.98rem, 1.55vw, 1.14rem);
+  font-weight: 400;
+  color: rgba(212, 212, 216, 0.84);
+  max-width: 560px;
+  line-height: 1.75;
+  margin-bottom: 44px;
+}
+
+.hero-cta-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.hero-cta-dot-mizu {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Bottom-left block leaves the bottom-centre free, so the cue can stay
+   where a reader expects it. */
+.hero-scroll-mizu {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.28;
+}
+
+.hero-scroll-rule-mizu {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.hero-scroll-mizu span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(228, 228, 231, 0.78);
+}
+
+/* ── Recruiter: the centred column ───────────────── */
+.mode-recruiter .hero-gif-mizu,
+.mode-recruiter .hero-gif-scrim-mizu { display: none; }
+
+.mode-recruiter .hero-fx-mizu { display: block; }
+
+.mode-recruiter .hero-wrap-mizu {
+  align-items: center;
+  justify-content: center;
+  padding: 100px 32px 60px;
+  text-align: center;
+}
+
+.mode-recruiter .hero-name-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.5rem, 7.4vw, 5.6rem);
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  justify-content: center;
+}
+
+.mode-recruiter .hero-name-latin-mizu { letter-spacing: 0.01em; }
+.mode-recruiter .hero-intro-mizu { text-align: center; }
+.mode-recruiter .hero-cta-mizu { justify-content: center; }
+.mode-recruiter .hero-scroll-mizu { position: static; transform: none; padding-bottom: 24px; }
+
+@media (max-width: 760px) {
+  .hero-wrap-mizu { padding: 120px 22px 96px; }
+  .hero-scroll-mizu { display: none; }
+  .mode-recruiter .hero-scroll-mizu { display: flex; }
+}
+
+/* ══════════════════════════════════════════════════
+   Personal nav — floating kanji dock
+
+   Silhouette: the top corners sweep up to points with
+   the edge dipping between them, the way a kawara roof
+   or a torii's kasagi does; the foot is chamfered flat.
+   Nothing here is a radius.
+   ══════════════════════════════════════════════════ */
+
+.pnav-mizu {
+  position: fixed;
+  z-index: 55;
+  /* Positioning shell only. The clip lives on the body inside, because
+     clip-path also clips absolutely-positioned descendants and the
+     rope hangs outside this box. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: grab;
+  transition: left 320ms cubic-bezier(0.16,1,0.3,1),
+              right 320ms cubic-bezier(0.16,1,0.3,1),
+              top 320ms cubic-bezier(0.16,1,0.3,1),
+              bottom 320ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pnav-mizu.is-dragging { transition: none; cursor: grabbing; }
+
+.pnav-mizu.is-right  { right: 18px; }
+.pnav-mizu.is-left   { left: 18px; }
+.pnav-mizu.is-top    { top: 18px; }
+.pnav-mizu.is-bottom { bottom: 18px; }
+
+/* ── Silhouette ────────────────────────────────── */
+.pnav-body-mizu {
+  --eave: polygon(
+    0 0,
+    15px 12px,
+    calc(100% - 15px) 12px,
+    100% 0,
+    100% calc(100% - 11px),
+    calc(100% - 11px) 100%,
+    11px 100%,
+    0 calc(100% - 11px)
+  );
+
+  clip-path: var(--eave);
+  padding: 1px;
+  background: rgba(212, 212, 216, 0.5);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6);
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pnav-mizu.is-dragging .pnav-body-mizu { background: rgba(250, 250, 250, 0.85); }
+
+.pnav-face-mizu {
+  clip-path: var(--eave);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  /* Extra top padding clears the dip in the eave so the grip never
+     rides up into the taper. */
+  padding: 20px 8px 11px;
+  background: rgba(8, 8, 8, 0.88);
+  -webkit-backdrop-filter: blur(14px) saturate(0.9);
+  backdrop-filter: blur(14px) saturate(0.9);
+}
+
+.pnav-mizu.is-right .pnav-face-mizu,
+.pnav-mizu.is-left .pnav-face-mizu { flex-direction: column; }
+
+.pnav-mizu.is-top .pnav-face-mizu,
+.pnav-mizu.is-bottom .pnav-face-mizu {
+  flex-direction: row;
+  padding: 18px 12px 10px;
+}
+
+/* ── Grip ──────────────────────────────────────── */
+.pnav-grip-mizu {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+.pnav-grip-mizu i {
+  width: 8px;
+  height: 1px;
+  background: rgba(212, 212, 216, 0.55);
+}
+
+.pnav-mizu.is-top .pnav-grip-mizu,
+.pnav-mizu.is-bottom .pnav-grip-mizu { flex-direction: column; }
+
+.pnav-mizu.is-top .pnav-grip-mizu i,
+.pnav-mizu.is-bottom .pnav-grip-mizu i { width: 1px; height: 8px; }
+
+/* ── Marks ─────────────────────────────────────── */
+.pnav-brand-mizu {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fafafa;
+}
+
+.pnav-brand-mizu:hover { background: rgba(255, 255, 255, 0.12); }
+
+.pnav-rule-mizu {
+  background: rgba(161, 161, 170, 0.35);
+  flex-shrink: 0;
+  transition: width 400ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pnav-mizu.is-right .pnav-rule-mizu,
+.pnav-mizu.is-left .pnav-rule-mizu { width: 20px; height: 1px; margin: 3px 0; }
+
+.pnav-mizu.is-top .pnav-rule-mizu,
+.pnav-mizu.is-bottom .pnav-rule-mizu { width: 1px; height: 20px; margin: 0 3px; }
+
+.pnav-item-mizu {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  color: rgba(212, 212, 216, 0.86);
+}
+
+.pnav-item-mizu:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+.pnav-item-mizu,
+.pnav-brand-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  /* Square by default — a radius here would contradict the shell. */
+  border-radius: 0;
+  transition: width 400ms cubic-bezier(0.16,1,0.3,1),
+              gap 400ms cubic-bezier(0.16,1,0.3,1),
+              padding 400ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1),
+              color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pnav-kanji-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.pnav-mode-mizu { cursor: pointer; color: rgba(161, 161, 170, 0.9); }
+.pnav-mode-mizu:hover { color: #fff; }
+
+/* ── Label: tooltip closed, inline open ────────── */
+.pnav-label-mizu {
+  position: absolute;
+  white-space: nowrap;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border: 1px solid rgba(163, 163, 163, 0.3);
+  background: rgba(8, 8, 8, 0.94);
+  color: #fafafa;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pnav-item-mizu:hover .pnav-label-mizu,
+.pnav-item-mizu:focus-visible .pnav-label-mizu { opacity: 1; }
+
+.pnav-mizu.is-right .pnav-label-mizu  { right: calc(100% + 10px); }
+.pnav-mizu.is-left .pnav-label-mizu   { left: calc(100% + 10px); }
+.pnav-mizu.is-top .pnav-label-mizu    { top: calc(100% + 10px); }
+.pnav-mizu.is-bottom .pnav-label-mizu { bottom: calc(100% + 10px); }
+
+/* ── Rope (suzunoo) ────────────────────────────────
+   A twisted rope, not a line: the diagonal repeating
+   gradient on a narrow strip is what reads as strands
+   laid around each other. Same weave on the knot, and
+   a masked fan below it for the tassel. */
+.pnav-rope-mizu {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.pnav-rope-mizu:active { cursor: grabbing; }
+
+.pnav-mizu.is-bottom .pnav-rope-mizu {
+  top: auto;
+  bottom: 100%;
+  flex-direction: column-reverse;
+}
+
+.pnav-rope-line-mizu {
+  width: 6px;
+  background:
+    repeating-linear-gradient(
+      -62deg,
+      rgba(233, 231, 225, 0.95) 0 1.4px,
+      rgba(176, 170, 158, 0.9) 1.4px 2.8px,
+      rgba(104, 99, 90, 0.85) 2.8px 4.2px,
+      rgba(150, 145, 134, 0.9) 4.2px 5.4px
+    );
+  box-shadow:
+    inset 1px 0 0 rgba(0, 0, 0, 0.35),
+    inset -1px 0 0 rgba(0, 0, 0, 0.35);
+  transition: height 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* While the hand is on it the rope must track the pointer exactly —
+   easing here reads as elastic lagging behind. */
+.pnav-mizu.is-pulling .pnav-rope-line-mizu { transition: none; }
+
+/* Knot: the same weave, wider than tall and bound top and bottom. */
+.pnav-rope-bead-mizu {
+  position: relative;
+  width: 17px;
+  height: 14px;
+  flex-shrink: 0;
+  background:
+    repeating-linear-gradient(
+      -62deg,
+      rgba(233, 231, 225, 0.95) 0 1.4px,
+      rgba(176, 170, 158, 0.9) 1.4px 2.8px,
+      rgba(104, 99, 90, 0.85) 2.8px 4.2px,
+      rgba(150, 145, 134, 0.9) 4.2px 5.4px
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 5px 12px rgba(0, 0, 0, 0.55);
+  transition: transform 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Tassel: a solid block masked into fine vertical strands, fading out
+   down its length. Cheaper and crisper than drawing each strand. */
+.pnav-rope-bead-mizu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 13px;
+  height: 11px;
+  background: linear-gradient(
+    to bottom,
+    rgba(226, 222, 214, 0.85),
+    rgba(226, 222, 214, 0)
+  );
+  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 3px);
+  mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 3px);
+}
+
+.pnav-rope-mizu:hover .pnav-rope-bead-mizu { transform: scale(1.15); }
+.pnav-mizu.is-open .pnav-rope-bead-mizu { transform: scale(0.88); }
+
+/* ── Opened ────────────────────────────────────────
+   Width animates to a fixed target: neither `auto` nor
+   a percentage is interpolable, so either would make
+   the dock jump open instead of sliding. */
+.pnav-mizu.is-open .pnav-item-mizu,
+.pnav-mizu.is-open .pnav-brand-mizu {
+  justify-content: flex-start;
+  gap: 11px;
+  width: 172px;
+  padding: 0 11px;
+}
+
+/* The label is a hover tooltip when closed and part of the row when
+   open. position cannot animate between those, so the fade is delayed
+   instead — by the time it shows, the row has opened under it. Closing
+   runs with no delay, so it clears before the row narrows over it. */
+.pnav-mizu.is-open .pnav-label-mizu {
+  position: static;
+  opacity: 1;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  pointer-events: auto;
+  transition: opacity 240ms cubic-bezier(0.16,1,0.3,1) 170ms;
+}
+
+.pnav-mizu.is-open .pnav-rule-mizu { width: 100%; }
+
+/* Along a horizontal edge nine 172px rows would be wider than the
+   screen, so items size to content and the rail may wrap. */
+.pnav-mizu.is-open.is-top .pnav-face-mizu,
+.pnav-mizu.is-open.is-bottom .pnav-face-mizu {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 92vw;
+}
+
+.pnav-mizu.is-open.is-top .pnav-item-mizu,
+.pnav-mizu.is-open.is-bottom .pnav-item-mizu,
+.pnav-mizu.is-open.is-top .pnav-brand-mizu,
+.pnav-mizu.is-open.is-bottom .pnav-brand-mizu { width: auto; }
+
+.pnav-mizu.is-open.is-top .pnav-rule-mizu,
+.pnav-mizu.is-open.is-bottom .pnav-rule-mizu { width: 1px; height: 22px; }
+
+/* ── Mode visibility ─────────────────────────────
+   Exactly one nav is visible at a time. Both mount so
+   the mode can switch without a React swap flashing
+   the wrong one, so each has to be explicitly hidden
+   in the other mode — the notch bar is display:flex,
+   and restoring it as block would collapse its rails. */
+.mode-recruiter .pnav-mizu { display: none; }
+
+.notch-mizu { display: none; }
+.mode-recruiter .notch-mizu { display: flex; }
+
+@media (max-width: 620px) {
+  .pnav-face-mizu { gap: 1px; padding: 18px 6px 9px; }
+  .pnav-brand-mizu,
+  .pnav-item-mizu { width: 30px; height: 30px; }
+}
+
+/* ══════════════════════════════════════════════════
+   Hero — outline mark + left-aligned strip
+   ══════════════════════════════════════════════════ */
+
+/* .hero-strip centres itself with `margin: 0 auto`, and auto margins
+   beat the flex container's align-items:flex-start. Zeroing them is
+   what actually moves the strip to the left. */
+.hero-strip { margin-left: 0; margin-right: 0; }
+.mode-recruiter .hero-strip { margin-left: auto; margin-right: auto; }
+
+/* The outline mark carries the kanji in personal mode, so the inline
+   one in the title would only say it twice. */
+.hero-name-kanji-mizu { display: none; }
+.mode-recruiter .hero-name-kanji-mizu { display: inline; }
+
+.hero-mark-mizu {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  /* Centred on the right half rather than pinned to the edge: that
+     half runs 50%–100%, so its middle is 75%. */
+  left: 74%;
+  transform: translate(-50%, -50%);
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(10rem, 34vw, 31rem);
+  font-weight: 800;
+  line-height: 1;
+  /* Outline only: transparent fill with a drawn stroke, so it reads as
+     a device over the plate rather than a second headline. */
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(250, 250, 250, 0.32);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mode-recruiter .hero-mark-mizu { display: none; }
+
+/* Below this the mark would sit under the copy rather than beside it. */
+@media (max-width: 860px) {
+  .hero-mark-mizu {
+    top: 28%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(11rem, 42vw, 18rem);
+    -webkit-text-stroke-width: 1.5px;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   Hackathons — header
+
+   Centred and set in mincho, with 挑戦 between the
+   kicker and the headline. The section keeps the `alt`
+   band colour the shell used to give it.
+   ══════════════════════════════════════════════════ */
+
+.hk-page-mizu {
+  position: relative;
+  z-index: 10;
+  padding: 128px 0;
+  background: #070707;
+}
+
+.hk-inner-mizu {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.hk-head-mizu {
+  text-align: center;
+  margin-bottom: clamp(30px, 5vw, 60px);
+}
+
+.hk-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  /* Wide enough to read as a rule of type rather than a word. */
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.85);
+  margin-bottom: 18px;
+}
+
+.hk-kana-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  line-height: 1;
+  color: rgba(244, 244, 245, 0.55);
+  margin-bottom: 20px;
+}
+
+.hk-claim-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(2rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.06;
+  color: #fafafa;
+  max-width: 18ch;
+  margin: 0 auto 22px;
+}
+
+.hk-copy-mizu {
+  max-width: 44rem;
+  margin: 0 auto;
+  font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+  line-height: 1.85;
+  color: rgba(212, 212, 216, 0.84);
+}
+
+/* ── Recruiter: plain left-aligned header ───────── */
+.mode-recruiter .hk-head-mizu {
+  text-align: left;
+  margin-bottom: 30px;
+}
+
+.mode-recruiter .hk-kana-mizu { display: none; }
+
+.mode-recruiter .hk-kicker-mizu {
+  letter-spacing: 0.14em;
+  text-indent: 0;
+  margin-bottom: 14px;
+}
+
+.mode-recruiter .hk-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  max-width: 52rem;
+  margin: 0 0 0.7em;
+}
+
+.mode-recruiter .hk-copy-mizu { margin: 0 0 2.75rem; max-width: 38rem; }
+
+@media (max-width: 760px) {
+  .hk-page-mizu { padding: 96px 0; }
+  .hk-inner-mizu { padding: 0 20px; }
+}
+
+/* ══════════════════════════════════════════════════
+   Stack — tansu (chest of drawers)
+   ══════════════════════════════════════════════════ */
+
+.tn-page-mizu {
+  position: relative;
+  z-index: 10;
+  padding: 128px 0;
+  background: #050505;
+}
+
+.tn-inner-mizu {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── Header ────────────────────────────────────── */
+.tn-head-mizu {
+  text-align: center;
+  margin-bottom: clamp(34px, 5vw, 64px);
+}
+
+.tn-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.85);
+  margin-bottom: 18px;
+}
+
+.tn-kana-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  line-height: 1;
+  color: rgba(244, 244, 245, 0.55);
+  margin-bottom: 20px;
+}
+
+.tn-claim-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(2rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.06;
+  color: #fafafa;
+  margin: 0 auto 22px;
+}
+
+.tn-copy-mizu {
+  max-width: 44rem;
+  margin: 0 auto;
+  font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+  line-height: 1.85;
+  color: rgba(212, 212, 216, 0.84);
+}
+
+/* ── The chest ─────────────────────────────────────
+   Drawers butt directly against one another with a
+   single shared hairline, the way carcase joinery
+   does. A gap between them would read as separate
+   boxes rather than one chest. */
+.tn-chest-mizu {
+  border: 1px solid rgba(163, 163, 163, 0.28);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.tn-drawer-mizu {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  align-items: stretch;
+  border-bottom: 1px solid rgba(163, 163, 163, 0.2);
+}
+
+.tn-chest-mizu > *:last-child .tn-drawer-mizu { border-bottom: none; }
+
+/* ── Label plate ───────────────────────────────── */
+.tn-plate-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 14px;
+  border-right: 1px solid rgba(163, 163, 163, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tn-kanji-mizu {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: rgba(250, 250, 250, 0.95);
+}
+
+.tn-plate-rule-mizu {
+  width: 22px;
+  height: 1px;
+  background: rgba(161, 161, 170, 0.4);
+}
+
+.tn-cat-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  text-align: center;
+  color: rgba(212, 212, 216, 0.9);
+}
+
+.tn-count-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(161, 161, 170, 0.75);
+  margin-top: auto;
+}
+
+/* ── Drawer face ───────────────────────────────── */
+.tn-face-mizu {
+  position: relative;
+  padding: 22px 26px 22px 46px;
+  /* Grain: a very low-contrast horizontal repeat. Anything stronger
+     turns the tools into something read through a fence. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.014) 0px,
+    rgba(255, 255, 255, 0.014) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+}
+
+/* The pull, sunk into the left of the face. */
+.tn-pull-mizu {
+  position: absolute;
+  top: 50%;
+  left: 17px;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 212, 216, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.tn-pull-mizu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 15px;
+  background: linear-gradient(to bottom, rgba(212, 212, 216, 0.4), transparent);
+}
+
+/* ── Tools ─────────────────────────────────────── */
+.tn-items-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tn-tool-mizu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px 6px 8px;
+  border: 1px solid rgba(163, 163, 163, 0.2);
+  background: rgba(255, 255, 255, 0.028);
+  transition: border-color 170ms cubic-bezier(0.16,1,0.3,1),
+              background 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tn-tool-mizu:hover {
+  border-color: rgba(212, 212, 216, 0.4);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.tn-tool-text-mizu {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tn-tool-name-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+  color: rgba(250, 250, 250, 0.94);
+  white-space: nowrap;
+}
+
+.tn-tool-ver-mizu,
+.tn-tool-role-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(161, 161, 170, 0.85);
+  white-space: nowrap;
+}
+
+/* Hidden in personal mode — the drawer plate carries a kanji, a name
+   and a count, and a paragraph under them stretches every drawer to the
+   height of its own description. Recruiter mode brings it back. */
+.tn-note-mizu {
+  display: none;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(161, 161, 170, 0.16);
+  font-size: 0.83rem;
+  line-height: 1.7;
+  color: rgba(212, 212, 216, 0.7);
+}
+
+@media (max-width: 760px) {
+  .tn-page-mizu { padding: 96px 0; }
+  .tn-inner-mizu { padding: 0 20px; }
+
+  /* The plate becomes a header strip: a 132px column beside wrapped
+     chips leaves the chips nowhere to go. */
+  .tn-drawer-mizu { grid-template-columns: 1fr; }
+
+  .tn-plate-mizu {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-right: none;
+    border-bottom: 1px solid rgba(163, 163, 163, 0.2);
+  }
+
+  .tn-kanji-mizu { writing-mode: horizontal-tb; font-size: 1.2rem; }
+  .tn-plate-rule-mizu { width: 1px; height: 16px; }
+  .tn-count-mizu { margin-top: 0; margin-left: auto; }
+
+  .tn-face-mizu { padding: 18px 16px; }
+  .tn-pull-mizu { display: none; }
+}
+
+/* ── Recruiter: the original stack layout ──────────
+   Not a simplification of the tansu — the exact rules
+   the SectionShell + Layers version used, re-applied
+   to this DOM. Values copied verbatim from the old
+   .stack-layer-mizu / .si-mizu set so the two are
+   pixel-identical. */
+.mode-recruiter .tn-kana-mizu,
+.mode-recruiter .tn-kanji-mizu,
+.mode-recruiter .tn-plate-rule-mizu,
+.mode-recruiter .tn-count-mizu,
+.mode-recruiter .tn-pull-mizu { display: none; }
+
+/* Header — SectionShell's own values. */
+.mode-recruiter .tn-head-mizu { text-align: left; margin-bottom: 0; }
+
+.mode-recruiter .tn-kicker-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-indent: 0;
+  color: rgba(212, 212, 216, 0.9);
+  margin-bottom: 1.5rem;
+}
+
+.mode-recruiter .tn-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  max-width: 52rem;
+  margin: 0 0 0.7em;
+}
+
+.mode-recruiter .tn-copy-mizu {
+  max-width: 38rem;
+  margin: 0 0 2.75rem;
+  font-size: clamp(0.92rem, 1.1vw, 1.08rem);
+  line-height: 1.75;
+  color: rgba(244, 244, 245, 0.82);
+}
+
+/* Layers */
+.mode-recruiter .tn-chest-mizu {
+  border: none;
+  border-top: 1px solid rgba(161, 161, 170, 0.24);
+  background: none;
+  margin-top: 12px;
+}
+
+.mode-recruiter .tn-drawer-mizu {
+  grid-template-columns: 190px 1fr;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.18);
+}
+
+.mode-recruiter .tn-plate-mizu {
+  display: block;
+  padding: 8px 0 0;
+  border-right: none;
+  background: none;
+}
+
+.mode-recruiter .tn-cat-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  color: rgba(212, 212, 216, 0.84);
+}
+
+.mode-recruiter .tn-note-mizu {
+  display: block;
+  margin: 6px 0 0;
+  padding: 0;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(161, 161, 170, 0.85);
+  line-height: 1.5;
+}
+
+.mode-recruiter .tn-face-mizu { padding: 0; background-image: none; }
+.mode-recruiter .tn-items-mizu { gap: 10px; }
+
+.mode-recruiter .tn-tool-mizu {
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(161, 161, 170, 0.28);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mode-recruiter .tn-tool-text-mizu { line-height: 1.15; gap: 4px; }
+
+/* The old chip put the role above the name; this DOM has it after, so
+   the two are re-ordered rather than the markup being duplicated. */
+.mode-recruiter .tn-tool-role-mizu {
+  order: -1;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.mode-recruiter .tn-tool-name-mizu {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(250, 250, 250, 0.96);
+}
+
+.mode-recruiter .tn-tool-ver-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.88);
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+
+/* ══════════════════════════════════════════════════
+   Experience — kakejiku (hanging scrolls)
+   ══════════════════════════════════════════════════ */
+
+.kj-page-mizu {
+  position: relative;
+  z-index: 10;
+  padding: 128px 0;
+  background: #070707;
+}
+
+.kj-inner-mizu {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.kj-head-mizu { text-align: center; margin-bottom: clamp(46px, 6vw, 78px); }
+
+.kj-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.85);
+  margin-bottom: 18px;
+}
+
+.kj-kana-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  line-height: 1;
+  color: rgba(244, 244, 245, 0.55);
+  margin-bottom: 20px;
+}
+
+.kj-claim-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(2rem, 6vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.06;
+  color: #fafafa;
+  max-width: 20ch;
+  margin: 0 auto;
+}
+
+/* Two scrolls hang apart from each other, so the shared hairline and
+   the inner padding the flat layout used are dropped here. */
+.kj-grid-mizu { gap: clamp(26px, 4vw, 58px); }
+.kj-grid-mizu > * + * { border-left: none; padding-left: 0; }
+.kj-grid-mizu > :first-child { padding-right: 0; }
+
+/* ── The scroll ────────────────────────────────── */
+.kj-scroll-mizu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* Room above for the cord to hang from. */
+  padding-top: 26px;
+}
+
+/* Cord: a hook and the line it hangs on. */
+.kj-cord-mizu {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(to bottom, rgba(161, 161, 170, 0.15), rgba(212, 212, 216, 0.55));
+}
+
+.kj-cord-mizu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 212, 216, 0.5);
+}
+
+/* Rollers overhang the paper on both sides, which is the detail that
+   makes it read as a scroll rather than a bordered card. */
+.kj-roller-mizu {
+  display: block;
+  flex-shrink: 0;
+  height: 11px;
+  margin: 0 -13px;
+  border-radius: 6px;
+  background: linear-gradient(
+    to bottom,
+    rgba(236, 233, 226, 0.92),
+    rgba(151, 146, 136, 0.9) 46%,
+    rgba(88, 84, 77, 0.92)
+  );
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.kj-roller-mizu.is-bot { height: 14px; }
+
+.kj-paper-mizu {
+  position: relative;
+  flex: 1;
+  padding: 34px 30px 34px 34px;
+  border-left: 1px solid rgba(163, 163, 163, 0.22);
+  border-right: 1px solid rgba(163, 163, 163, 0.22);
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    rgba(255, 255, 255, 0.022);
+}
+
+/* Written down the right edge, the way a scroll is titled. The paper's
+   right padding is what keeps the panel clear of it. */
+.kj-title-mizu {
+  position: absolute;
+  top: 30px;
+  right: 26px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  color: rgba(250, 250, 250, 0.9);
+}
+
+.kj-paper-mizu .org-panel-mizu { padding-right: 42px; }
+
+/* ── Recruiter: the original two-panel layout ─────
+   The frame comes off and the panel inside is already
+   the original markup, so nothing has to be restyled
+   back — only the scroll chrome is dropped. */
+.mode-recruiter .kj-cord-mizu,
+.mode-recruiter .kj-roller-mizu,
+.mode-recruiter .kj-title-mizu,
+.mode-recruiter .kj-kana-mizu { display: none; }
+
+.mode-recruiter .kj-scroll-mizu { padding-top: 0; display: block; }
+
+.mode-recruiter .kj-paper-mizu {
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.mode-recruiter .kj-paper-mizu .org-panel-mizu { padding-right: 0; }
+
+.mode-recruiter .kj-head-mizu { text-align: left; margin-bottom: 0; }
+
+.mode-recruiter .kj-kicker-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-indent: 0;
+  color: rgba(212, 212, 216, 0.9);
+  margin-bottom: 1.5rem;
+}
+
+.mode-recruiter .kj-claim-mizu {
+  font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  max-width: 52rem;
+  margin: 0 0 1.1em;
+}
+
+/* Back to the shared hairline and inner padding. */
+.mode-recruiter .kj-grid-mizu { gap: 0; }
+
+.mode-recruiter .kj-grid-mizu > * + * {
+  border-left: 1px solid rgba(161, 161, 170, 0.2);
+  padding-left: clamp(28px, 4.5vw, 60px);
+}
+
+.mode-recruiter .kj-grid-mizu > :first-child {
+  padding-right: clamp(28px, 4.5vw, 60px);
+}
+
+@media (max-width: 760px) {
+  .kj-page-mizu { padding: 96px 0; }
+  .kj-inner-mizu { padding: 0 20px; }
+  .kj-title-mizu { font-size: 1.2rem; top: 24px; right: 20px; }
+  .kj-paper-mizu { padding: 28px 22px; }
+  .kj-paper-mizu .org-panel-mizu { padding-right: 34px; }
+
+  .mode-recruiter .kj-grid-mizu > * + * { border-left: none; padding-left: 0; }
+  .mode-recruiter .kj-grid-mizu > :first-child { padding-right: 0; }
+}
+
+/* ══════════════════════════════════════════════════
+   Section plates
+
+   Same construction as the About backdrop: the image
+   under a flat wash plus a radial pool centred where
+   the copy lands, so the plate survives at the margins
+   and gets out of the way behind the text.
+
+   Content in each section needs an explicit z-index —
+   these are ::before pseudo-elements, which paint
+   after their parent's background but before nothing
+   else, so untouched children would sit under them.
+   ══════════════════════════════════════════════════ */
+
+.wk-page-mizu::before,
+.kj-page-mizu::before,
+.tn-page-mizu::before,
+.hk-page-mizu::before,
+.mg-page-mizu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.wk-inner-mizu,
+.kj-inner-mizu,
+.tn-inner-mizu,
+.hk-inner-mizu,
+.mg-sheet-mizu {
+  position: relative;
+  z-index: 1;
+}
+
+/* Work — #050505 band */
+.wk-page-mizu::before {
+  background-image:
+    radial-gradient(ellipse 70% 56% at 50% 46%, rgba(5, 5, 5, 0.9), rgba(5, 5, 5, 0) 74%),
+    linear-gradient(rgba(5, 5, 5, 0.82), rgba(5, 5, 5, 0.82)),
+    url('/profile/worksbackground.jpg');
+}
+
+/* Experience — #070707 band */
+.kj-page-mizu::before {
+  background-image:
+    radial-gradient(ellipse 70% 56% at 50% 46%, rgba(7, 7, 7, 0.9), rgba(7, 7, 7, 0) 74%),
+    linear-gradient(rgba(7, 7, 7, 0.82), rgba(7, 7, 7, 0.82)),
+    url('/profile/experiencebg.jpg');
+}
+
+/* Stack — #050505 band */
+.tn-page-mizu::before {
+  background-image:
+    radial-gradient(ellipse 70% 56% at 50% 46%, rgba(5, 5, 5, 0.9), rgba(5, 5, 5, 0) 74%),
+    linear-gradient(rgba(5, 5, 5, 0.82), rgba(5, 5, 5, 0.82)),
+    url('/profile/technologybg.jpg');
+}
+
+/* Hackathons — plate at 10% visible. The wash is 0.90; the plate is
+   white, so this is the number that decides whether the band reads as
+   texture or as a panel. The radial adds a little more behind the
+   copy on top of it. */
+.hk-page-mizu::before {
+  background-image:
+    radial-gradient(ellipse 72% 58% at 50% 46%, rgba(7, 7, 7, 0.3), rgba(7, 7, 7, 0.05) 78%),
+    linear-gradient(rgba(7, 7, 7, 0.9), rgba(7, 7, 7, 0.9)),
+    url('/profile/hackathonsbg.png');
+}
+
+/* Recruiter mode carries no ambient imagery — same call as the About
+   plate, the section breaks and the contact video. */
+.mode-recruiter .wk-page-mizu::before,
+.mode-recruiter .kj-page-mizu::before,
+.mode-recruiter .tn-page-mizu::before,
+.mode-recruiter .hk-page-mizu::before,
+.mode-recruiter .mg-page-mizu::before { display: none; }
+
+/* Certifications — #070707 band. The manga sheet already lays its own
+   screentone over this, so the wash sits a little heavier than the
+   dark-plate sections to keep the two textures from competing. */
+.mg-page-mizu::before {
+  background-image:
+    radial-gradient(ellipse 70% 56% at 50% 46%, rgba(7, 7, 7, 0.9), rgba(7, 7, 7, 0) 74%),
+    linear-gradient(rgba(7, 7, 7, 0.86), rgba(7, 7, 7, 0.86)),
+    url('/profile/certsbg.jpg');
+}
+
+/* ══════════════════════════════════════════════════
+   Contact — kōsatsu (roofed noticeboard)
+
+   Chrome around the existing panel, not a replacement:
+   the frosted panel becomes the notice posted on the
+   board, so recruiter mode only has to drop the frame.
+   ══════════════════════════════════════════════════ */
+
+.kb-board-mizu {
+  position: relative;
+  max-width: 940px;
+  margin: 0 auto;
+  /* Room below for the posts to stand in. */
+  padding-bottom: 54px;
+}
+
+/* Roof. Wider than the board and tapering upward — the overhang is
+   what makes it a shelter over the notice rather than a header bar. */
+.kb-roof-mizu {
+  display: block;
+  height: clamp(26px, 3.4vw, 44px);
+  margin: 0 clamp(-30px, -3vw, -18px) -1px;
+  clip-path: polygon(0 100%, 7% 0, 93% 0, 100% 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(214, 209, 199, 0.9),
+    rgba(126, 121, 112, 0.88) 52%,
+    rgba(72, 69, 63, 0.92)
+  );
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+}
+
+.kb-face-mizu {
+  position: relative;
+  padding: clamp(26px, 3.4vw, 42px) clamp(20px, 3vw, 40px);
+  border: 1px solid rgba(163, 163, 163, 0.3);
+  /* Vertical grain — a board is sawn along its length. */
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.016) 0px,
+      rgba(255, 255, 255, 0.016) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.kb-posts-mizu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54px;
+  display: flex;
+  justify-content: center;
+  gap: clamp(180px, 40vw, 420px);
+  pointer-events: none;
+}
+
+.kb-posts-mizu i {
+  width: 13px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    rgba(196, 191, 181, 0.72),
+    rgba(112, 107, 99, 0.7) 55%,
+    rgba(62, 59, 54, 0.75)
+  );
+  /* Fades out at the foot rather than stopping on a hard edge — the
+     posts read as going into the ground, not as cut bars. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+
+/* The board provides the frame, so the notice inside loses its own
+   outer radius and sits flush against it. */
+.kb-face-mizu .contact-panel-mizu {
+  border: none;
+  border-radius: 0;
+  padding: clamp(30px, 5vw, 62px) clamp(14px, 3vw, 44px);
+}
+
+/* ── Recruiter: the plain panel closer ─────────── */
+.mode-recruiter .kb-roof-mizu,
+.mode-recruiter .kb-posts-mizu { display: none; }
+
+.mode-recruiter .kb-board-mizu { max-width: none; padding-bottom: 0; }
+
+.mode-recruiter .kb-face-mizu {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.mode-recruiter .kb-face-mizu .contact-panel-mizu {
+  border: 1px solid rgba(163, 163, 163, 0.16);
+  border-radius: clamp(18px, 2.4vw, 28px);
+  padding: clamp(44px, 7.5vw, 96px) clamp(22px, 5vw, 72px);
+}
+
+/* ══════════════════════════════════════════════════
+   Closing plate
+   ══════════════════════════════════════════════════ */
+
+.end-plate-mizu {
+  position: relative;
+  z-index: 10;
+  background: #050505;
+  line-height: 0;
+}
+
+/* Full-bleed and uncropped. The source is portrait (736×1308), so at
+   viewport width the band is tall — that is the cost of showing the
+   whole plate edge to edge, and scrolling reaches the bottom of it. */
+.end-plate-mizu img {
+  display: block;
+  width: 100%;
+  height: auto;
 }

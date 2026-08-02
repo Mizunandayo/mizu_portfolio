@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Nav from './components/Nav.jsx'
+import PersonalNav from './components/PersonalNav.jsx'
 import Footer from './components/Footer.jsx'
 import Home from './pages/Home.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -33,7 +34,10 @@ export default function App() {
       <Boot />
       <a href="#main" className="skip-mizu">Skip to content</a>
       <ScrollManager />
+      {/* Both navs mount; CSS shows one. Swapping them in React would
+          flash the wrong one before hydration settles the mode. */}
       <Nav />
+      <PersonalNav />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="*" element={<NotFound />} />
