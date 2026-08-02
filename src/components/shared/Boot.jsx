@@ -29,7 +29,10 @@ export default function Boot() {
     /* Reduced motion collapses every animation to ~0ms globally, so the
        overlay is already invisible — just take it out immediately
        rather than holding an empty pane over the page for 3.5s. */
+    /* Recruiter mode skips the 3.5s intro outright — someone screening
+       candidates should land on the work, not wait for a title card. */
     const skip = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('mode-recruiter')
     const root = document.documentElement
     const unlock = () => root.classList.remove('booting-mizu')
 

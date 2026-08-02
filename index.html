@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#050505" />
     <!--app-head-->
+    <!-- Applies the saved presentation mode before first paint. The
+         page is prerendered in personal mode, so without this a
+         recruiter-mode visitor sees the full Japanese layout flash up
+         and then collapse once React hydrates. -->
+    <script>
+      try {
+        if (localStorage.getItem('mizu-mode') === 'recruiter') {
+          document.documentElement.classList.add('mode-recruiter')
+        }
+      } catch (e) {}
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Shippori Mincho carries the vertical hackathon spine. Google

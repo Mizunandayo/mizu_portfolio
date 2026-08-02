@@ -5,6 +5,7 @@ import Footer from './components/Footer.jsx'
 import Home from './pages/Home.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Boot from './components/shared/Boot.jsx'
+import { ModeProvider } from './hooks/useMode.jsx'
 
 /* Route changes start at the top; an incoming #hash wins over that. */
 function ScrollManager() {
@@ -28,7 +29,7 @@ function ScrollManager() {
    rather than routing — there are no standalone case-study pages. */
 export default function App() {
   return (
-    <>
+    <ModeProvider>
       <Boot />
       <a href="#main" className="skip-mizu">Skip to content</a>
       <ScrollManager />
@@ -38,6 +39,6 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
-    </>
+    </ModeProvider>
   )
 }

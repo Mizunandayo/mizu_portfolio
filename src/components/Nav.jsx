@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PROFILE } from '../data/profile.js'
+import ModeToggle from './shared/ModeToggle.jsx'
 
 /* ══════════════════════════════════════════════════
    Notch navbar.
@@ -116,6 +117,8 @@ export default function Nav() {
 
               {/* Right cluster */}
               <div className="notch-right-mizu">
+                <ModeToggle className="notch-mode-mizu" />
+
                 <a href="#contact" onClick={(e) => go(e, '#contact')} className="notch-cta-mizu">
                   Get in touch
                 </a>
@@ -170,6 +173,13 @@ export default function Nav() {
               )}
 
               <div className="notch-menu-rule-mizu" />
+
+              {/* The bar switch is hidden at this width, so the menu is
+                  where the mode is reachable on a phone. */}
+              <div className="notch-menu-mode-mizu">
+                <span>Mode</span>
+                <ModeToggle />
+              </div>
 
               <a href={`mailto:${PROFILE.contact.email}`} className="notch-menu-cta-mizu">
                 Get in touch
