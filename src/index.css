@@ -5833,7 +5833,7 @@ html.wc-open-mizu {
   border: none;
   padding: 0;
   background: none;
-  max-width: min(1000px, calc(100vw - 28px));
+  max-width: min(1120px, calc(100vw - 28px));
   width: 100%;
   overflow: visible;
   animation: tk-in-mizu 380ms cubic-bezier(0.16,1,0.3,1);
@@ -5853,19 +5853,365 @@ html.wc-open-mizu {
 .tk-body-mizu {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.22) transparent;
 }
 
-/* The element is 1100×520 in its backing store at 2x; letting it lay
-   out on width alone keeps the aspect without a wrapper. */
-.tk-canvas-mizu {
-  display: block;
+/* ── Stage ────────────────────────────────────────
+   Larger than the ticket by the overhang margin, so a
+   sticker pushed past the edge is still on the surface
+   that gets exported. Its aspect ratio is set inline
+   from the same constants the canvas uses — one source
+   for both, or the two drift apart. */
+.tk-stage-mizu {
+  position: relative;
   width: 100%;
-  height: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tk-plate-mizu {
+  position: absolute;
+  display: block;
   /* Checkerboard would show through the punched notches — a flat
      shadow reads as the ticket floating instead. */
   filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.8));
 }
+
+/* ── Stickers on the stage ──────────────────────── */
+.tk-st-mizu {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+}
+
+.tk-st-mizu:active { cursor: grabbing; }
+
+.tk-st-mizu img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Outline only while selected, and inset so it does not read as part
+   of the artwork in the exported PNG — which it is not, since the
+   canvas draws the image alone. */
+.tk-st-mizu.is-on::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 1px dashed rgba(250, 250, 250, 0.7);
+  pointer-events: none;
+}
+
+.tk-st-del-mizu,
+.tk-st-grip-mizu {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(250, 250, 250, 0.5);
+  background: rgba(10, 10, 11, 0.92);
+  color: #fafafa;
+  font-size: 0.62rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tk-st-del-mizu { top: -17px; right: -17px; }
+
+.tk-st-grip-mizu {
+  bottom: -17px;
+  right: -17px;
+  cursor: nwse-resize;
+  background:
+    radial-gradient(circle at 50% 50%, #fafafa 0 3px, transparent 3px),
+    rgba(10, 10, 11, 0.92);
+}
+
+/* ── Body switch ────────────────────────────────── */
+.tk-panel-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tk-seg-mizu {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid rgba(250, 250, 250, 0.22);
+}
+
+.tk-seg-mizu button {
+  padding: 9px 16px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.9);
+  background: none;
+  cursor: pointer;
+  transition: background 170ms cubic-bezier(0.16,1,0.3,1),
+              color 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-seg-mizu button + button { border-left: 1px solid rgba(250, 250, 250, 0.22); }
+
+.tk-seg-mizu button:hover { background: rgba(255, 255, 255, 0.06); }
+
+.tk-seg-mizu button.is-on { background: #fafafa; color: #050505; }
+
+.tk-msg-mizu { position: relative; }
+
+.tk-msg-mizu textarea {
+  width: 100%;
+  padding: 11px 62px 11px 13px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  outline: none;
+  resize: vertical;
+  transition: border-color 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-msg-mizu textarea:focus { border-color: rgba(250, 250, 250, 0.6); }
+
+.tk-msg-mizu textarea::placeholder { color: rgba(113, 113, 122, 0.9); }
+
+.tk-count-mizu {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  color: rgba(161, 161, 170, 0.75);
+  pointer-events: none;
+}
+
+/* ── Tray ───────────────────────────────────────── */
+.tk-tray-label-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(228, 228, 231, 0.92);
+  margin-bottom: 8px;
+}
+
+.tk-tray-label-mizu span {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.75);
+}
+
+/* margin-left rather than a spacer, so the label and hint keep sharing
+   a baseline instead of being pushed onto their own row. */
+.tk-expand-mizu {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(228, 228, 231, 0.92);
+  background: none;
+  border: 1px solid rgba(250, 250, 250, 0.24);
+  cursor: pointer;
+  transition: background 170ms cubic-bezier(0.16,1,0.3,1),
+              border-color 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-expand-mizu:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(250, 250, 250, 0.6);
+}
+
+/* ── Full sticker sheet ─────────────────────────── */
+.tk-pick-mizu {
+  border: none;
+  padding: 0;
+  background: none;
+  max-width: min(880px, calc(100vw - 28px));
+  width: 100%;
+  animation: tk-in-mizu 300ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-pick-mizu::backdrop {
+  background: rgba(2, 2, 2, 0.9);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.tk-pick-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(18px, 2.6vw, 28px);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  background: #0b0b0c;
+  max-height: calc(100vh - 48px);
+}
+
+.tk-pick-head-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.tk-pick-jp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #fafafa;
+}
+
+.tk-pick-head-mizu h3 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.tk-pick-count-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+.tk-pick-done-mizu {
+  margin-left: auto;
+  padding: 9px 20px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #050505;
+  background: #fafafa;
+  cursor: pointer;
+  transition: background 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-pick-done-mizu:hover { background: #fff; }
+
+/* auto-fill rather than a fixed column count: the sheet then fits
+   whatever width the viewport allows without a breakpoint per size. */
+.tk-pick-grid-mizu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.22) transparent;
+}
+
+/* The chip is sized by the tray strip; inside the sheet it fills its
+   grid cell instead. */
+.tk-pick-grid-mizu .tk-chip-mizu {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 10px;
+}
+
+/* A row rather than a grid: nineteen thumbnails stacked into a grid
+   would push the stage off a laptop screen. */
+.tk-tray-strip-mizu {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.22) transparent;
+}
+
+.tk-chip-mizu {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  padding: 6px;
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: border-color 170ms cubic-bezier(0.16,1,0.3,1),
+              background 170ms cubic-bezier(0.16,1,0.3,1),
+              transform 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-chip-mizu:hover {
+  border-color: rgba(250, 250, 250, 0.55);
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-2px);
+}
+
+/* On the ticket. Deliberately the hover treatment — lifted and lit —
+   but carried further so the two never read as the same thing: a
+   hovered chip is an invitation, a lit one is a statement of fact. */
+.tk-chip-mizu.is-on {
+  border-color: #fafafa;
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
+}
+
+/* The border and lift alone are a fine distinction to hold across
+   fifty chips; the dot settles it at a glance. */
+.tk-chip-mizu.is-on::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fafafa;
+  box-shadow: 0 0 0 2px rgba(11, 11, 12, 0.9);
+}
+
+.tk-chip-mizu img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.tk-clear-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(212, 212, 216, 0.9);
+  padding: 8px 2px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.3);
+  transition: color 170ms cubic-bezier(0.16,1,0.3,1),
+              border-color 170ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-clear-mizu:hover { color: #fafafa; border-color: rgba(250, 250, 250, 0.7); }
 
 .tk-cta-mizu {
   display: flex;
@@ -5890,13 +6236,13 @@ html.wc-open-mizu {
               transform 180ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.tk-save-mizu:hover { background: #fff; transform: translateY(-2px); }
+.tk-save-mizu:hover:not(:disabled) { background: #fff; transform: translateY(-2px); }
 
-/* No href until the blob exists — pointer-events off stops a click
-   from navigating the page away to nothing. */
-.tk-save-mizu.is-off {
-  opacity: 0.5;
-  pointer-events: none;
+/* Held while the export renders, so a second click cannot start a
+   parallel compose over the same canvases. */
+.tk-save-mizu:disabled {
+  opacity: 0.55;
+  cursor: progress;
 }
 
 .tk-note-mizu {
