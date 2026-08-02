@@ -88,8 +88,6 @@ export default function Boot({ onDone }) {
             <span className="boot-lines-mizu" aria-hidden="true" />
             <span className="boot-beam-mizu" aria-hidden="true" />
           </div>
-
-          <div className="boot-rule-mizu" aria-hidden="true" />
         </div>
       )}
     </div>

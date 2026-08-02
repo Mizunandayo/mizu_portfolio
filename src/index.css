@@ -278,31 +278,6 @@ html.booting-mizu { overflow: hidden; }
   100% { opacity: 0; }
 }
 
-.boot-rule-mizu {
-  position: relative;
-  width: min(200px, 38vw);
-  height: 1px;
-  margin-top: 26px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.boot-rule-mizu::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(250, 250, 250, 0.7);
-  transform: scaleX(0);
-  transform-origin: left center;
-  /* Matched to the beam, so the rule completing *is* the scan
-     completing rather than an unrelated progress guess. */
-  animation: boot-rule-mizu 1900ms linear 250ms forwards;
-}
-
-@keyframes boot-rule-mizu {
-  to { transform: scaleX(1); }
-}
-
 /* ══════════════════════════════════════════════════
    Notch navbar
 
@@ -4990,27 +4965,64 @@ html.booting-mizu { overflow: hidden; }
 }
 
 /* ══════════════════════════════════════════════════
-   Welcome — the guide's greeting
+   Welcome — 入場券, the admission ticket
 
-   Glass panel with chamfered corners. Same nested-box
-   trick as the ofuda and the dock: clip-path cuts away
-   the corners a border is meant to draw, so the ink is
-   an outer box and the glass an inner one, both
-   carrying the same silhouette.
+   A ticket rather than another glass dialog. The 9:16
+   cover is the illustrated stub, flush to the panel
+   edge with no inset and no gap; a perforation runs
+   down the seam with a notch punched out of each end.
+
+   The notches are *cut*, not drawn. A drawn circle
+   would have to match the blurred page showing through
+   behind it, which it cannot — so two radial-gradient
+   mask layers are intersected to remove those pixels
+   outright.
+
+   Masking clips the box-shadow away along with
+   everything else, so the lift comes from a drop-shadow
+   filter on the dialog instead: a filter follows the
+   punched silhouette, a box-shadow traces the
+   rectangle the punch was supposed to interrupt.
+
+   The paper is opaque on purpose. backdrop-filter
+   samples the backdrop of its own stacking context, and
+   the mask creates one — glass here would sample
+   nothing. The page behind stays blurred by the
+   ::backdrop, which is a separate box and unaffected.
    ══════════════════════════════════════════════════ */
 
 .wc-mizu {
+  /* The panel height is the one authored number; the stub's width is
+     derived from it at 9:16, which is what keeps the artwork uncropped
+     rather than filling whatever the greeting beside it happened to
+     need. Capped against both axes so the ticket always fits: by
+     height directly, and by width so the stub can never eat the page.
+
+     Deriving width from height rather than the reverse is deliberate.
+     A stub with `aspect-ratio` in a stretch row is circular — its
+     width depends on the row height, which depends on the text height,
+     which depends on the width left over — and browsers resolve that
+     by giving the stub a zero base size. This has one direction. */
+  --h: min(760px, calc(100vh - 36px), calc((100vw - 28px) * 0.66));
+  --cover: calc(var(--h) * 0.5625);
+  --notch: 12px;
+  --pad: clamp(22px, 3vw, 46px);
+
   border: none;
   padding: 0;
   background: none;
-  max-width: min(940px, calc(100vw - 32px));
+  /* The stub's width is fixed by the 9:16 derivation above, so every
+     pixel added here goes to the greeting — which is the only part
+     that was short of room. */
+  max-width: min(1180px, calc(100vw - 28px));
   width: 100%;
   overflow: visible;
+  filter: drop-shadow(0 26px 54px rgba(0, 0, 0, 0.78));
   animation: wc-in-mizu 460ms cubic-bezier(0.16,1,0.3,1);
 }
 
 .wc-mizu::backdrop {
-  background: rgba(3, 3, 3, 0.78);
+  background: rgba(3, 3, 3, 0.8);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   animation: wc-fade-mizu 460ms cubic-bezier(0.16,1,0.3,1);
@@ -5058,97 +5070,209 @@ html.booting-mizu { overflow: hidden; }
   to { opacity: 0; }
 }
 
+/* ── The ticket ─────────────────────────────────── */
 .wc-body-mizu {
-  --chamfer: polygon(
-    22px 0, calc(100% - 22px) 0, 100% 22px,
-    100% calc(100% - 22px), calc(100% - 22px) 100%,
-    22px 100%, 0 calc(100% - 22px), 0 22px
-  );
+  position: relative;
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  background: #0b0b0c;
+}
 
-  clip-path: var(--chamfer);
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(250, 250, 250, 0.5),
-    rgba(163, 163, 163, 0.18) 45%,
-    rgba(250, 250, 250, 0.38)
-  );
-  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.72);
+/* Punched ends. Guarded, because a browser without mask-composite
+   would apply only the first layer and erase most of the panel. */
+@supports (mask-composite: intersect) or (-webkit-mask-composite: source-in) {
+  .wc-body-mizu {
+    --hole-a: radial-gradient(
+      circle var(--notch) at var(--cover) 0,
+      transparent calc(var(--notch) - 0.5px), #000 var(--notch)
+    );
+    --hole-b: radial-gradient(
+      circle var(--notch) at var(--cover) 100%,
+      transparent calc(var(--notch) - 0.5px), #000 var(--notch)
+    );
+
+    -webkit-mask-image: var(--hole-a), var(--hole-b);
+    mask-image: var(--hole-a), var(--hole-b);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
 }
 
 .wc-face-mizu {
   position: relative;
-  clip-path: var(--chamfer);
   display: grid;
-  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+  grid-template-columns: var(--cover) minmax(0, 1fr);
   align-items: stretch;
-  gap: clamp(20px, 3vw, 40px);
-  padding: clamp(18px, 2.4vw, 30px);
-  /* The glass itself. */
-  background: rgba(12, 12, 14, 0.62);
-  -webkit-backdrop-filter: blur(26px) saturate(1.1);
-  backdrop-filter: blur(26px) saturate(1.1);
+  height: var(--h);
 }
 
-/* Register marks on the two open corners, so the chamfers read as cut
-   rather than merely rounded-off. */
-.wc-corner-mizu {
-  position: absolute;
-  width: 34px;
-  height: 34px;
-  pointer-events: none;
-  border-color: rgba(250, 250, 250, 0.55);
-  border-style: solid;
-  border-width: 0;
-}
-
-.wc-corner-mizu.tl {
-  top: 12px; left: 12px;
-  border-top-width: 1px;
-  border-left-width: 1px;
-}
-
-.wc-corner-mizu.br {
-  bottom: 12px; right: 12px;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
-}
-
-/* ── Portrait ──────────────────────────────────── */
-.wc-stage-mizu {
+/* ── Stub ───────────────────────────────────────── */
+.wc-stub-mizu {
   position: relative;
-  aspect-ratio: 9 / 16;
-  min-height: 0;
   overflow: hidden;
-  background: #060606;
+  min-height: 0;
+  background: #050505;
 }
 
-.wc-video-mizu {
+/* ── Slideshow ──────────────────────────────────
+   All four frames are stacked and cross-faded on
+   opacity rather than swapped in one <img>. Swapping a
+   src leaves the previous frame up until the next one
+   has decoded, which reads as a stall; stacking also
+   means every frame is already decoded by the time it
+   is its turn. */
+.wc-cover-mizu {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+  /* The art is 9:16 but the row height is set by the greeting beside
+     it, so the crop is inevitable — biased upward to keep faces in. */
+  /* Container and art are both 9:16, so cover crops nothing. It stays
+     `cover` rather than `contain` so the one frame that is a hair off
+     ratio fills the stub instead of letterboxing. */
   object-fit: cover;
+  object-position: 50% 50%;
+  opacity: 0;
+  transition: opacity 620ms cubic-bezier(0.16,1,0.3,1);
 }
 
-/* Inner hairline riding just inside the frame — a double rule, the way
-   a mounted print is bordered. */
-.wc-stage-edge-mizu {
+.wc-cover-mizu.is-on { opacity: 1; }
+
+/* Arrows sit over the art, held at low contrast until the stub is
+   hovered — they are always present for touch and keyboard, just not
+   competing with the image. */
+.wc-nav-mizu {
   position: absolute;
-  inset: 7px;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  color: #fafafa;
+  background: rgba(8, 8, 9, 0.5);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(250, 250, 250, 0.22);
+  cursor: pointer;
+  opacity: 0.34;
+  transition: opacity 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wc-nav-mizu.prev { left: 8px; }
+.wc-nav-mizu.next { right: 8px; }
+
+.wc-stub-mizu:hover .wc-nav-mizu { opacity: 0.82; }
+
+.wc-nav-mizu:hover,
+.wc-nav-mizu:focus-visible {
+  opacity: 1;
+  background: rgba(8, 8, 9, 0.82);
+}
+
+/* One segment per frame, so the rail doubles as a position indicator
+   rather than only a countdown. */
+.wc-rail-mizu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: 3px;
+  height: 3px;
   pointer-events: none;
-  border: 1px solid rgba(250, 250, 250, 0.24);
+}
+
+.wc-rail-seg-mizu {
+  flex: 1;
+  background: rgba(250, 250, 250, 0.22);
+  overflow: hidden;
+}
+
+/* Frames already shown stay filled; the current one animates across.
+   The element is keyed on the slide index in JSX so React remounts it
+   — restarting a CSS animation otherwise needs a reflow hack. */
+.wc-rail-seg-mizu.is-done { background: rgba(250, 250, 250, 0.72); }
+
+.wc-rail-fill-mizu {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #fafafa;
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: wc-rail-mizu var(--slide-ms) linear forwards;
+}
+
+@keyframes wc-rail-mizu {
+  to { transform: scaleX(1); }
+}
+
+/* Paused: the rail holds full rather than sitting empty, so a stopped
+   slideshow does not look like one that failed to start. */
+@media (prefers-reduced-motion: reduce) {
+  .wc-rail-fill-mizu { animation: none; transform: scaleX(1); }
+  .wc-cover-mizu { transition: none; }
+}
+
+/* Foot of the stub, so the vertical title and serial stay legible over
+   whatever the art happens to be doing down there. */
+.wc-stub-veil-mizu {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 58%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(4, 4, 5, 0.92),
+    rgba(4, 4, 5, 0.5) 45%,
+    transparent
+  );
+}
+
+/* text-orientation is what makes this a column of upright glyphs
+   rather than a rotated line of them. */
+.wc-stub-kana-mizu {
+  position: absolute;
+  left: 16px;
+  bottom: 18px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(1.02rem, 1.7vw, 1.32rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  color: #fafafa;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
+}
+
+.wc-stub-serial-mizu {
+  position: absolute;
+  right: 14px;
+  bottom: 18px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(250, 250, 250, 0.62);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
 .wc-sound-mizu {
   position: absolute;
-  left: 12px;
-  bottom: 12px;
+  left: 14px;
+  top: 14px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 12px;
+  padding: 7px 11px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -5160,172 +5284,231 @@ html.booting-mizu { overflow: hidden; }
 
 .wc-sound-mizu:hover { background: #fff; }
 
-/* ── Greeting ──────────────────────────────────── */
+/* ── Perforation ────────────────────────────────── */
+.wc-perf-mizu {
+  position: absolute;
+  top: var(--notch);
+  bottom: var(--notch);
+  left: var(--cover);
+  width: 1px;
+  pointer-events: none;
+  transform: translateX(-0.5px);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(250, 250, 250, 0.4) 0 4px,
+    transparent 4px 10px
+  );
+}
+
+/* ── Body ───────────────────────────────────────── */
 .wc-text-mizu {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   min-width: 0;
-  padding: clamp(6px, 1.6vw, 22px) clamp(6px, 1.4vw, 18px) clamp(6px, 1.6vw, 22px) 0;
+  padding: var(--pad);
+  /* The stub now fixes the panel height, so on a short viewport the
+     greeting is what has to give. Scrolling the text is the only
+     option that keeps the portrait at 9:16, which is the point. */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.22) transparent;
 }
 
-.wc-kana-mizu {
+.wc-text-mizu::-webkit-scrollbar { width: 6px; }
+.wc-text-mizu::-webkit-scrollbar-track { background: transparent; }
+
+.wc-text-mizu::-webkit-scrollbar-thumb {
+  background: rgba(250, 250, 250, 0.22);
+}
+
+/* Ticket header: the printed matter above the tear. */
+.wc-head-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 11px;
+  margin-bottom: clamp(16px, 2.2vw, 22px);
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.wc-head-jp-mizu {
   font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
-  font-size: clamp(1.2rem, 2.4vw, 1.75rem);
-  font-weight: 500;
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
-  line-height: 1;
-  color: rgba(244, 244, 245, 0.6);
-  margin-bottom: 16px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #fafafa;
+}
+
+.wc-head-en-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+/* Pushes the serial to the far edge without a wrapper element. */
+.wc-head-no-mizu {
+  margin-left: auto;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(161, 161, 170, 0.7);
 }
 
 .wc-title-mizu {
-  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
-  font-size: clamp(1.35rem, 2.9vw, 2.15rem);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1.55rem, 3.1vw, 2.35rem);
   font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: -0.022em;
+  line-height: 1.16;
   color: #fafafa;
-  margin-bottom: 16px;
+  margin-bottom: 13px;
 }
 
 .wc-copy-mizu {
-  font-size: clamp(0.88rem, 1.1vw, 0.98rem);
-  line-height: 1.75;
-  color: rgba(212, 212, 216, 0.86);
-  margin-bottom: clamp(20px, 2.6vw, 30px);
+  font-size: clamp(0.88rem, 1.05vw, 0.96rem);
+  line-height: 1.72;
+  color: rgba(212, 212, 216, 0.84);
+  margin-bottom: 13px;
+  /* Capped measure. Without it the extra panel width just makes longer
+     lines — past roughly 75 characters the eye loses the return sweep,
+     so the width is better spent as margin than as line length. */
+  max-width: 58ch;
 }
 
-.wc-cta-mizu {
+.wc-title-mizu { max-width: 22ch; }
+
+/* Signed off, not another paragraph — trailed by a rule that runs to
+   the edge, the way a name is stamped on a ticket. No italic: only the
+   upright Poppins weights are loaded, so italic here would be a
+   browser-synthesised slant rather than a real cut. */
+.wc-sign-mizu {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.wc-enter-mizu {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 22px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #050505;
-  background: #fafafa;
-  cursor: pointer;
-  transition: background 180ms cubic-bezier(0.16,1,0.3,1),
-              transform 180ms cubic-bezier(0.16,1,0.3,1);
-}
-
-.wc-enter-mizu:hover { background: #fff; transform: translateY(-2px); }
-
-.wc-enter-kanji-mizu {
-  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  gap: 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 1.02rem;
-  font-weight: 800;
-}
-
-.wc-skip-mizu {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.9);
-  padding: 8px 4px;
-  cursor: pointer;
-  border-bottom: 1px solid rgba(161, 161, 170, 0.3);
-  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
-              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+  letter-spacing: -0.008em;
+  color: rgba(235, 235, 238, 0.92);
+  margin-bottom: clamp(18px, 2.4vw, 26px);
 }
 
-.wc-skip-mizu:hover {
-  color: rgba(250, 250, 250, 0.95);
-  border-color: rgba(250, 250, 250, 0.6);
+.wc-sign-mizu::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(250, 250, 250, 0.28),
+    transparent
+  );
 }
 
-/* A 9:16 portrait beside text needs a two-column frame; below this the
-   video would be a slit, so it stacks and caps its own height. */
-@media (max-width: 720px) {
-  .wc-face-mizu { grid-template-columns: 1fr; gap: 18px; }
-  .wc-stage-mizu { aspect-ratio: 4 / 5; max-height: 34vh; }
-  .wc-text-mizu { padding: 0 4px 4px; }
-  .wc-corner-mizu { display: none; }
-}
-
-/* The webm carries an alpha channel, so the stage must not paint a
-   colour behind it — the glass shows through instead. */
-.wc-stage-mizu { background: none; }
-.wc-stage-edge-mizu { display: none; }
-
-/* ── Track chooser ─────────────────────────────── */
-.wc-music-mizu { margin-bottom: clamp(18px, 2.2vw, 26px); }
+/* ── Track index ────────────────────────────────── */
+.wc-music-mizu { margin-bottom: clamp(18px, 2.4vw, 26px); }
 
 .wc-music-label-mizu {
   display: flex;
   align-items: baseline;
   gap: 9px;
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.62rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(212, 212, 216, 0.82);
-  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+  color: rgba(228, 228, 231, 0.92);
+  margin-bottom: 6px;
 }
 
 .wc-music-opt-mizu {
-  font-size: 0.56rem;
-  letter-spacing: 0.1em;
-  color: rgba(161, 161, 170, 0.7);
-  text-transform: none;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: rgba(161, 161, 170, 0.72);
 }
 
+/* An index, not a set of boxes — hairlines between rows and nothing
+   around them, so three tracks read as a list on the ticket rather
+   than three more cards. */
 .wc-tracks-mizu {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  border-top: 1px solid rgba(250, 250, 250, 0.1);
 }
 
-/* Rows, not columns. Three chips side by side wrapped 'Illusionary
-   Daytime' onto two lines and left the row ragged; a stacked list gives
-   every title the full width. */
 .wc-track-mizu {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 7px 12px 7px 7px;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px 8px 2px;
   text-align: left;
-  border: 1px solid rgba(163, 163, 163, 0.22);
-  background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: border-color 180ms cubic-bezier(0.16,1,0.3,1),
-              background 180ms cubic-bezier(0.16,1,0.3,1);
+  border-bottom: 1px solid rgba(250, 250, 250, 0.1);
+  background: none;
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1),
+              padding-left 180ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.wc-track-mizu:hover { border-color: rgba(212, 212, 216, 0.48); background: rgba(255, 255, 255, 0.06); }
-
-.wc-track-mizu.is-on {
-  border-color: rgba(250, 250, 250, 0.85);
-  background: rgba(255, 255, 255, 0.11);
+.wc-track-mizu:hover,
+.wc-track-mizu:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  padding-left: 8px;
 }
+
+.wc-track-mizu.is-on { background: rgba(255, 255, 255, 0.08); }
+
+/* The selected row grows a marker in the gutter the hover slide opens
+   up, so selection survives the pointer leaving. */
+.wc-track-mizu.is-on::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: #fafafa;
+}
+
+.wc-track-no-mizu {
+  flex-shrink: 0;
+  width: 15px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  color: rgba(250, 250, 250, 0.42);
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wc-track-mizu:hover .wc-track-no-mizu,
+.wc-track-mizu.is-on .wc-track-no-mizu { color: rgba(250, 250, 250, 0.92); }
 
 .wc-track-cover-mizu {
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   object-fit: cover;
   border: 1px solid rgba(250, 250, 250, 0.16);
 }
 
-.wc-track-text-mizu { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.wc-track-text-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
 
 .wc-track-name-mizu {
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   font-weight: 700;
   color: rgba(250, 250, 250, 0.95);
   white-space: nowrap;
@@ -5335,10 +5518,10 @@ html.booting-mizu { overflow: hidden; }
 
 .wc-track-sub-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(161, 161, 170, 0.82);
+  color: rgba(161, 161, 170, 0.8);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5346,33 +5529,38 @@ html.booting-mizu { overflow: hidden; }
 
 .wc-track-kanji-mizu {
   font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1;
   flex-shrink: 0;
-  color: rgba(250, 250, 250, 0.5);
-  transition: color 180ms cubic-bezier(0.16,1,0.3,1);
+  color: rgba(250, 250, 250, 0.42);
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1), opacity 160ms linear;
 }
 
 .wc-track-mizu.is-on .wc-track-kanji-mizu { color: rgba(250, 250, 250, 0.95); }
 
-/* Bars over the cover while a row is auditioning, so a preview is
-   visibly attached to the thing being hovered. */
+/* Bars replace the kanji while a row auditions, in the same slot — so
+   the preview is visibly attached to the row under the cursor without
+   the layout shifting under it. */
 .wc-track-cue-mizu {
   position: absolute;
-  left: 15px;
-  bottom: 13px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  height: 11px;
+  height: 13px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms cubic-bezier(0.16,1,0.3,1);
+  transition: opacity 160ms linear;
 }
 
 .wc-track-mizu:hover .wc-track-cue-mizu,
 .wc-track-mizu:focus-visible .wc-track-cue-mizu { opacity: 1; }
+
+.wc-track-mizu:hover .wc-track-kanji-mizu,
+.wc-track-mizu:focus-visible .wc-track-kanji-mizu { opacity: 0; }
 
 .wc-track-cue-mizu i {
   width: 2px;
@@ -5386,21 +5574,296 @@ html.booting-mizu { overflow: hidden; }
 .wc-track-cue-mizu i:nth-child(2) { animation-duration: 1020ms; }
 .wc-track-cue-mizu i:nth-child(3) { animation-duration: 1240ms; }
 
-/* ── Layout: give the copy room ────────────────────
-   The 9:16 stage set the row height, which forced the
-   panel tall and squeezed the text beside it. Capping
-   the stage and centring it lets the greeting breathe. */
-.wc-face-mizu { grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr); align-items: center; }
+/* Shown only when the browser has actually refused a preview, so it
+   never nags someone whose previews are working. */
+.wc-hint-mizu {
+  margin-top: 7px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  color: rgba(161, 161, 170, 0.72);
+}
 
-.wc-stage-mizu { max-height: min(58vh, 460px); align-self: center; }
+/* ── Name field ─────────────────────────────────
+   A line to write on, not a boxed input. The underline
+   is the field; a border would make it the fourth
+   rectangle in a panel that is already full of them. */
+.wc-name-mizu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  margin-bottom: clamp(14px, 2vw, 20px);
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
 
-.wc-video-mizu { object-fit: contain; }
+.wc-name-label-mizu {
+  flex-shrink: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(161, 161, 170, 0.9);
+}
 
-.wc-text-mizu { padding: clamp(4px, 1.2vw, 14px) clamp(4px, 1.2vw, 14px) clamp(4px, 1.2vw, 14px) 0; }
+.wc-name-input-mizu {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px 2px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fafafa;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.28);
+  outline: none;
+  transition: border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
 
-.wc-title-mizu { font-size: clamp(1.25rem, 2.5vw, 1.85rem); margin-bottom: 12px; }
-.wc-copy-mizu { font-size: clamp(0.85rem, 1vw, 0.93rem); line-height: 1.7; margin-bottom: clamp(16px, 2vw, 22px); }
-.wc-kana-mizu { margin-bottom: 12px; }
+.wc-name-input-mizu::placeholder {
+  font-weight: 500;
+  color: rgba(113, 113, 122, 0.9);
+}
+
+.wc-name-input-mizu:focus { border-bottom-color: #fafafa; }
+
+.wc-issue-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #fafafa;
+  background: none;
+  border: 1px solid rgba(250, 250, 250, 0.34);
+  cursor: pointer;
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1),
+              opacity 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wc-issue-mizu:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: #fafafa;
+}
+
+/* Dimmed rather than hidden, so the reward is visible before it is
+   earned — that is what makes anyone type a name at all. */
+.wc-issue-mizu:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.wc-issue-kanji-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+/* ── Actions ────────────────────────────────────── */
+.wc-cta-mizu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: clamp(4px, 1.2vw, 10px);
+}
+
+.wc-enter-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 26px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #050505;
+  background: #fafafa;
+  cursor: pointer;
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1),
+              transform 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wc-enter-mizu:hover { background: #fff; transform: translateY(-2px); }
+
+.wc-enter-kanji-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.wc-skip-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+  padding: 8px 2px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.28);
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.wc-skip-mizu:hover {
+  color: rgba(250, 250, 250, 0.95);
+  border-color: rgba(250, 250, 250, 0.6);
+}
+
+/* ── Narrow ─────────────────────────────────────── */
+/* The stub turns into a header band and the tear turns with it. The
+   mask is dropped rather than re-authored: its two holes are pinned to
+   a vertical seam that no longer exists here. */
+@media (max-width: 700px) {
+  .wc-mizu { --cover: auto; }
+
+  .wc-body-mizu {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* Height goes back to the content here. A true 9:16 portrait at phone
+     width is ~670px tall — the whole screen — so the stub becomes a
+     band and the art is cropped to it. Stacked is the one layout where
+     the ratio has to give. */
+  .wc-face-mizu { grid-template-columns: 1fr; height: auto; }
+
+  .wc-text-mizu { overflow-y: visible; }
+
+  .wc-stub-mizu { height: clamp(150px, 30vh, 210px); }
+
+  .wc-cover-mizu { object-position: 50% 22%; }
+
+  .wc-perf-mizu {
+    top: clamp(150px, 30vh, 210px);
+    bottom: auto;
+    left: var(--notch);
+    right: var(--notch);
+    width: auto;
+    height: 1px;
+    transform: none;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(250, 250, 250, 0.4) 0 4px,
+      transparent 4px 10px
+    );
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   Ticket — the issued 入場券
+
+   Opened on top of the greeting, which is itself a
+   modal dialog. Two showModal() dialogs stack in the
+   top layer without any z-index of their own, so the
+   ordering here is the browser's rather than ours.
+   ══════════════════════════════════════════════════ */
+
+.tk-mizu {
+  border: none;
+  padding: 0;
+  background: none;
+  max-width: min(1000px, calc(100vw - 28px));
+  width: 100%;
+  overflow: visible;
+  animation: tk-in-mizu 380ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-mizu::backdrop {
+  background: rgba(2, 2, 2, 0.88);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+@keyframes tk-in-mizu {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.tk-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* The element is 1100×520 in its backing store at 2x; letting it lay
+   out on width alone keeps the aspect without a wrapper. */
+.tk-canvas-mizu {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Checkerboard would show through the punched notches — a flat
+     shadow reads as the ticket floating instead. */
+  filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.8));
+}
+
+.tk-cta-mizu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tk-save-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 22px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #050505;
+  background: #fafafa;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 180ms cubic-bezier(0.16,1,0.3,1),
+              transform 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-save-mizu:hover { background: #fff; transform: translateY(-2px); }
+
+/* No href until the blob exists — pointer-events off stops a click
+   from navigating the page away to nothing. */
+.tk-save-mizu.is-off {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tk-note-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.tk-close-mizu {
+  margin-left: auto;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(212, 212, 216, 0.9);
+  padding: 8px 2px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(161, 161, 170, 0.3);
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-close-mizu:hover {
+  color: #fafafa;
+  border-color: rgba(250, 250, 250, 0.7);
+}
+
+@media (max-width: 560px) {
+  .tk-close-mizu { margin-left: 0; }
+}
 
 /* ══════════════════════════════════════════════════
    Music player — floating, draggable, collapsible
@@ -5563,7 +6026,6 @@ html.booting-mizu { overflow: hidden; }
 }
 
 @media (max-width: 520px) {
-  .wc-tracks-mizu { grid-template-columns: 1fr; }
   .mp-mizu { right: 12px; bottom: 12px; }
 }
 
@@ -5793,3 +6255,113 @@ html.booting-mizu { overflow: hidden; }
 /* Width is set inline while resizing, so the eased transition has to
    go or the bar lags the pointer. It only eases on collapse. */
 .mp-mizu { transition: none; }
+
+/* ── Hero backdrop switch ────────────────────────
+   Top-left, above the scrim and the outline mark. The
+   dock lives on the right, so this corner is free. */
+.hero-bg-ctl-mizu {
+  position: absolute;
+  top: clamp(20px, 4vh, 42px);
+  left: clamp(20px, 4vw, 46px);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-bg-btn-mizu,
+.hero-vol-mizu > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.9);
+  border: 1px solid rgba(250, 250, 250, 0.24);
+  background: rgba(8, 8, 8, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: border-color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1),
+              color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hero-bg-btn-mizu:hover,
+.hero-vol-mizu > button:hover {
+  border-color: rgba(250, 250, 250, 0.6);
+  background: rgba(14, 14, 14, 0.78);
+  color: #fff;
+}
+
+.hero-vol-mizu > button { padding: 0 9px; gap: 0; }
+
+/* The slider is folded away until the cluster is hovered — width, not
+   display, so it can actually animate open. */
+.hero-vol-mizu {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 32px;
+  padding-right: 0;
+  border: 1px solid transparent;
+  transition: padding-right 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.hero-vol-mizu input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 3px;
+  margin: 0;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.26);
+  opacity: 0;
+  cursor: pointer;
+  outline: none;
+  transition: width 260ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1),
+              margin 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* focus-within too, or the slider collapses the instant it is tabbed
+   to and the keyboard user is adjusting something invisible. */
+.hero-vol-mizu:hover input[type='range'],
+.hero-vol-mizu:focus-within input[type='range'] {
+  width: 76px;
+  opacity: 1;
+  margin: 0 12px 0 4px;
+}
+
+.hero-vol-mizu input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+}
+
+.hero-vol-mizu input[type='range']::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+}
+
+/* The generated backdrop is recruiter's, so the switch goes with it. */
+.mode-recruiter .hero-bg-ctl-mizu { display: none; }
+
+@media (max-width: 560px) {
+  .hero-bg-btn-mizu span { display: none; }
+  .hero-bg-btn-mizu { padding: 0 10px; }
+}
