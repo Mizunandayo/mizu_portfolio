@@ -21,13 +21,13 @@ export default function Home() {
         <SectionBreak src="betweenheroandabout.jpg" />
 
         <About />
-        <SectionBreak src="betweenaboutandwork.jpg" />
+        <SectionBreak src="betweenaboutandwork.gif" />
 
         <Work />
         <SectionBreak src="betweenworksandexperience.gif" />
 
         <Experience />
-        <SectionBreak src="betweenexperienceandstack.jpg" />
+        <SectionBreak src="betweenexperienceandstack.gif" />
 
         <Stack />
         <SectionBreak src="betweenstackandhackathons.jpg" />
@@ -36,6 +36,7 @@ export default function Home() {
         <SectionBreak src="betweenhackathonsandcert.gif" />
 
         <Certifications />
+        <SectionBreak src="betweencertandcontact.gif" />
         <Contact />
 
         {/* Closing plate. Natural aspect rather than a cropped band, so
