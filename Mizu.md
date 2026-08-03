@@ -2,7 +2,9 @@
 
 **Owner:** Francis Daniel Genese
 **Status:** Built and shipping. Build passes, 2 routes prerendered, dual presentation modes.
-**Date:** 2026-08-02
+Personal mode now opens with a greeting ticket the visitor can put their name on, decorate with
+stickers and download as a PNG (§7.3).
+**Date:** 2026-08-03
 
 ---
 
@@ -325,14 +327,59 @@ wears the same film as the site.
 never unmounted — `App` renders it for the life of the page — so cleanup would never fire and `<html>`
 would keep `overflow: hidden` forever. This was a real bug.
 
+There is **no progress bar**. The rail under ミズ was removed: the scan beam already communicates
+that something is happening, and a second indicator was claiming to measure a fixed 3.45s timeline it
+had no information about.
+
 ### 6.1 Hero
 
-Personal is the base: `heropersonal.gif` full-bleed, the whole block set **bottom-left**, name in
-mincho, and 水 as an outline mark centred on the right half (`left: 74%`, `clamp(10rem, 34vw, 31rem)`).
-The generated backdrop (StarField / PerspectiveGrid / Spotlight) switches off so the two never stack.
+The whole block sits **bottom-left**, name in mincho, 水 as an outline mark centred on the right half
+(`left: 74%`, `clamp(10rem, 34vw, 31rem)`). The generated backdrop (StarField / PerspectiveGrid /
+Spotlight) switches off so the two never stack. CTAs are View the work · GitHub · LinkedIn, all three
+reading their URLs from `PROFILE.contact`.
 
 Scrim is weighted, not flat — bottom to 94%, left to 88%, falling away toward the top-right. A wash
 heavy enough for the copy would kill the plate everywhere else.
+
+**Backdrop rotation.** Three layers hand over to each other in a loop:
+
+| Layer | Source | Ends after |
+|---|---|---|
+| Video | `herobg2.mp4` | its own `onEnded` |
+| Image | `bgheroes.png` | 6000 ms |
+| GIF | `heropersonal.gif` | 8400 ms — `GIF_LOOP × 3` |
+
+The video announces its own end rather than running a timer, which would only be a guess at the
+file's length. The GIF cannot: **nothing in the DOM reports a GIF's animation** — no event, no
+property, not even a frame count — so `GIF_LOOP = 2800` is measured from the file itself (42 frames,
+280 centiseconds summed from its Graphic Control Extensions) and the hold is written as `× 3` so a
+re-export keeps landing on a loop boundary.
+
+**All three stay mounted** and cross-fade on opacity. Rendering only the active one would unmount the
+video every rotation and re-fetch it when its turn came round, and would leave the outgoing backdrop
+on screen until the incoming file decoded — which reads as a stall, not a cut.
+
+Two consequences of that:
+
+- The video is **rewound on arrival** (`currentTime = 0`), because it is still sitting on its last
+  frame from the previous pass.
+- A hidden GIF **keeps animating**, so by its next turn it would be mid-loop. It is reset by
+  assigning a blank data-URI then the original `src` back — a different value forces a fresh decode
+  from frame one, served from cache rather than the network.
+
+**Timer rail** along the very bottom edge, above the scrim. It works two ways on purpose: the image
+and GIF run a CSS animation over their fixed duration, but the video's bar tracks real playback
+position, because a large file stalls to buffer and a timed bar would march on while the picture sat
+still. Hidden in recruiter mode. Under `prefers-reduced-motion` the rotation stops entirely and the
+video loops in place.
+
+**Manual switch** at the top-left cycles the same three layers, with a speaker toggle and a volume
+slider beside it when the video is showing. The slider folds to `width: 0` and opens on `:hover`
+**and `:focus-within`** — without the second it collapses the instant a keyboard user tabs into it.
+
+**Sound** starts on and at full volume, but a browser refuses to autoplay audible media before the
+page has been interacted with, so the first attempt is made audible and falls back to muted when
+refused. See §7.2 for how the greeting hands the sound back.
 
 **Trap:** `.hero-strip` centres itself with `margin: 0 auto`, and auto margins **beat** the flex
 container's `align-items: flex-start`. Zeroing them is what actually moves it left.
@@ -438,14 +485,111 @@ display. All lazy, `aria-hidden`, empty alt.
 
 ## 7. Dialogs
 
-Both use native `<dialog>` + `showModal()` — real focus trapping, ESC, top-layer stacking, inert
-background, no z-index competition.
+Every one uses native `<dialog>` + `showModal()` — real focus trapping, ESC, top-layer stacking,
+inert background, **no z-index anywhere**. The greeting can open the ticket editor, which can open the
+sticker sheet: three modal dialogs deep, stacked by the browser in open order. Hand-managed
+z-indexes would be a guess that eventually loses.
 
-**Project dialog** — cover → title → meta → summary → links → tech stack with icons → gallery, all
-16:9.
+### 7.1 Project and hackathon dialogs
 
-**Hackathon dialog** — lightbox: `fit="contain"` so nothing is cropped, prev/next chevrons, arrow-key
-nav, `n / m` counter, thumbnail carousel with hidden scrollbar.
+**Project** — cover → title → meta → summary → links → tech stack with icons → gallery, all 16:9.
+
+**Hackathon** — lightbox: `fit="contain"` so nothing is cropped, prev/next chevrons, arrow-key nav,
+`n / m` counter, thumbnail carousel with hidden scrollbar.
+
+### 7.2 The greeting — 入場券
+
+Personal mode only, once per session (`sessionStorage`), after Boot clears. Built as an **admission
+ticket** rather than a panel: the 9:16 art is the ticket's illustrated stub, flush to the edge with no
+inset, a perforation down the seam, and a notch punched out of each end.
+
+**The notches are cut, not drawn.** A drawn circle would have to match the blurred page showing
+through behind it, which it cannot — two radial-gradient mask layers are intersected to remove those
+pixels outright, guarded by `@supports` because a browser without `mask-composite` would apply only
+the first layer and erase most of the panel. Two consequences: masking clips `box-shadow` away, so the
+lift comes from a `drop-shadow` **filter** which follows the punched silhouette; and the mask creates
+a stacking context that would starve `backdrop-filter`, so the ticket is opaque paper and the page
+behind stays blurred via `::backdrop`.
+
+**The stub is genuinely 9:16.** The panel height is the one authored number and the stub's width is
+derived from it — *not* the reverse. A stub with `aspect-ratio` in a stretch row is circular (width
+depends on row height depends on text height depends on leftover width) and browsers resolve that by
+handing it a **zero base size**. Deriving width from height has one direction and cannot loop. On
+short viewports the greeting scrolls rather than the portrait shrinking; below 700px the layout stacks
+and the ratio has to give, because a true 9:16 portrait at phone width is the whole screen.
+
+**Slideshow** — 11 frames from `public/profile/tickets/`, 4.5s each, cross-faded on opacity with a
+segmented rail (one segment per frame, so it shows position as well as countdown). Prev/next restart
+the full interval rather than inheriting the remainder.
+
+**Track previews.** Hovering a track auditions it at 0.42 volume. This did not work at first and the
+cause is worth recording: **a hover is not a user gesture**, so the autoplay policy refuses it, and no
+amount of cursor movement will ever satisfy the policy. The first real `pointerdown` or `keydown`
+anywhere on the page now silently primes the audio element — play at zero volume, pause — which marks
+it user-activated and lets every later hover through. Guarded so it never pauses a preview already
+playing. If a preview is still refused, the panel says so rather than looking broken.
+
+**Exits.** `Enter` is disabled until a track is picked; **Continue without music** discards any
+selection *and* dispatches `HERO_SOUND`, which unmutes the hero video at full volume. That dispatch
+happens inside the click handler, not after the 460ms exit animation — unmuting needs user activation
+and the exit is a different call stack with no gesture behind it. Esc mirrors whichever path applies.
+
+**Scroll lock.** `showModal()` makes the page inert to clicks but does **not** stop the wheel, so the
+page slid around under the backdrop. `<html>` gets its own class while open — separate from Boot's, so
+whichever clears first cannot unlock the page for the other — and the scrollbar's width is measured
+and handed back as padding, or the page behind jumps sideways as the modal opens.
+
+### 7.3 The ticket editor
+
+Reached from the greeting's 氏名 / Name field. The visitor's name is printed on a ticket they can
+decorate and download.
+
+**Drawn to canvas, not screenshotted.** The DOM-capture libraries re-implement CSS and would get this
+panel wrong in exactly the places it is interesting — the notches are a mask, the lift is a filter —
+besides costing ~200 KB to do it badly. A canvas renders it exactly, at 2×, in a couple of KB.
+
+**Two surfaces, one coordinate space.** The stage is DOM so dragging is cheap and hit-testing is free;
+the export is canvas. Both address the same logical grid (a 1100×520 ticket inside a 130-unit margin,
+exporting at 2720×1560), so what is arranged is what is downloaded — there is no second layout to
+keep in sync.
+
+**The export uses two canvases.** The notch punch is `destination-out`, which erases whatever is
+already on the surface. Drawing stickers first and punching after would cut holes straight through any
+sticker overhanging that seam, so the ticket is painted on its own offscreen canvas, punched there,
+composited in, and *then* the stickers go on top.
+
+**Stickers** — 50 transparent PNGs in `public/profile/stickers/`, generated from a count rather than
+listed, with any that fail to load dropped at runtime (the set has had gaps). Drag to move; one corner
+grip does both scale and rotation, because two handles would cover the sticker being edited. The
+"must touch the ticket" rule is enforced by **clamping, not rejecting** — a drag that wanders off
+stops at the furthest still-overlapping position instead of snapping back.
+
+Tray chips are **toggles** and light up when their artwork is on the ticket: the hover treatment
+carried further, plus a dot, since a border-brightness difference is a fine distinction to hold across
+fifty chips. Clicking a lit chip removes **every** copy of that sticker — removing only the newest
+would leave the chip lit, and "click again to remove" would stop meaning what it says. An **All 50**
+button opens the full sheet, which stays open while adding and reports a live count, since the stage
+is hidden behind it.
+
+**Message mode** swaps the ISSUED / GUIDE / SEAT rows for up to 500 characters under a 一言 / MESSAGE
+label. Canvas has no text layout at all — `measureText` is the only tool — so wrapping is a hand-built
+greedy line-builder that **falls back to breaking by character** when a token is wider than the
+column. Without that, anything pasted without spaces (a URL, a keysmash) rendered as one line running
+straight off the ticket. It walks code points, so a surrogate pair or CJK glyph is never split. The
+type then shrinks to fit its band the same way the name line does.
+
+**Fonts must be awaited.** Canvas does not participate in CSS font loading — an unloaded family
+silently falls back, so the download would come out in Arial while the screen looked right.
+
+The stub code and the ISSUED row both come from a **single** `new Date()`; reading the clock twice
+would let a ticket issued near midnight print one day on the stub and the next in the body.
+
+### 7.4 Music player
+
+Rebuilt from the vengenceui reference without lucide-react, `cn` or shadcn. Floating, draggable,
+horizontally resizable, collapsible to a 72px cover. Loop modes are off / all / one, defaulting to
+all. The left resize grip also moves the origin so the opposite edge stays put. Appears only when a
+track was chosen in the greeting.
 
 ---
 
@@ -501,9 +645,11 @@ Application, Dec 2022 – Jul 2026.
 ```
 src/
 ├── App.jsx                    ModeProvider · Boot · both navs · routes
+│                              · Welcome · MusicPlayer
 ├── main.jsx                   hydrate if firstElementChild, else render
 ├── entry-server.jsx           SSR entry for prerender
-├── index.css                  the entire design system, ~15 KB gz
+├── index.css                  the entire design system, ~6.8k lines
+├── events.js                  cross-tree signals (HERO_SOUND)
 ├── hooks/
 │   ├── useMode.jsx            personal / recruiter
 │   └── useScrollReveal.jsx    IntersectionObserver + <Reveal>
@@ -513,6 +659,9 @@ src/
 │   ├── Footer.jsx · Seo.jsx
 │   ├── shared/
 │   │   ├── Boot.jsx           水 scan loader
+│   │   ├── Welcome.jsx        入場券 greeting · slideshow · tracks
+│   │   ├── Ticket.jsx         canvas ticket + sticker editor
+│   │   ├── MusicPlayer.jsx    draggable · resizable · collapsible
 │   │   ├── ModeToggle.jsx · SectionBreak.jsx
 │   │   ├── Backdrop.jsx       StarField · PerspectiveGrid · Spotlight
 │   │   ├── TechIcon.jsx · placeholders.jsx · primitives.jsx
@@ -521,12 +670,20 @@ src/
 │   │                          + HackathonDialog
 │   └── deck/ProjectDialog.jsx
 ├── data/                      projects hackathons hackathonMedia
-│                              certifications experience stack profile icons
+│                              certifications experience stack profile
+│                              icons music
 └── assets/hackathons/<id>/    cover.png, 01.png … (globbed)
 
 scripts/  prerender.js · gen-icons.mjs · find-slug.mjs
 public/   profile/ · work/ · certs/ · orgs/ · og/
+          profile/stickers/   s1–s50.png   ticket stickers
+          profile/tickets/    gc1–gc11.jpg greeting slideshow, all 9:16
 ```
+
+`events.js` exists for the handful of moments where one component must tell a distant one something
+once and threading a callback through every layer between them would cost more than it explains.
+`HERO_SOUND` is the only entry: the greeting fires it, `Hero` listens. Named in one place so a typo is
+a build error rather than an event nobody hears.
 
 ---
 
@@ -542,13 +699,15 @@ npm run icons     regenerate src/data/icons.js
 then writes `sitemap.xml` and `robots.txt`. **2 routes:** `/` and `/404`.
 
 ```
-bundle js    127.5 KB gzipped
-bundle css    15.1 KB gzipped
+bundle js    137.6 KB gzipped
+bundle css    20.4 KB gzipped
 ```
 
-**Media weight is now the real cost, not JS.** ~10.9 MB of referenced media ships, dominated by
-`contactsection.mp4` (5.3 MB) and the two GIF section breaks (3.0 + 1.6 MB). Recruiter mode avoids
-the GIFs and the video entirely. See §13.
+**Media weight is the real cost, not JS.** ~51 MB of *referenced* media ships — dominated by
+`stickers/` (9.9 MB), `herobg2.mp4` (7.3 MB), the section-break GIFs (~7.6 MB) and
+`contactsection.mp4` (5.2 MB) — plus ~12 MB more that nothing references but `public/` deploys
+anyway. The JS grew 10 KB gzipped across this whole feature set; the media is roughly **200×** the
+code. Recruiter mode avoids the GIFs, the video and the greeting entirely. See §13.
 
 ---
 
@@ -568,16 +727,29 @@ the GIFs and the video entirely. See §13.
 
 ## 13. Known gaps
 
+Weight is now the dominant problem, and it is entirely in `public/` — which Vite copies **verbatim**
+into `dist/`, referenced or not.
+
 | # | Gap | Note |
 |---|---|---|
-| 1 | **`contactsection.mp4` is 5.3 MB** | Was 290 KB when wired. Re-encode — this is the single heaviest asset on the site |
-| 2 | **27 unreferenced files in `public/profile/` (~6.9 MB)** | `public/` is copied verbatim into `dist/`, so they deploy on every build. Random hashes, `download.png`, spare portraits |
-| 3 | Section-break GIFs are 3.0 MB + 1.6 MB, and only 500px wide | Convert to MP4/WebM — typically 10–20× smaller, and re-export wider to fix the softness |
-| 4 | `heropersonal.gif` is 480×260 | A 4× upscale at 1080p. Soft behind the scrim, but soft |
-| 5 | `highlights` / `architecture` unrendered | §2. Either fold into the project dialog or delete from the data |
-| 6 | OG images | `public/og/` still empty |
-| 7 | Domain undecided | `SITE.url` = `https://mizu-portfolio.vercel.app` |
-| 8 | Nothing pushed since `4e690ef` | The repo is far behind the working tree |
+| 1 | **`herobg.mp4` is 46.95 MB and no longer referenced** | The hero moved to `herobg2.mp4` (7.31 MB). Nothing imports it; it still deploys on every build. Deleting it is the single biggest win available and costs nothing |
+| 2 | **18 unreferenced files in `public/profile/` — 11.96 MB** | Beyond the above: `sada.gif` 2.97, `0803 (8).gif` 2.21, `asdsa.gif` 1.90, `dump.gif` 1.27, `download.png` 1.20 |
+| 3 | **`stickers/` is 9.88 MB across 50 PNGs** | ~200 KB each at up to 598px, but only ever drawn at ~380px. The **All 50** sheet lays them all out at once, so opening it pulls the lot. Re-export at 400×400 + `pngquant` → roughly 2–3 MB with no visible difference |
+| 4 | `contactsection.mp4` is 5.21 MB | Was 290 KB when wired |
+| 5 | `herobg2.mp4` is 7.31 MB | Check `moov` placement — without `+faststart` the browser downloads the whole file before the first frame |
+| 6 | Section-break GIFs total ~7.6 MB, 500px wide | Convert to MP4/WebM — typically 10–20× smaller — and re-export wider to fix the softness |
+| 7 | `heropersonal.gif` is 540×303 | Upscaled hard at 1080p, and GIFs cannot be hardware-decoded, so it costs more CPU than the video did |
+| 8 | `bgheroes.png` is 1280×720, 1.31 MB | Upscaled on anything wider than 1280. A 1920 JPEG at q82 would be smaller *and* sharper |
+| 9 | `highlights` / `architecture` unrendered | §2. Either fold into the project dialog or delete from the data |
+| 10 | OG images | `public/og/` still empty |
+| 11 | Domain undecided | `SITE.url` = `https://mizu-portfolio.vercel.app` |
+| 12 | Nothing pushed since `4e690ef` | The repo is far behind the working tree |
+| 13 | `nuts.MP3` uppercase extension | Works on Windows, 404s on Vercel's Linux filesystem if the reference is ever lowercased. `music.js` matches it exactly today |
+| 14 | Ticket layout is hand-placed coordinates | Canvas has no layout engine. Verified by construction, never by eye — the rendered output has not been visually reviewed |
+
+**The JS bundle is not the problem.** 415 kB raw / ~135 kB gz with three runtime dependencies, after
+adding the greeting, the canvas ticket, the sticker editor and the music player. The media is roughly
+**200× the size of the code.**
 
 ---
 
@@ -597,12 +769,32 @@ Recorded because every one of these cost real time and none is obvious from the 
 | Minifier rewrites | `translate(0,y)` → `translateY(y)`, breaking transform **function-list matching** and dropping animations to matrix interpolation; `::after` → `:after`; `even` → `2n`; whitespace **preserved** inside custom-property values | Use `var()` to block the collapse; write verification against minified forms |
 | React text nodes | `全{n}枚` renders as `全<!-- -->11<!-- -->枚` | Strip `<!-- -->` before matching built HTML |
 | `speechSynthesis` (retired) | `cancel()` + `speak()` in the same tick drops the utterance; `getVoices()` empty on first call | — |
+| **A hover is not a user gesture** | Track previews silently refused until something had been clicked. No amount of cursor movement satisfies the autoplay policy, and deploying does not change it | Prime the element on the first real `pointerdown`/`keydown` anywhere — play at zero volume, pause |
+| **Unmuting after an animation** | Dispatching the hero-sound signal after the 460ms exit is a different call stack with no gesture behind it, so the play is refused exactly like the first autoplay | Dispatch inside the click handler |
+| `showModal()` does not stop the wheel | Page behind the modal scrolls under the backdrop. It blocks *clicks*, not scrolling | Class on `<html>`, plus give the scrollbar's width back as padding or the page jumps sideways |
+| `aspect-ratio` in a stretch row | Circular sizing — width depends on row height depends on content height depends on leftover width. Browsers resolve it by handing the element a **zero base size** | Derive one dimension from the other in a single direction |
+| `destination-out` erases *everything* | Punching the ticket's notches after drawing stickers cut holes through any sticker overhanging that seam | Paint the plate on its own offscreen canvas, punch there, composite, then draw on top |
+| A hidden GIF keeps animating | By its next turn in the rotation it was mid-loop, so "play once then advance" was never true | Assign a blank data-URI then the original `src` — a different value forces a decode from frame one |
+| Canvas ignores CSS font loading | The exported PNG came out in Arial while the page looked correct | `await document.fonts.load(...)` for each exact cut, then `document.fonts.ready` |
+| Word wrap alone is not wrap | A token with no spaces has nothing to break at, so a greedy wrapper emits one line running off the canvas. Any pasted URL does this | Fall back to breaking by character; iterate code points so surrogate pairs survive |
+| Passing a handler directly | `onClick={close}` hands the **click event** in as the first argument, and every event object is truthy — a new `discard` parameter silently fired on the wrong button | Pass explicit values and compare with `=== true` |
+| Side effects in a `setState` updater | StrictMode invokes updaters twice, double-incrementing a ref used for keys | Read state from render scope; keep updaters pure |
+| Reading the clock twice | A ticket issued near midnight printed one date on the stub and another in the body | One `new Date()`, passed to both |
+| **Verification false negatives** | Recurring, and always my own checker: the minifier hoists constants (`6e3` → a variable), rewrites alphas to hex (`rgba(255,255,255,.16)` → `#ffffff29`), strips quotes from `[type="range"]`, keeps the space in `max-width: 700px`, and autoprefixer *expands* `@supports` conditions. Substring collisions too — `.tk-pick-grid-mizu .tk-chip-mizu{` matches a search for `.tk-chip-mizu{` | Resolve identifiers before asserting; anchor selector lookups on a separator; write checks to a `.mjs` file rather than embedding them in a shell string, where `${...}` and backticks get mangled |
 
 ---
 
 ## 15. Open questions
 
 1. Domain — buy one, or ship on `*.vercel.app`?
-2. Re-encode the video and GIFs, or accept the weight?
-3. Delete `highlights` / `architecture`, or build them somewhere?
-4. Should recruiter mode be the default for first-time visitors arriving from a job application?
+2. Delete `highlights` / `architecture`, or build them somewhere?
+3. Should recruiter mode be the default for first-time visitors arriving from a job application?
+4. Does anything ever *read* the downloaded tickets? Right now a visitor can write 500 characters of
+   feedback and the only copy is the PNG on their own machine. That is a deliberate no-backend
+   choice, but it means the feedback affordance collects nothing.
+5. Should `Enter` with no track selected also unmute the hero, the way **Continue without music**
+   does? It cannot happen today — `Enter` is disabled until a track is picked — but if that gate is
+   ever relaxed, the two exits diverge again.
+
+**Not open any more:** the media weight. §13 items 1–3 are ~28 MB of deletions and re-exports with
+no design decision attached to them, and item 1 alone is 47 MB that nothing references.

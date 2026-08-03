@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ORDERED, formatPeriod } from '../../data/projects.js'
+import { ORDERED, UPCOMING, formatPeriod } from '../../data/projects.js'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
 import { Reveal } from '../../hooks/useScrollReveal.jsx'
 import ProjectDialog from '../deck/ProjectDialog.jsx'
@@ -58,6 +58,13 @@ export default function Work() {
                 <Card project={p} onOpen={() => setOpen(p)} />
               </Reveal>
             ))}
+
+            {/* The span goes on the Reveal, not the card — the wrapper
+                is the grid item, and grid-column on a grandchild does
+                nothing. */}
+            <Reveal delay={1} className="wk-wide-mizu">
+              <Teaser />
+            </Reveal>
           </div>
         </div>
 
@@ -107,6 +114,49 @@ function Torii() {
 
       <span className="wk-pillar-mizu" style={{ left: PILLAR.left }} />
       <span className="wk-pillar-mizu" style={{ left: PILLAR.right }} />
+    </div>
+  )
+}
+
+/* The one plate with nothing behind it yet. A div, not a button: there
+   is no dialog to open, and a button that does nothing when pressed is
+   worse than no affordance at all.
+
+   Runs the full width of the grid rather than sitting alone in a column
+   with two holes beside it. Nine projects fill three rows exactly, so a
+   tenth plate always starts a row of its own — spanning it turns that
+   from a gap into a deliberate closing band. */
+function Teaser() {
+  const u = UPCOMING
+
+  return (
+    <div className="wk-card-mizu is-wip">
+
+
+      {/* One centred column on one surface. The split into an art slot
+          and a body panel is what put a solid block beside the hatch;
+          with the hatch running the full plate there is nothing left to
+          divide. */}
+      <span className="wk-wip-inner-mizu">
+        <span className="wk-wip-kanji-mizu" aria-hidden="true">
+          {u.kanji}
+        </span>
+
+        <span className="wk-meta-mizu">{u.kicker}</span>
+
+        {/* No inline kanji here — the mark above it is the same glyph,
+            and printing 春 twice in one card reads as a mistake. */}
+        <span className="wk-name-mizu">{u.name}</span>
+
+        <span className="wk-desc-mizu">{u.tagline}</span>
+      </span>
+
+      {/* Same takeover the project plates use, saying the one thing
+          there is to say about a plate with nothing behind it. */}
+      <span className="wk-wip-veil-mizu" aria-hidden="true">
+        <span className="wk-wip-jp-mizu">近日公開</span>
+        <span className="wk-wip-soon-mizu">Coming soon</span>
+      </span>
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { PlayIcon } from './primitives.jsx'
    walks the list before giving up and showing a placeholder. */
 const FORMATS = ['png', 'jpg', 'jpeg', 'webp', 'avif']
 
-function candidatesFor(url) {
+export function candidatesFor(url) {
   const m = url.match(/^(.*)\.([A-Za-z0-9]+)$/)
   if (!m) return [url]
   const [, stem, ext] = m
@@ -115,7 +115,10 @@ export function ImagePlaceholder({
 /* ── YouTube facade ────────────────────────────────
    Thumbnail + play affordance linking to the video.
    No iframe, so no third-party script on first paint. */
-export function YouTubePlaceholder({ id, cap, className = '' }) {
+/* `cap` still describes the video to a screen reader and still labels
+   the fallback tile when the thumbnail 404s — `showCaption` governs the
+   printed figcaption alone, so hiding it costs nothing in meaning. */
+export function YouTubePlaceholder({ id, cap, showCaption = true, className = '' }) {
   const [failed, setFailed] = useState(false)
   const href = `https://www.youtube.com/watch?v=${id}`
 
@@ -169,7 +172,7 @@ export function YouTubePlaceholder({ id, cap, className = '' }) {
           </span>
         </div>
       </a>
-      {cap && <Caption>{cap}</Caption>}
+      {cap && showCaption && <Caption>{cap}</Caption>}
     </figure>
   )
 }

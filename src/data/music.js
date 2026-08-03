@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════
-   Music — the three tracks offered in the greeting.
+   Music - the three tracks offered in the greeting.
 
    `src` is case-sensitive once deployed. Vercel serves
    from a Linux filesystem, so nuts.MP3 must keep its
@@ -28,7 +28,7 @@ export const TRACKS = [
     id: 'nuts',
     kanji: '律',
     title: 'Nuts',
-    artist: 'Instrumental',
+    artist: 'Lil Peep',
     src: '/profile/nuts.MP3',
     cover: '/profile/nutscover.png',
   },

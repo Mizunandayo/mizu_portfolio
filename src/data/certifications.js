@@ -3,16 +3,16 @@
    and grouping would leave Cisco and PMI as lonely single-card rows.
 
    `badge` is a filename in /public/certs/. Missing files fall back to a
-   placeholder shell — drop the image in and it appears, no code change.
+   placeholder shell - drop the image in and it appears, no code change.
    `sort` drives newest-first ordering; `issued` is the display string.
 
    There is no résumé PDF, so credential IDs live here in full. */
 
 export const CERTIFICATIONS = [
   {
-    name:    'IT Specialist — Software Development',
+    name:    'IT Specialist - Software Development',
     issuer:  'Certiport',
-    issuerFull: 'Certiport — A Pearson VUE Business',
+    issuerFull: 'Certiport - A Pearson VUE Business',
     issued:  'Apr 2026',
     expires: 'Apr 2031',
     sort:    '2026-04',
@@ -60,9 +60,9 @@ export const CERTIFICATIONS = [
     badge:   'mos-powerpoint.png',
   },
   {
-    name:    'IT Specialist — Network Security',
+    name:    'IT Specialist - Network Security',
     issuer:  'Certiport',
-    issuerFull: 'Certiport — A Pearson VUE Business',
+    issuerFull: 'Certiport - A Pearson VUE Business',
     issued:  'May 2025',
     expires: null,
     sort:    '2025-05',
@@ -70,9 +70,9 @@ export const CERTIFICATIONS = [
     badge:   'it-specialist-network-security.png',
   },
   {
-    name:    'IT Specialist — Device Configuration and Management',
+    name:    'IT Specialist - Device Configuration and Management',
     issuer:  'Certiport',
-    issuerFull: 'Certiport — A Pearson VUE Business',
+    issuerFull: 'Certiport - A Pearson VUE Business',
     issued:  'Apr 2025',
     expires: null,
     sort:    '2025-04',
@@ -82,7 +82,7 @@ export const CERTIFICATIONS = [
   {
     name:    'IC3 Digital Literacy GS6 Level 1',
     issuer:  'Certiport',
-    issuerFull: 'Certiport — A Pearson VUE Business',
+    issuerFull: 'Certiport - A Pearson VUE Business',
     issued:  'May 2024',
     expires: null,
     sort:    '2024-05',
@@ -100,9 +100,9 @@ export const CERTIFICATIONS = [
     badge:   'pmi-project-management-ready.png',
   },
   {
-    name:    'IT Specialist — Cybersecurity',
+    name:    'IT Specialist - Cybersecurity',
     issuer:  'Certiport',
-    issuerFull: 'Certiport — A Pearson VUE Business',
+    issuerFull: 'Certiport - A Pearson VUE Business',
     issued:  'Dec 2024',
     expires: null,
     sort:    '2024-12',

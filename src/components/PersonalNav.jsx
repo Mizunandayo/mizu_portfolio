@@ -31,7 +31,7 @@ const THRESHOLD = 6; // px of travel before a press becomes a drag
 const PULL_MAX = 62; // how far the rope will stretch
 const PULL_TRIP = 26; // how far it has to be pulled to ring
 
-export default function PersonalNav() {
+export default function PersonalNav({ onCredits }) {
   const { toggle } = useMode();
   const [dock, setDock] = useState({ edge: "right", pos: 50 });
   const [drag, setDrag] = useState(null);
@@ -228,6 +228,26 @@ export default function PersonalNav() {
 
           {/* The mode switch lives in the notch bar, which is hidden in
           this mode — without this there is no way back to recruiter. */}
+          {/* Same movedRef guard as every item in the dock: the whole
+              thing is draggable, so a press that travelled is a drag
+              ending, not a click. */}
+          <button
+            type="button"
+            className="pnav-item-mizu"
+            onClick={(e) => {
+              if (movedRef.current) {
+                e.preventDefault();
+                return;
+              }
+              onCredits?.();
+            }}
+          >
+            <span className="pnav-kanji-mizu" aria-hidden="true">
+              典
+            </span>
+            <span className="pnav-label-mizu">Credits</span>
+          </button>
+
           <button
             type="button"
             className="pnav-item-mizu pnav-mode-mizu"

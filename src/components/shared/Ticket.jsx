@@ -1,142 +1,69 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PROFILE } from '../../data/profile.js'
+import {
+  PRESETS,
+  paintTicket,
+  serialOf,
+  SANS,
+  MINCHO,
+} from './ticketPresets.js'
+
+export { ticketStamp } from './ticketPresets.js'
 
 /* ══════════════════════════════════════════════════
-   Ticket — the visitor's 入場券, theirs to decorate.
+   Ticket — the visitor's 入場券, theirs to shape.
 
    Drawn rather than screenshotted. The DOM-capture
    libraries re-implement CSS and would get this panel
    wrong in exactly the places it is interesting — the
-   punched notches are a mask, the lift is a filter —
-   besides costing ~200 KB to do it badly.
+   notches are a mask, the lift is a filter — besides
+   costing ~200 KB to do it badly.
 
    Two surfaces, one coordinate space. The stage is DOM
    so dragging is cheap and hit-testing is free; the
-   download is canvas. Both address the same logical
-   grid, so what is arranged is what is exported.
+   export is canvas. Both address the same logical grid,
+   so what is arranged is what is downloaded.
 
-   The ticket is painted into its own offscreen canvas
-   before being composited. Its notches are cut with
-   destination-out, which erases whatever is already on
-   the surface — done in place, it would punch holes
-   through any sticker overhanging that edge.
+   The layouts live in ticketPresets.js. This file is
+   about interaction — choosing, dragging, exporting —
+   and that one is about ink; they change for different
+   reasons.
    ══════════════════════════════════════════════════ */
 
-/* Logical units. The ticket is W×H; the export adds a margin so a
-   sticker can hang off the edge and still be in the picture. */
-const W = 1100
-const H = 520
-const M = 130
-const OUT_W = W + M * 2
-const OUT_H = H + M * 2
 const DPR = 2
 
-const STUB = 330
-const PAD = 56
-const NOTCH = 15
+/* Overhang room, so a sticker can hang off the edge and still be inside
+   the exported picture. Proportional rather than fixed: a flat 130 units
+   is 12% of an 1100-wide stub but 33% of a 460-wide ofuda, which left
+   the narrow designs floating in a frame far bigger than themselves and
+   rendered far too small to read. Tied to the sticker size — half a
+   sticker is 0.18 of the short edge — so the room always matches what
+   has to fit in it. */
+const marginFor = (p) => Math.round(Math.min(p.w, p.h) * 0.22)
 
 /* How far a sticker must overlap the ticket. "Touching" is enforced by
    clamping rather than rejecting: a drag that wanders off stops at the
    edge instead of snapping back, which is far less annoying. */
 const GRIP = 16
-
-const SIZE = 190
 const MIN_S = 70
-const MAX_S = 460
 
 /* Generated from a count rather than listed, so adding artwork is a
    one-number change. Any that fail to load are dropped at runtime — the
-   set has had gaps in it, and a numbered range cannot know about them.
-   That also means the count is an upper bound, not a promise. */
+   set has had gaps in it, and a numbered range cannot know about them. */
 const STICKER_COUNT = 50
 const STICKERS = Array.from(
   { length: STICKER_COUNT },
   (_, i) => `/profile/stickers/s${i + 1}.png`
 )
 
-const SANS = "'Poppins', system-ui, sans-serif"
-const MINCHO = "'Shippori Mincho', 'Yu Mincho', serif"
 const MSG_MAX = 500
-/* The band the message gets: first baseline to last, clear of the
-   footer line. The type shrinks to fit inside it rather than the text
-   being cut, so a full 500 characters still lands whole. */
-const MSG_TOP = 306
-const MSG_BOTTOM = H - 70
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
-/* Stable per visitor, so re-issuing the same name gives the same ticket
-   rather than a new random one each time. */
-function serialOf(name) {
-  let h = 0
-  for (const ch of name.trim().toUpperCase()) h = (h * 31 + ch.codePointAt(0)) >>> 0
-  return String((h % 9000) + 1000)
-}
-
-function stamped(d) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())}`
-}
-
-/* The code down the stub: MZ plus the day it was issued. Exported
-   because the greeting prints the same stub, and two hardcoded strings
-   would eventually say different things. */
-export function ticketStamp(d = new Date()) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `MZ-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
-}
-
-/* Greedy wrap. Canvas has no text layout of its own — measureText is
-   the only tool, so the lines are built by hand.
-
-   Word breaking alone is not enough: a token longer than the column has
-   no space to break at, and a greedy pass emits it as a single line
-   that runs straight off the ticket. Anything pasted without spaces —
-   a URL, a keysmash — does exactly that, so an over-long token falls
-   back to breaking by character, which is what CSS calls break-word. */
-function wrapLines(c, text, maxW) {
-  const out = []
-
-  for (const para of text.split('\n')) {
-    let line = ''
-
-    for (const word of para.split(/\s+/)) {
-      if (!word) continue
-
-      if (c.measureText(word).width > maxW) {
-        if (line) {
-          out.push(line)
-          line = ''
-        }
-        let chunk = ''
-        /* for..of walks code points, so a surrogate pair or a CJK glyph
-           is never split down the middle. */
-        for (const ch of word) {
-          if (chunk && c.measureText(chunk + ch).width > maxW) {
-            out.push(chunk)
-            chunk = ch
-          } else {
-            chunk += ch
-          }
-        }
-        line = chunk
-        continue
-      }
-
-      const test = line ? `${line} ${word}` : word
-      if (line && c.measureText(test).width > maxW) {
-        out.push(line)
-        line = word
-      } else {
-        line = test
-      }
-    }
-
-    out.push(line)
-  }
-
-  return out
-}
+/* Sticker geometry follows the preset: a default sized off the ticket's
+   short edge lands sensibly on a 1280×400 pass and a 460×1080 ofuda
+   alike, where one fixed number cannot. */
+const sizeFor = (p) => Math.round(Math.min(p.w, p.h) * 0.36)
+const maxFor = (p) => Math.round(Math.min(p.w, p.h) * 1.1)
 
 /* Contain-fit, so a sticker that is not square keeps its shape inside
    the square box the stage draws it in. */
@@ -147,179 +74,15 @@ function containRect(iw, ih, box) {
   return { w, h, dx: (box - w) / 2, dy: (box - h) / 2 }
 }
 
-/* ── The ticket itself, at 0,0 in logical units ───── */
-function paintTicket(c, { art, name, serial, mode, message }) {
-  /* One instant for both places the date appears. Reading the clock
-     twice would let a ticket issued at midnight print one day on the
-     stub and the next in the body. */
-  const issued = new Date()
-
-  c.fillStyle = '#0b0b0c'
-  c.fillRect(0, 0, W, H)
-
-  if (art?.naturalWidth) {
-    const k = Math.max(STUB / art.naturalWidth, H / art.naturalHeight)
-    const sw = STUB / k
-    const sh = H / k
-    c.drawImage(
-      art,
-      (art.naturalWidth - sw) / 2,
-      (art.naturalHeight - sh) * 0.26,
-      sw,
-      sh,
-      0,
-      0,
-      STUB,
-      H
-    )
+/* Clamped into whichever preset is showing, in that preset's own
+   coordinate space — its margin is part of the geometry. */
+function anchorIn(p, st) {
+  const m = marginFor(p)
+  return {
+    ...st,
+    x: clamp(st.x, m + GRIP - st.s / 2, m + p.w - GRIP + st.s / 2),
+    y: clamp(st.y, m + GRIP - st.s / 2, m + p.h - GRIP + st.s / 2),
   }
-
-  const veil = c.createLinearGradient(0, H * 0.42, 0, H)
-  veil.addColorStop(0, 'rgba(4,4,5,0)')
-  veil.addColorStop(1, 'rgba(4,4,5,0.94)')
-  c.fillStyle = veil
-  c.fillRect(0, H * 0.42, STUB, H * 0.58)
-
-  /* Tategaki: one glyph per line down a column. Canvas has no
-     writing-mode, so the column is placed by hand. */
-  c.fillStyle = '#fafafa'
-  c.font = `800 26px ${MINCHO}`
-  c.textAlign = 'left'
-  c.textBaseline = 'alphabetic'
-  ;[...'ようこそ'].forEach((ch, i) => c.fillText(ch, 30, H - 132 + i * 34))
-
-  c.font = `700 12px ${SANS}`
-  c.letterSpacing = '0.2em'
-  c.fillStyle = 'rgba(250,250,250,0.66)'
-  c.textAlign = 'right'
-  c.fillText(ticketStamp(issued), STUB - 22, H - 26)
-  c.letterSpacing = '0px'
-
-  c.strokeStyle = 'rgba(250,250,250,0.42)'
-  c.lineWidth = 1
-  c.setLineDash([5, 8])
-  c.beginPath()
-  c.moveTo(STUB + 0.5, NOTCH)
-  c.lineTo(STUB + 0.5, H - NOTCH)
-  c.stroke()
-  c.setLineDash([])
-
-  const x = STUB + PAD
-  const right = W - PAD
-
-  c.textAlign = 'left'
-  c.fillStyle = '#fafafa'
-  c.font = `800 26px ${MINCHO}`
-  c.fillText('入場券', x, 76)
-
-  c.font = `700 13px ${SANS}`
-  c.letterSpacing = '0.22em'
-  c.fillStyle = 'rgba(161,161,170,0.9)'
-  c.fillText('ADMIT ONE', x + 104, 74)
-
-  c.textAlign = 'right'
-  c.fillText(`NO. ${serial}`, right, 74)
-  c.letterSpacing = '0px'
-
-  const rule = (y) => {
-    c.strokeStyle = 'rgba(250,250,250,0.16)'
-    c.lineWidth = 1
-    c.beginPath()
-    c.moveTo(x, y + 0.5)
-    c.lineTo(right, y + 0.5)
-    c.stroke()
-  }
-  rule(100)
-
-  c.textAlign = 'left'
-  c.font = `700 12px ${SANS}`
-  c.letterSpacing = '0.22em'
-  c.fillStyle = 'rgba(161,161,170,0.85)'
-  c.fillText('氏名 / NAME', x, 148)
-  c.letterSpacing = '0px'
-
-  /* Shrink to fit rather than clip — a long name is the one thing
-     guaranteed to overflow this line. */
-  const upper = name.toUpperCase()
-  let size = 54
-  c.font = `800 ${size}px ${SANS}`
-  while (c.measureText(upper).width > right - x && size > 20) {
-    size -= 2
-    c.font = `800 ${size}px ${SANS}`
-  }
-  c.fillStyle = '#fafafa'
-  c.fillText(upper, x, 202)
-
-  rule(232)
-
-  if (mode === 'message' && message.trim()) {
-    c.font = `700 12px ${SANS}`
-    c.letterSpacing = '0.22em'
-    c.fillStyle = 'rgba(161,161,170,0.85)'
-    c.fillText('一言 / MESSAGE', x, 276)
-    c.letterSpacing = '0px'
-
-    /* Shrink to fit, the same way the name line does. Wrapping depends
-       on the size and the size depends on the wrap, so it is settled by
-       trying each step down until the block fits the band — six or so
-       measurements, once, on a canvas nobody is watching. */
-    const body = message.trim()
-    const room = MSG_BOTTOM - MSG_TOP
-    let size = 17
-    let lines = []
-    let lh = 26
-
-    for (; size >= 11; size -= 1) {
-      c.font = `500 ${size}px ${SANS}`
-      lines = wrapLines(c, body, right - x)
-      lh = Math.round(size * 1.5)
-      if ((lines.length - 1) * lh <= room) break
-    }
-
-    c.font = `500 ${size}px ${SANS}`
-    c.fillStyle = 'rgba(244,244,245,0.95)'
-    /* Even at the floor size an unbroken 500 characters can overrun, so
-       the band is enforced once more rather than trusted. */
-    lines
-      .slice(0, Math.floor(room / lh) + 1)
-      .forEach((line, i) => c.fillText(line, x, MSG_TOP + i * lh))
-  } else {
-    const rows = [
-      ['発行日 / ISSUED', stamped(issued)],
-      ['案内 / GUIDE', `${PROFILE.kanji}  ${PROFILE.name.toUpperCase()}`],
-      ['席 / SEAT', 'GENERAL ADMISSION — ALL NINE PROJECTS'],
-    ]
-    rows.forEach(([k, v], i) => {
-      const y = 278 + i * 40
-      c.font = `700 12px ${SANS}`
-      c.letterSpacing = '0.18em'
-      c.fillStyle = 'rgba(161,161,170,0.8)'
-      c.fillText(k, x, y)
-      c.letterSpacing = '0px'
-      c.font = `600 15px ${SANS}`
-      c.fillStyle = 'rgba(244,244,245,0.94)'
-      c.fillText(v, x + 190, y)
-    })
-  }
-
-  c.font = `700 12px ${SANS}`
-  c.letterSpacing = '0.18em'
-  c.fillStyle = 'rgba(161,161,170,0.62)'
-  c.fillText(PROFILE.contact.github.replace(/^https?:\/\//, ''), x, H - 42)
-  c.letterSpacing = '0px'
-
-  c.strokeStyle = 'rgba(250,250,250,0.24)'
-  c.lineWidth = 1
-  c.strokeRect(0.5, 0.5, W - 1, H - 1)
-
-  /* destination-out cuts real transparency, so the notches read as
-     punched on any background the PNG lands on. */
-  c.globalCompositeOperation = 'destination-out'
-  c.beginPath()
-  c.arc(STUB, 0, NOTCH, 0, Math.PI * 2)
-  c.arc(STUB, H, NOTCH, 0, Math.PI * 2)
-  c.fill()
-  c.globalCompositeOperation = 'source-over'
 }
 
 export default function Ticket({ open, name, art, onClose }) {
@@ -340,7 +103,34 @@ export default function Ticket({ open, name, art, onClose }) {
      the tray and pastes nothing onto the ticket. Recording the failure
      removes it from both places instead. */
   const [broken, setBroken] = useState(() => new Set())
+  const [pi, setPi] = useState(0)
+  /* An object URL for a picture the visitor supplied. Same-origin, so
+     the canvas stays untainted and toBlob still works — a remote URL
+     would poison the export instead. */
+  const [shot, setShot] = useState(null)
+  const [shotErr, setShotErr] = useState('')
   const pickRef = useRef(null)
+  const fromRef = useRef(0)
+
+  const thumbRefs = useRef([])
+
+  const preset = PRESETS[pi]
+  const M = marginFor(preset)
+  const OUT_W = preset.w + M * 2
+  const OUT_H = preset.h + M * 2
+
+  const around = useMemo(
+    () => ({
+      prev: PRESETS[(pi - 1 + PRESETS.length) % PRESETS.length],
+      next: PRESETS[(pi + 1) % PRESETS.length],
+    }),
+    [pi]
+  )
+
+  const step = useCallback(
+    (d) => setPi((i) => (i + d + PRESETS.length) % PRESETS.length),
+    []
+  )
 
   const usable = useMemo(
     () => STICKERS.filter((s) => !broken.has(s)),
@@ -358,6 +148,30 @@ export default function Ticket({ open, name, art, onClose }) {
 
   const clean = (name || '').trim() || 'GUEST'
   const serial = useMemo(() => serialOf(clean), [clean])
+
+  /* Their picture if they gave one, the slideshow frame otherwise. */
+  const artSrc = shot || art
+
+  /* Revoked when it is replaced and when the panel unmounts — the
+     cleanup closes over the URL it was created with, so each one is
+     released exactly once. */
+  useEffect(() => {
+    if (!shot) return
+    return () => URL.revokeObjectURL(shot)
+  }, [shot])
+
+  const onPickPhoto = (e) => {
+    const file = e.target.files?.[0]
+    /* Cleared so choosing the same file twice still fires a change. */
+    e.target.value = ''
+    if (!file) return
+    if (!/^image\/(png|jpeg)$/.test(file.type)) {
+      setShotErr('PNG or JPEG only.')
+      return
+    }
+    setShotErr('')
+    setShot(URL.createObjectURL(file))
+  }
 
   useEffect(() => {
     const el = ref.current
@@ -414,26 +228,99 @@ export default function Ticket({ open, name, art, onClose }) {
     }
   }, [])
 
+  /* One instant for every date on the ticket. Reading the clock twice
+     would let one issued near midnight print one day on the stub and
+     the next in the body. Held for the life of the panel so switching
+     preset does not silently re-date it either. */
+  const issued = useMemo(() => new Date(), [open])
+
   /* ── Live plate ── */
   useEffect(() => {
     if (!open) return
     let dead = false
     ;(async () => {
       await fonts()
-      const image = await loadImg(art)
+      const image = await loadImg(artSrc)
       if (dead) return
-      const canvas = plateRef.current
-      if (!canvas) return
-      canvas.width = W * DPR
-      canvas.height = H * DPR
-      const c = canvas.getContext('2d')
-      c.scale(DPR, DPR)
-      paintTicket(c, { art: image, name: clean, serial, mode, message })
+      const into = (canvas, p, dpr) => {
+        if (!canvas) return
+        canvas.width = p.w * dpr
+        canvas.height = p.h * dpr
+        const c = canvas.getContext('2d')
+        c.scale(dpr, dpr)
+        paintTicket(c, p, {
+          art: image,
+          name: clean,
+          serial,
+          mode,
+          message,
+          issued,
+        })
+      }
+
+      into(plateRef.current, preset, DPR)
     })()
     return () => {
       dead = true
     }
-  }, [open, art, clean, serial, mode, message, fonts, loadImg])
+  }, [open, artSrc, clean, serial, mode, message, preset, issued, fonts, loadImg])
+
+  /* Swatches. Deliberately not on the same effect as the plate: they
+     show the *design*, so they are painted once at open rather than
+     five extra repaints on every keystroke in the message field. Drawn
+     at logical size and scaled down by CSS, which is one line instead
+     of a second set of coordinates to keep in step. */
+  useEffect(() => {
+    if (!open) return
+    let dead = false
+    ;(async () => {
+      await fonts()
+      const image = await loadImg(artSrc)
+      if (dead) return
+      PRESETS.forEach((p, i) => {
+        const cv = thumbRefs.current[i]
+        if (!cv) return
+        cv.width = p.w
+        cv.height = p.h
+        paintTicket(cv.getContext('2d'), p, {
+          art: image,
+          name: clean,
+          serial,
+          mode: 'details',
+          message: '',
+          issued,
+        })
+      })
+    })()
+    return () => {
+      dead = true
+    }
+  }, [open, artSrc, clean, serial, issued, fonts, loadImg])
+
+  /* Stickers are stored in absolute output units, so a preset with
+     different dimensions would leave them all in the wrong place —
+     often off the ticket entirely. Remapped proportionally into the new
+     rect, then re-clamped so the touching rule still holds. */
+  useEffect(() => {
+    const from = PRESETS[fromRef.current]
+    if (from === preset) return
+    fromRef.current = pi
+    /* Both the ticket and its margin change size, so the old absolute
+       position means nothing in the new space. Converted through the
+       fraction of the ticket it sat at, which is the part a visitor
+       actually chose. */
+    const fm = marginFor(from)
+    setStickers((list) =>
+      list.map((st) =>
+        anchorIn(preset, {
+          ...st,
+          x: M + ((st.x - fm) / from.w) * preset.w,
+          y: M + ((st.y - fm) / from.h) * preset.h,
+          s: clamp(st.s, MIN_S, maxFor(preset)),
+        })
+      )
+    )
+  }, [pi, preset, M])
 
   /* ── Stickers ── */
   /* Which artwork is currently on the ticket, so the tray can show it.
@@ -463,11 +350,18 @@ export default function Ticket({ open, name, art, onClose }) {
       const off = (key % 6) * 24 - 60
       setStickers((list) => [
         ...list,
-        { key, src, x: M + W * 0.62 + off, y: M + H * 0.52 + off, s: SIZE, r: 0 },
+        {
+          key,
+          src,
+          x: M + preset.w * 0.62 + off,
+          y: M + preset.h * 0.52 + off,
+          s: sizeFor(preset),
+          r: 0,
+        },
       ])
       setSel(key)
     },
-    [placed]
+    [placed, preset]
   )
 
   /* Selection follows the list. Anything that removes a sticker — the
@@ -477,11 +371,7 @@ export default function Ticket({ open, name, art, onClose }) {
     if (sel !== null && !stickers.some((s) => s.key === sel)) setSel(null)
   }, [stickers, sel])
 
-  const anchored = (st) => ({
-    ...st,
-    x: clamp(st.x, M + GRIP - st.s / 2, M + W - GRIP + st.s / 2),
-    y: clamp(st.y, M + GRIP - st.s / 2, M + H - GRIP + st.s / 2),
-  })
+  const anchored = (st) => anchorIn(preset, st)
 
   const toLogical = (clientX, clientY) => {
     const r = stageRef.current.getBoundingClientRect()
@@ -530,7 +420,7 @@ export default function Ticket({ open, name, art, onClose }) {
         const dist = Math.hypot(p.y - st.y, p.x - st.x)
         return anchored({
           ...st,
-          s: clamp((dist / d.d0) * d.base.s, MIN_S, MAX_S),
+          s: clamp((dist / d.d0) * d.base.s, MIN_S, maxFor(preset)),
           r: d.base.r + (a - d.a0),
         })
       })
@@ -570,25 +460,32 @@ export default function Ticket({ open, name, art, onClose }) {
   const download = async () => {
     setBusy(true)
     await fonts()
-    const image = await loadImg(art)
+    const image = await loadImg(artSrc)
     const loaded = await Promise.all(stickers.map((s) => loadImg(s.src)))
 
     /* The ticket goes on its own surface first: its notch punch uses
        destination-out, which would otherwise cut through any sticker
        already drawn over that edge. */
     const plate = document.createElement('canvas')
-    plate.width = W * DPR
-    plate.height = H * DPR
+    plate.width = preset.w * DPR
+    plate.height = preset.h * DPR
     const pc = plate.getContext('2d')
     pc.scale(DPR, DPR)
-    paintTicket(pc, { art: image, name: clean, serial, mode, message })
+    paintTicket(pc, preset, {
+      art: image,
+      name: clean,
+      serial,
+      mode,
+      message,
+      issued,
+    })
 
     const out = document.createElement('canvas')
     out.width = OUT_W * DPR
     out.height = OUT_H * DPR
     const c = out.getContext('2d')
     c.scale(DPR, DPR)
-    c.drawImage(plate, M, M, W, H)
+    c.drawImage(plate, M, M, preset.w, preset.h)
 
     stickers.forEach((st, i) => {
       const im = loaded[i]
@@ -629,11 +526,64 @@ export default function Ticket({ open, name, art, onClose }) {
       }}
     >
       <div className="tk-body-mizu">
+        {/* ── Caption ──
+            In normal flow above the card, not floated over it. The
+            designs run from 0.52:1 to 2.53:1, so there is no corner of
+            the artwork that is free on all five. */}
+        <div className="tk-head-mizu">
+          <p className="tk-cap-mizu" aria-live="polite">
+            <span className="tk-cap-jp-mizu" aria-hidden="true">
+              {preset.jp}
+            </span>
+            <span className="tk-cap-name-mizu">{preset.name}</span>
+            <span className="tk-cap-meta-mizu">
+              {preset.shape} · {preset.w}×{preset.h}
+            </span>
+          </p>
+
+          <div className="tk-head-act-mizu">
+            <button
+              type="button"
+              className="tk-save-mizu"
+              onClick={download}
+              disabled={busy}
+            >
+              <DownIcon />
+              {busy ? 'Rendering…' : 'Download PNG'}
+            </button>
+
+            <button type="button" className="tk-close-mizu" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
+
+        {/* ── Rail ──
+            One card, arrows either side. Peeking neighbours were tried
+            and abandoned: at a shared preview height the boarding pass
+            wants 1062px and the ofuda 217px, so a three-up row either
+            overlaps or collapses whichever design is narrow. The strip
+            below shows all five at once, which is what the neighbours
+            were failing to do anyway. */}
+        <div className="tk-rail-mizu">
+          <button
+            type="button"
+            className="tk-preset-nav-mizu prev"
+            onClick={() => step(-1)}
+            aria-label={`Previous design — ${around.prev.name}`}
+          >
+            <Chev dir="left" />
+          </button>
+
         {/* ── Stage ── */}
         <div
           ref={stageRef}
           className="tk-stage-mizu"
-          style={{ aspectRatio: `${OUT_W} / ${OUT_H}` }}
+          /* The ratio drives width, not height. Capping height while
+             width stayed at 100% would let height win over
+             aspect-ratio, and every child is positioned in percent —
+             so the plate and the stickers would stretch. */
+          style={{ '--ar': OUT_W / OUT_H, aspectRatio: `${OUT_W} / ${OUT_H}` }}
           onPointerDown={() => setSel(null)}
         >
           <canvas
@@ -642,8 +592,8 @@ export default function Ticket({ open, name, art, onClose }) {
             style={{
               left: pct(M, OUT_W),
               top: pct(M, OUT_H),
-              width: pct(W, OUT_W),
-              height: pct(H, OUT_H),
+              width: pct(preset.w, OUT_W),
+              height: pct(preset.h, OUT_H),
             }}
             role="img"
             aria-label={`Admission ticket number ${serial} issued to ${clean}`}
@@ -694,6 +644,43 @@ export default function Ticket({ open, name, art, onClose }) {
           ))}
         </div>
 
+          <button
+            type="button"
+            className="tk-preset-nav-mizu next"
+            onClick={() => step(1)}
+            aria-label={`Next design — ${around.next.name}`}
+          >
+            <Chev dir="right" />
+          </button>
+        </div>
+
+        {/* ── The five ──
+            Every design visible at once, each at its own shape, so
+            choosing is recognition rather than a guess at what is two
+            clicks away. Painted once when the panel opens — they are
+            design swatches, not live previews, so they do not repaint
+            on every keystroke in the message field. */}
+        <div className="tk-thumbs-mizu" role="tablist" aria-label="Ticket design">
+          {PRESETS.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              className={`tk-thumb-mizu${i === pi ? ' is-on' : ''}`}
+              onClick={() => setPi(i)}
+              aria-selected={i === pi}
+              aria-label={`${p.name} — ${p.shape}`}
+            >
+              <span className="tk-thumb-box-mizu">
+                <canvas ref={(el) => (thumbRefs.current[i] = el)} />
+              </span>
+              <span className="tk-thumb-jp-mizu" aria-hidden="true">
+                {p.jp}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* ── Detail block ── */}
         <div className="tk-panel-mizu">
           <div className="tk-seg-mizu" role="group" aria-label="Ticket body">
@@ -713,6 +700,38 @@ export default function Ticket({ open, name, art, onClose }) {
             >
               Your message
             </button>
+          </div>
+
+          {/* A label wrapping a hidden input: the whole control is the
+              file picker, with no button-triggers-input plumbing and no
+              styling fight with the browser's own widget. */}
+          <div className="tk-photo-mizu">
+            <label className="tk-upload-mizu">
+              <PhotoIcon />
+              {shot ? 'Change photo' : 'Use my photo'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={onPickPhoto}
+              />
+            </label>
+
+            {shot && (
+              <button
+                type="button"
+                className="tk-clear-mizu"
+                onClick={() => {
+                  setShot(null)
+                  setShotErr('')
+                }}
+              >
+                Reset
+              </button>
+            )}
+
+            <span className="tk-photo-note-mizu" role={shotErr ? 'alert' : undefined}>
+              {shotErr || 'PNG or JPEG · stays on your device'}
+            </span>
           </div>
 
           {mode === 'message' && (
@@ -779,15 +798,10 @@ export default function Ticket({ open, name, art, onClose }) {
 
         {/* ── Actions ── */}
         <div className="tk-cta-mizu">
-          <button
-            type="button"
-            className="tk-save-mizu"
-            onClick={download}
-            disabled={busy}
-          >
-            <DownIcon />
-            {busy ? 'Rendering…' : 'Download PNG'}
-          </button>
+          <p className="tk-note-mizu">
+            Stickers can hang off the edge — they just have to touch the
+            ticket.
+          </p>
 
           {stickers.length > 0 && (
             <button
@@ -801,15 +815,6 @@ export default function Ticket({ open, name, art, onClose }) {
               Clear stickers
             </button>
           )}
-
-          <p className="tk-note-mizu">
-            Stickers can hang off the edge — they just have to touch the
-            ticket.
-          </p>
-
-          <button type="button" className="tk-close-mizu" onClick={onClose}>
-            Close
-          </button>
         </div>
       </div>
     </dialog>
@@ -876,6 +881,24 @@ export default function Ticket({ open, name, art, onClose }) {
   )
 }
 
+function Chev({ dir }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={dir === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
+    </svg>
+  )
+}
+
 function ExpandIcon() {
   return (
     <svg
@@ -890,6 +913,26 @@ function ExpandIcon() {
       strokeLinejoin="round"
     >
       <path d="M4 10V4h6M20 14v6h-6M20 10V4h-6M4 14v6h6" />
+    </svg>
+  )
+}
+
+function PhotoIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="m21 16-5-5-5 5-2-2-6 6" />
     </svg>
   )
 }

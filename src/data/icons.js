@@ -1,4 +1,4 @@
-/* GENERATED FILE — do not edit by hand.
+/* GENERATED FILE - do not edit by hand.
    Source: simple-icons (devDependency). Regenerate with `npm run icons`.
 
    name -> { c: brand colour, p: 24x24 SVG path data }
@@ -6,7 +6,7 @@
    Colours are the real brand hex, adjusted for legibility on the #050505
    canvas: hue and saturation are preserved, lightness is raised until the
    mark clears 3.6:1 against the page. Brands with no hue to preserve
-   (black, white, grey) render as E4E4E7 — the same convention GitHub uses
+   (black, white, grey) render as E4E4E7 - the same convention GitHub uses
    for its own mark on dark backgrounds. See scripts/gen-icons.mjs.
 
    111 brand marks. Names absent here fall back to a

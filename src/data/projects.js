@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════
-   Nine shipped projects — the single source of truth.
+   Nine shipped projects - the single source of truth.
    The work grid, all nine decks, prev/next, the
    sitemap and the prerender route list derive from
    this array. Order is computed, never hand-kept.
@@ -12,7 +12,7 @@ export const PROJECTS = [
     name:     'Mitsu',
     kanji:    '見つ',
     tagline:  'Touchless window control for Windows',
-    event:    'OpenAI Build Week — Apps for Your Life',
+    event:    'OpenAI Build Week - Apps for Your Life',
     role:     'Solo Developer',
     duration: '8 days',
     period:   { start: '2026-07', end: '2026-07' },
@@ -21,7 +21,7 @@ export const PROJECTS = [
 
     summary:
       'A hands-free Windows window manager combining webcam hand tracking, voice commands and ' +
-      'direct Win32 window control. Point at nothing, say a name, and your windows move — pinch ' +
+      'direct Win32 window control. Point at nothing, say a name, and your windows move - pinch ' +
       'a window on one monitor, slide your hand, and watch it glide to the other.',
 
     stats: [
@@ -98,7 +98,7 @@ export const PROJECTS = [
     name:     'Minari',
     kanji:    '実成',
     tagline:  'Autonomous flaky-test resolution for GitLab',
-    event:    'Google Cloud Rapid Agent Hackathon — GitLab',
+    event:    'Google Cloud Rapid Agent Hackathon - GitLab',
     role:     'Solo Developer',
     duration: '8 days',
     period:   { start: '2026-05', end: '2026-06' },
@@ -107,7 +107,7 @@ export const PROJECTS = [
 
     summary:
       'An autonomous agent that detects, diagnoses, repairs, verifies and submits merge requests ' +
-      'for flaky tests in GitLab repositories — a full agentic loop from probabilistic detection ' +
+      'for flaky tests in GitLab repositories - a full agentic loop from probabilistic detection ' +
       'through CI verification to a reviewable MR.',
 
     stats: [
@@ -182,7 +182,7 @@ export const PROJECTS = [
     name:     'Misaki',
     kanji:    '見先',
     tagline:  'AI legislative intelligence platform',
-    event:    'Web Data UNLOCKED — Security & Compliance + AI/ML API',
+    event:    'Web Data UNLOCKED - Security & Compliance + AI/ML API',
     role:     'Solo Developer',
     duration: '7 days',
     period:   { start: '2026-05', end: '2026-06' },
@@ -191,7 +191,7 @@ export const PROJECTS = [
 
     summary:
       'An AI-powered platform that analyses regulatory risk across all 50 U.S. states, the EU and ' +
-      'the UK, turning live web data into company-specific compliance insight — impact estimates, ' +
+      'the UK, turning live web data into company-specific compliance insight - impact estimates, ' +
       'pass probability and financial exposure.',
 
     stats: [
@@ -266,7 +266,7 @@ export const PROJECTS = [
     name:     'Mirai',
     kanji:    'ミライ',
     tagline:  'AI-powered robot arm simulator',
-    event:    'Transforming Enterprise Through AI — Robotics & Simulation',
+    event:    'Transforming Enterprise Through AI - Robotics & Simulation',
     role:     'Solo Developer',
     duration: '8 days',
     period:   { start: '2026-05', end: '2026-05' },
@@ -275,7 +275,7 @@ export const PROJECTS = [
 
     summary:
       'A browser-based robotics platform that turns natural-language instructions into verified ' +
-      'robot arm motion plans — no programming required — then exports the result to real ' +
+      'robot arm motion plans - no programming required - then exports the result to real ' +
       'hardware in one click.',
 
     stats: [
@@ -314,16 +314,36 @@ export const PROJECTS = [
         detail: 'Emits Arduino, Python, URDF and a bill of materials from the same verified plan.' },
     ],
 
+    /* Grouped the way the runtime actually divides: what plans, what
+       simulates, what ships. The old three-bucket split had Rapier in
+       two of them and said nothing about the kinematics or the export
+       path. */
     stack: [
-      { category: 'Core Languages', items: [{ name: 'TypeScript' }, { name: 'Python' }] },
-      { category: 'Development Ecosystem', items: [
-        { name: 'React', ver: '18' }, { name: 'Vite', ver: '7' }, { name: 'React Three Fiber' },
-        { name: 'Rapier WASM' }, { name: 'React Flow' }, { name: 'Jotai' },
-        { name: 'FastAPI' }, { name: 'Jinja2' }] },
-      { category: 'Physics', note: 'Client simulation, server validation.', items: [
-        { name: 'Rapier WASM', role: 'client-side' }, { name: 'MuJoCo', ver: '3.x', role: 'server-side' }] },
-      { category: 'AI & SDKs', items: [
-        { name: 'Gemini 2.5 Flash' }, { name: '@google/generative-ai' }, { name: 'google-generativeai' }] },
+      { category: 'Inference', note: 'ReAct planning, with a deterministic validation pass behind it.', items: [
+        { name: 'Gemini 2.5 Flash',  role: 'planning · ReAct' },
+        { name: 'Gemini 2.0 Flash',  role: 'fallback chain' },
+        { name: 'MuJoCo', ver: '3.x', role: 'validation' }] },
+
+      { category: 'Simulation & Physics', note: 'Client simulation at 60fps, server-side validation.', items: [
+        { name: 'Rapier WASM',       role: 'realtime sim' },
+        { name: 'Three.js',          role: '3D engine' },
+        { name: 'React Three Fiber', role: '3D engine' },
+        { name: 'FABRIK',            role: 'IK solver' },
+        { name: 'Forward Kinematics',role: 'FK solver' },
+        { name: 'Motion Compiler',   role: 'motion' },
+        { name: 'React Flow', ver: '12', role: 'task graph' },
+        { name: 'Jotai',             role: 'state' },
+        { name: 'Python',            role: 'language' }] },
+
+      { category: 'Application', items: [
+        { name: 'React', ver: '18',  role: 'frontend' },
+        { name: 'TypeScript',        role: 'frontend' },
+        { name: 'FastAPI',           role: 'backend' },
+        { name: 'Jinja2',            role: 'export' },
+        { name: 'Vercel',            role: 'deploy' },
+        { name: 'Railway',           role: 'deploy' },
+        { name: 'Docker',            role: 'container' },
+        { name: 'SQLite',            role: 'storage' }] },
     ],
 
     media: [
@@ -349,7 +369,7 @@ export const PROJECTS = [
     name:     'Miwa',
     kanji:    '美話',
     tagline:  'Real-time Japanese voice translation for Discord',
-    event:    'AMD Developer Hackathon 2026 — AI Agents & Agentic Workflows',
+    event:    'AMD Developer Hackathon 2026 - AI Agents & Agentic Workflows',
     role:     'Solo Developer',
     duration: '7 days',
     period:   { start: '2026-05', end: '2026-05' },
@@ -412,11 +432,14 @@ export const PROJECTS = [
         { name: 'CrewAI-style pipeline' }, { name: 'Edge-TTS' }, { name: 'pykakasi' }] },
     ],
 
+    /* Video second, so it leads the gallery - the same order mitsu,
+       minari, misaki and mirai use. It was last here, which put the
+       presentation at the end of the row instead of the front. */
     media: [
       { src: 'overlay.png',     cap: 'Miwa translation overlay', ratio: '16/9' },
+      { yt:  'jZzCQzYThZE',     cap: 'Video presentation' },
       { src: 'walkthrough.png', cap: 'Miwa walkthrough', ratio: '16/9' },
       { src: 'replies.png',     cap: 'Agent reply suggestions', ratio: '16/9' },
-      { yt:  'jZzCQzYThZE',     cap: 'Video presentation' },
     ],
 
     links: [
@@ -434,7 +457,7 @@ export const PROJECTS = [
     name:     'Bacsal Consultancy',
     kanji:    '事務',
     tagline:  'Business management & CMS platform',
-    event:    'Internship — Lead Junior Software Engineer',
+    event:    'Internship - Lead Junior Software Engineer',
     role:     'Lead Junior Software Engineer',
     duration: '4 months',
     period:   { start: '2026-01', end: '2026-04' },
@@ -562,7 +585,7 @@ export const PROJECTS = [
     media: [
       { src: 'dashboard.png', cap: 'Galactic strategy dashboard', ratio: '16/9' },
       { src: 'troops.png',    cap: 'Troop dashboard', ratio: '16/9' },
-      { src: 'award.png',     cap: '🥉 2nd Runner-Up — RAITE 2025', ratio: '16/9' },
+      { src: 'award.png',     cap: '🥉 2nd Runner-Up - RAITE 2025', ratio: '16/9' },
     ],
 
     links: [
@@ -577,7 +600,7 @@ export const PROJECTS = [
     name:     'HirNa!',
     kanji:    '求人',
     tagline:  'Smart talent sourcing platform',
-    event:    'Byteforward Hackathon — The Final Pitch',
+    event:    'Byteforward Hackathon - The Final Pitch',
     role:     'UI/UX & Frontend Developer · BPSU1 Team',
     duration: '5 months',
     period:   { start: '2025-06', end: '2025-10' },
@@ -635,14 +658,14 @@ export const PROJECTS = [
     ],
 
     media: [
-      { src: 'app.png',     cap: 'HirNa! — Hire Talent. Here. Now.', ratio: '16/9' },
+      { src: 'app.png',     cap: 'HirNa! - Hire Talent. Here. Now.', ratio: '16/9' },
       { src: 'heatmap.png', cap: 'Employment heatmap', ratio: '16/9' },
-      { src: 'award.png',   cap: '🥈 1st Runner-Up — Byteforward', ratio: '16/9' },
+      { src: 'award.png',   cap: '🥈 1st Runner-Up - Byteforward', ratio: '16/9' },
     ],
 
     links: [
       { kind: 'demo', label: 'Live Site',  url: 'https://careerstep-bpsu1.web.app/index.html', primary: true },
-      /* Team repository — owned by ArlynA47, not Mizunandayo. */
+      /* Team repository - owned by ArlynA47, not Mizunandayo. */
       { kind: 'repo', label: 'Repository', url: 'https://github.com/ArlynA47/bpsu1' },
     ],
   },
@@ -763,7 +786,29 @@ export const ORDERED = [...PROJECTS].sort((a, b) =>
 
 export const bySlug = (slug) => PROJECTS.find((p) => p.slug === slug)
 
-/** The project's own live site — where its work-grid card points.
+/** In progress - a teaser plate, not a project.
+ *
+ *  Deliberately outside PROJECTS. Everything that counts the work reads
+ *  that array: the masthead says "5/5 Mi-series", the greeting says
+ *  "Nine shipped projects", and the SEO payload enumerates them. A
+ *  tenth entry would quietly make all three wrong, and a `wip` flag
+ *  every consumer had to remember to filter on would be worse - one
+ *  missed check and unfinished work is listed as shipped.
+ *
+ *  春 (haru) is spring - the season things start in. It sits outside
+ *  the Mi- family on purpose, which is why the masthead counts the
+ *  series as 5/5 and leaves this plate out of the tally. */
+export const UPCOMING = {
+  name:     'Haru',
+  kanji:    '春',
+  kicker:   'Link-in-bio · portfolio builder',
+  tagline:
+    'A customizable digital identity platform where creators, gamers, ' +
+    'and developers can build a unique online presence - part ' +
+    'link-in-bio, part mini portfolio builder.',
+}
+
+/** The project's own live site - where its work-grid card points.
     Marked explicitly with `primary: true` rather than inferred from
     array order: Mirai and Mitsu each ship more than one demo URL, and
     letting position decide picks the wrong one silently. */
@@ -773,6 +818,6 @@ export const liveUrl = (p) =>
    p.links[0])?.url ?? null
 
 /* `siblings` and a per-project ROUTES list lived here for the
-   standalone case-study pages. Those are gone — projects open as a
-   dialog from the work grid — so both were removed rather than left
+   standalone case-study pages. Those are gone - projects open as a
+   dialog from the work grid - so both were removed rather than left
    as dead exports. */

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════
-   Hackathon media — discovered, not declared.
+   Hackathon media - discovered, not declared.
 
    A browser cannot list a directory, so the old model
    was a hand-written `media` array per entry. That
@@ -9,14 +9,14 @@
 
    Vite's import.meta.glob resolves the folders at build
    time instead. Whatever is in
-   src/assets/hackathons/<id>/ is what shows — add a
+   src/assets/hackathons/<id>/ is what shows - add a
    file and it appears, remove one and it disappears,
    with no data edit and no wasted 404 probing.
 
    Living under src/assets rather than public/ is what
    makes this possible: public/ is copied verbatim and
    never enters the module graph. The trade is worth it
-   — files also get content-hashed for caching.
+   - files also get content-hashed for caching.
    ══════════════════════════════════════════════════ */
 
 const FILES = import.meta.glob(
@@ -60,5 +60,5 @@ export function mediaFor(id, captions = {}) {
 /** Folders that exist, for tooling and checks. */
 export const MEDIA_FOLDERS = Object.keys(BY_FOLDER).sort()
 
-/** Total files discovered — handy for verification. */
+/** Total files discovered - handy for verification. */
 export const MEDIA_COUNT = Object.values(BY_FOLDER).reduce((n, a) => n + a.length, 0)

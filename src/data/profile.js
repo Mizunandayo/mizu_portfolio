@@ -21,7 +21,7 @@ export const PROFILE = {
     'production-ready software through modern web technologies, intelligent systems and ' +
     'thoughtful system design.',
 
-  /* The About section's claim. Stated as a rule rather than a virtue —
+  /* The About section's claim. Stated as a rule rather than a virtue -
      "discipline is to build it" describes a quality; this makes a
      claim the rest of the page then has to back up, and every project
      below is evidence for it. */
@@ -95,7 +95,7 @@ export const CHANNELS = [
 /* Site-level constants. */
 export const SITE = {
   url:   'https://mizu-portfolio.vercel.app',
-  title: 'Francis Daniel Genese — Software Engineer',
+  title: 'Francis Daniel Genese - Software Engineer',
   description:
     'Software engineer building AI-powered applications and scalable systems. Nine shipped ' +
     'projects across agentic AI, LLM platforms, computer vision and full-stack web.',

@@ -47,15 +47,15 @@ export default function MusicPlayer({ startId, onClose }) {
   const [drag, setDrag] = useState(null)
   const [width, setWidth] = useState(null)
   const sizeRef = useRef(null)
-
   const audioRef = useRef(null)
   const rootRef = useRef(null)
   const wantPlay = useRef(true)
   const startRef = useRef(null)
   const movedRef = useRef(false)
-
   const track = TRACKS[index]
 
+
+  
   /* ── Restore position and volume ───────────────── */
   useEffect(() => {
     try {

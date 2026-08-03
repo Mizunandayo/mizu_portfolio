@@ -1,7 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { formatPeriod } from '../../data/projects.js'
 import { Layers, Pill, ArrowIcon, GitHubIcon, PlayIcon, ExternalIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder, YouTubePlaceholder } from '../shared/placeholders.jsx'
+import { shotsFor } from '../../data/projectMedia.js'
+import Lightbox from '../shared/Lightbox.jsx'
 import TechIcon from '../shared/TechIcon.jsx'
 
 /* ══════════════════════════════════════════════════
@@ -28,6 +30,8 @@ const LINK_ICON = {
 export default function ProjectDialog({ project: p, onClose }) {
   const ref = useRef(null)
   const scrollRef = useRef(null)
+  /* Which still is open full size. -1 is closed. */
+  const [shot, setShot] = useState(-1)
 
   const close = useCallback(() => onClose(), [onClose])
 
@@ -55,13 +59,39 @@ export default function ProjectDialog({ project: p, onClose }) {
     }
   }, [close])
 
-  useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }) }, [p.slug])
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 })
+    setShot(-1)
+  }, [p.slug])
 
   if (!p) return null
 
   const cover = p.media?.[0]
-  /* The cover already leads the dialog — don't repeat it below. */
-  const gallery = (p.media || []).slice(1)
+
+  /* Gallery comes from the folder when there is one: drop p1 … p10 into
+     src/assets/work/<slug>/ and exactly those render, the way the
+     hackathon galleries already work.
+
+     Videos stay declared — a YouTube id is not a file and cannot be
+     discovered — and they lead, which is the order every mi-series
+     project already uses: the presentation first, then the stills.
+     With no folder yet, the project's own media array is used
+     unchanged, so nothing goes blank while the images are still being
+     gathered. */
+  const shots = shotsFor(p.slug, p.shotCaptions)
+  const rest = (p.media || []).slice(1)
+  const gallery = shots.length
+    ? [...rest.filter((m) => m.yt), ...shots]
+    : rest
+
+  /* Only the stills open in the viewer. The video tile already has a
+     destination — YouTube — and swallowing that click to show a
+     thumbnail nobody asked for would be worse than useless.
+
+     Indexed separately from `gallery` so stepping through the viewer
+     never lands on the video and stalls. */
+  const viewable = gallery.filter((m) => !m.yt)
+  const seatOf = (m) => viewable.indexOf(m)
 
   return (
     <dialog
@@ -154,11 +184,42 @@ export default function ProjectDialog({ project: p, onClose }) {
                 Gallery
               </p>
               <div className="pdlg-gallery-mizu">
+                {/* Captions carried off — the panels are screenshots of
+                    the thing the page has just described in full, and a
+                    line of grey text under each one was labelling the
+                    obvious. `cap` stays on every tile as its alt text
+                    and its fallback label. */}
                 {gallery.map((m) =>
                   m.yt ? (
-                    <YouTubePlaceholder key={m.yt} id={m.yt} cap={m.cap} />
+                    <YouTubePlaceholder
+                      key={m.yt}
+                      id={m.yt}
+                      cap={m.cap}
+                      showCaption={false}
+                    />
                   ) : (
-                    <ImagePlaceholder key={m.src} slug={p.slug} src={m.src} cap={m.cap} ratio="16/9" />
+                    /* A real button, not a div with onClick — it has to
+                       be reachable by keyboard and announce itself, and
+                       the tile is genuinely an action now. */
+                    <button
+                      key={m.key ?? m.src}
+                      type="button"
+                      className="pdlg-shot-mizu"
+                      onClick={() => setShot(seatOf(m))}
+                      aria-label={`View ${m.cap || 'image'} full size`}
+                    >
+                      <ImagePlaceholder
+                        /* Discovered media carries a resolved url; a
+                           declared one needs the slug so the component
+                           can walk the format candidates. */
+                        url={m.url}
+                        slug={m.url ? undefined : p.slug}
+                        src={m.src}
+                        cap={m.cap}
+                        ratio="16/9"
+                        showCaption={false}
+                      />
+                    </button>
                   )
                 )}
               </div>
@@ -166,6 +227,14 @@ export default function ProjectDialog({ project: p, onClose }) {
           )}
         </div>
       </div>
+
+      <Lightbox
+        items={viewable}
+        index={shot}
+        slug={p.slug}
+        onIndex={setShot}
+        onClose={() => setShot(-1)}
+      />
     </dialog>
   )
 }

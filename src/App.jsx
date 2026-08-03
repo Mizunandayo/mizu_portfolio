@@ -9,6 +9,7 @@ import Boot from "./components/shared/Boot.jsx";
 import { ModeProvider } from "./hooks/useMode.jsx";
 import Welcome from "./components/shared/Welcome.jsx";
 import MusicPlayer from "./components/shared/MusicPlayer.jsx";
+import Credits from "./components/shared/Credits.jsx";
 
 /* Route changes start at the top; an incoming #hash wins over that. */
 function ScrollManager() {
@@ -35,6 +36,9 @@ export default function App() {
   const [booted, setBooted] = useState(false);
   /* Set only when the visitor picks a track in the greeting. */
   const [music, setMusic] = useState(null);
+  /* Openable from either navbar, so the panel lives here — one dialog,
+     one piece of state, rather than a copy inside each nav. */
+  const [credits, setCredits] = useState(false);
 
   return (
     <ModeProvider>
@@ -45,8 +49,8 @@ export default function App() {
       <ScrollManager />
       {/* Both navs mount; CSS shows one. Swapping them in React would
           flash the wrong one before hydration settles the mode. */}
-      <Nav />
-      <PersonalNav />
+      <Nav onCredits={() => setCredits(true)} />
+      <PersonalNav onCredits={() => setCredits(true)} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="*" element={<NotFound />} />
@@ -54,6 +58,7 @@ export default function App() {
       <Footer />
       <Welcome show={booted} onPickTrack={setMusic} />
       {music && <MusicPlayer startId={music} onClose={() => setMusic(null)} />}
+      <Credits open={credits} onClose={() => setCredits(false)} />
     </ModeProvider>
   );
 }
