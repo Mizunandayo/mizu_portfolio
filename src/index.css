@@ -3808,8 +3808,128 @@ html.wc-open-mizu {
   align-items: flex-start;
   justify-content: flex-end;
   min-height: 100dvh;
-  padding: 140px clamp(24px, 6vw, 88px) clamp(88px, 12vh, 132px);
+  /* Declared once so the spine can align to the same left edge the copy
+     is indented from. Two hardcoded clamps would drift apart. */
+  --hero-pad: clamp(24px, 6vw, 88px);
+  --hero-foot: clamp(88px, 12vh, 132px);
+  --hero-spine: 54px;
+  padding: 140px var(--hero-pad) var(--hero-foot);
+  /* Room for the spine to stand in without overlapping the copy. */
+  padding-left: calc(var(--hero-pad) + var(--hero-spine));
   text-align: left;
+}
+
+/* ── Spine ──────────────────────────────────────── */
+/* text-orientation is what makes this a column of upright glyphs rather
+   than a rotated line of them — the single most important declaration
+   here, and the one that is easy to leave out. */
+.hero-spine-mizu {
+  position: absolute;
+  left: clamp(24px, 6vw, 88px);
+  bottom: clamp(88px, 12vh, 132px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.hero-spine-rule-mizu {
+  width: 1px;
+  height: clamp(48px, 10vh, 96px);
+  background: linear-gradient(to bottom, transparent, rgba(250, 250, 250, 0.42));
+}
+
+.hero-spine-text-mizu {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  line-height: 1;
+  color: rgba(228, 228, 231, 0.62);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Spec readout ───────────────────────────────── */
+.hero-spec-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: clamp(26px, 4vh, 40px);
+}
+
+.hero-spec-row-mizu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-spec-no-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(250, 250, 250, 0.5);
+  /* Fixed width so the values line up whatever the index. */
+  width: 18px;
+}
+
+.hero-spec-dash-mizu {
+  width: 26px;
+  height: 1px;
+  background: rgba(250, 250, 250, 0.34);
+  flex-shrink: 0;
+}
+
+.hero-spec-val-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 245, 0.94);
+}
+
+/* The last row is the availability line, and it is the one a hiring
+   manager is scanning for. */
+.hero-spec-row-mizu:last-child .hero-spec-val-mizu { color: #fafafa; }
+
+.hero-spec-row-mizu:last-child .hero-spec-dash-mizu {
+  background: rgba(250, 250, 250, 0.7);
+}
+
+/* ── Masthead rule ──────────────────────────────── */
+/* Between the name and the tagline, so the two read as a masthead and
+   its subtitle instead of two stacked lines. */
+.hero-name-rule-mizu {
+  display: block;
+  width: clamp(120px, 22vw, 260px);
+  height: 1px;
+  margin-bottom: 18px;
+  background: linear-gradient(to right, rgba(250, 250, 250, 0.6), transparent);
+}
+
+/* ── Recruiter mode ─────────────────────────────── */
+/* That mode drops the Japanese layer entirely and re-centres the
+   column, so the spine goes and the gutter it needed goes with it. */
+.mode-recruiter .hero-spine-mizu { display: none; }
+
+.mode-recruiter .hero-wrap-mizu {
+  padding-left: var(--hero-pad);
+}
+
+.mode-recruiter .hero-spec-mizu { align-items: center; }
+
+.mode-recruiter .hero-name-rule-mizu { margin-inline: auto; }
+
+/* Below this the spine would sit on top of the copy rather than beside
+   it — there is not enough width for two axes. */
+@media (max-width: 720px) {
+  .hero-spine-mizu { display: none; }
+  .hero-wrap-mizu { padding-left: var(--hero-pad); }
 }
 
 .hero-name-mizu {
@@ -4301,6 +4421,12 @@ html.wc-open-mizu {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Without a stroke the glyph would be invisible, so it takes a faint
+   fill instead. */
+@supports not (-webkit-text-stroke: 1px #000) {
+  .hero-mark-mizu { color: rgba(250, 250, 250, 0.18); }
 }
 
 .mode-recruiter .hero-mark-mizu { display: none; }

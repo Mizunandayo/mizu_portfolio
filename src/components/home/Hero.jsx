@@ -73,6 +73,12 @@ const LAYERS = [
 const BLANK =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
+/* Role and location come from the strip that was already declared;
+   availability is appended rather than hardcoded, so the hero and the
+   contact card cannot end up disagreeing about it. */
+const SPEC = [...PROFILE.strip, PROFILE.availability.status];
+
+
 export default function Hero() {
   const [bg, setBg] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -89,6 +95,7 @@ export default function Hero() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+
 
   const layer = LAYERS[bg];
   const isVideo = layer.kind === "video";
@@ -134,6 +141,8 @@ export default function Hero() {
       v.play().catch(() => {});
     });
   }, [bg, isVideo]);
+
+
 
   /* Back to frame one, for the reason given at BLANK. */
   useEffect(() => {
@@ -287,26 +296,39 @@ export default function Hero() {
         <Spotlight />
       </span>
 
+      {/* Vertical spine, running up the left margin beside the block.
+          A second axis is what stops the hero reading as the usual
+          label-name-paragraph stack: the Latin runs across, the
+          Japanese runs down, which is how a poster sets both.
+
+          Outside hero-wrap so it is not part of that column's flow —
+          the wrap is bottom-aligned, and a flex child here would push
+          the copy sideways instead of standing beside it. */}
+      <span className="hero-spine-mizu" aria-hidden="true">
+        <span className="hero-spine-rule-mizu" />
+        <span className="hero-spine-text-mizu">ソフトウェア技術者</span>
+      </span>
+
       <div className="hero-wrap-mizu">
-        {/* Spec strip — hairline rules + mono tracking, no container */}
+        {/* A numbered readout rather than a tracked line between two
+            rules. Same information, but it reads as a spec block: the
+            indices give it structure the old strip had to get from
+            slashes. Availability is here because it is the one fact a
+            hiring manager is looking for, and it was only in the
+            contact section. */}
         <div
-          className="hero-enter hero-strip"
+          className="hero-enter hero-spec-mizu"
           style={{ animationDelay: "0.05s" }}
         >
-          <div className="hero-strip-rule" />
-          <div className="hero-strip-row">
-            {PROFILE.strip.map((s, i) => (
-              <span key={s} style={{ display: "contents" }}>
-                {i > 0 && (
-                  <span className="hero-strip-slash" aria-hidden="true">
-                    ///
-                  </span>
-                )}
-                <span className="hero-strip-primary">{s}</span>
+          {SPEC.map((s, i) => (
+            <span key={s} className="hero-spec-row-mizu">
+              <span className="hero-spec-no-mizu" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
               </span>
-            ))}
-          </div>
-          <div className="hero-strip-rule" />
+              <span className="hero-spec-dash-mizu" aria-hidden="true" />
+              <span className="hero-spec-val-mizu">{s}</span>
+            </span>
+          ))}
         </div>
 
         <h1
@@ -316,6 +338,14 @@ export default function Hero() {
           <span className="hero-name-latin-mizu">{PROFILE.name}</span>
           <span className="hero-name-kanji-mizu">{PROFILE.kanji}</span>
         </h1>
+
+        {/* Sits between the name and the tagline so the two read as a
+            masthead and its subtitle rather than two stacked lines. */}
+        <span
+          className="hero-enter hero-name-rule-mizu"
+          style={{ animationDelay: "0.26s" }}
+          aria-hidden="true"
+        />
 
         <p
           className="hero-enter hero-tagline-mizu"

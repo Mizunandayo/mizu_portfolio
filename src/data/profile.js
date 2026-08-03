@@ -12,9 +12,9 @@ export const PROFILE = {
   brand:     'MIZU',
   role:      'Software Engineer',
   tagline:   'Agentic AI · LLM Applications · Intelligent Systems',
-  location:  'Bataan, Philippines',
+  location:  'Philippines',
 
-  strip: ['Software Engineer', 'Bataan, Philippines'],
+  strip: ['Software Engineer', 'Philippines'],
 
   intro:
     'I build AI-powered applications and scalable software systems turning ideas into ' +
@@ -25,7 +25,10 @@ export const PROFILE = {
      "discipline is to build it" describes a quality; this makes a
      claim the rest of the page then has to back up, and every project
      below is evidence for it. */
+
+
   claim: 'Every build brings mastery',
+
 
   about: [
     'Software Engineer building AI-powered applications and scalable software systems. I enjoy ' +
@@ -50,7 +53,7 @@ export const PROFILE = {
   ],
 
   availability: {
-    status:    'Open to work',
+    status:    '',
     headline:  'Open to software engineering roles.',
     modes:     ['On-site', 'Hybrid', 'Remote'],
   },

@@ -53,21 +53,33 @@ export default function Contact() {
             <span className="ms-head-rule-mizu" aria-hidden="true" />
           </header>
 
-          {/* Two-tone headline. Three short lines rather than a
-              sentence: at display size fragments land harder than
-              clauses, and these two are the actual job description of
-              every hackathon on this page. The grey tail is the drop;
-              the evidence for it is the rest of the site. */}
+          {/* Three agents, one object. The repeated "it" is the whole
+              device: each line hands the same work to the next stage,
+              so the sentence arrives at discipline rather than simply
+              asserting it.
+
+              Discipline sits in the grey tail because it is the quiet
+              one of the three, and because the nine finished projects
+              above have already argued for it. A claim the page has
+              proved can afford to be understated. */}
           <h2 className="contact-claim-mizu">
-            <span className="contact-claim-lead-mizu">Hard problem.</span>
-            <span className="contact-claim-lead-mizu">Tight deadline.</span>
-            <span className="contact-claim-tail-mizu">I ship.</span>
+            <span className="contact-claim-lead-mizu">Ambition</span>
+            <span className="contact-claim-lead-mizu">Passion</span>
+            <span className="contact-claim-tail-mizu">Discipline.</span>
           </h2>
 
+          {/* Turned to face the reader. This once listed hackathons,
+              podium finishes and internships — the same evidence the
+              nine plates above already present far better than a
+              sentence can, so repeating it here only spent the closing
+              moment talking about me.
+
+              It opens on an imperative aimed at them instead, and the
+              three nouns above have no meaning until this line gives
+              them one: the whole claim is that a problem and a date are
+              the only inputs required. */}
           <p className="contact-lede-mizu">
-            Nine hackathons. Five of them built solo in eight days or less. A
-            production CMS shipped during a four-month internship.{" "}
-            {availability.headline}
+            Tell me what needs to exist and when. That is all I need to start.
           </p>
         </Reveal>
 
@@ -127,10 +139,10 @@ export default function Contact() {
           {/* The slip that comes with it. Kept off the card because a
               meishi prints what is permanent; availability is not. */}
           <p className="ms-slip-mizu">
-            <span className="ms-dot-mizu" aria-hidden="true" />
-            {availability.status}
+            <span aria-hidden="true" />
+  
             <span className="ms-slip-sep-mizu" aria-hidden="true">
-              ·
+            
             </span>
             {availability.modes.join(" / ")}
           </p>
