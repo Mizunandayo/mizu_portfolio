@@ -157,15 +157,19 @@ function perf(c, P, x1, y1, x2, y2) {
   c.setLineDash([])
 }
 
-function cover(c, img, dx, dy, dw, dh, focus = 0.26) {
+/* `pan` overrides where the crop sits, 0..1 on each axis. Absent, each
+   preset keeps the focus it was composed around. */
+function cover(c, img, dx, dy, dw, dh, focus = 0.26, pan) {
   if (!img?.naturalWidth) return
   const k = Math.max(dw / img.naturalWidth, dh / img.naturalHeight)
   const sw = dw / k
   const sh = dh / k
+  const fx = pan?.x ?? 0.5
+  const fy = pan?.y ?? focus
   c.drawImage(
     img,
-    (img.naturalWidth - sw) / 2,
-    (img.naturalHeight - sh) * focus,
+    (img.naturalWidth - sw) * fx,
+    (img.naturalHeight - sh) * fy,
     sw,
     sh,
     dx,
@@ -290,7 +294,7 @@ function paintStub(c, o) {
 
   c.fillStyle = P.paper
   c.fillRect(0, 0, W, H)
-  cover(c, o.art, 0, 0, STUB, H)
+  cover(c, o.art, 0, 0, STUB, H, 0.26, o.pan)
   fade(c, P, 0, H * 0.42, STUB, H * 0.58)
 
   tategaki(c, 'ようこそ', 30, H - 132, 26, 34, P.ink)
@@ -313,10 +317,10 @@ function paintStub(c, o) {
   rule(c, P, x, right, 100)
 
   label(c, P, '氏名 / NAME', x, 148)
-  const s = fit(c, o.upper, right - x, 54)
+  const s = fit(c, o.who, right - x, 54)
   c.font = `800 ${s}px ${SANS}`
   c.fillStyle = P.ink
-  c.fillText(o.upper, x, 202)
+  c.fillText(o.who, x, 202)
   rule(c, P, x, right, 232)
 
   detail(c, P, o, { x, y: 278, w: right - x, room: 172 })
@@ -339,7 +343,7 @@ function paintTanzaku(c, o) {
 
   c.fillStyle = P.paper
   c.fillRect(0, 0, W, H)
-  cover(c, o.art, 0, 0, W, ART, 0.2)
+  cover(c, o.art, 0, 0, W, ART, 0.2, o.pan)
   fade(c, P, 0, ART * 0.5, W, ART * 0.5)
 
   tategaki(c, 'ようこそ', PAD, ART - 196, 30, 40, P.ink)
@@ -362,10 +366,10 @@ function paintTanzaku(c, o) {
   rule(c, P, PAD, right, ART + 88)
 
   label(c, P, '氏名 / NAME', PAD, ART + 134)
-  const s = fit(c, o.upper, right - PAD, 46)
+  const s = fit(c, o.who, right - PAD, 46)
   c.font = `800 ${s}px ${SANS}`
   c.fillStyle = P.ink
-  c.fillText(o.upper, PAD, ART + 186)
+  c.fillText(o.who, PAD, ART + 186)
   rule(c, P, PAD, right, ART + 214)
 
   detail(c, P, o, {
@@ -397,7 +401,7 @@ function paintPass(c, o) {
 
   c.fillStyle = P.paper
   c.fillRect(0, 0, W, H)
-  cover(c, o.art, 0, 0, ART, H, 0.18)
+  cover(c, o.art, 0, 0, ART, H, 0.18, o.pan)
   fade(c, P, 0, H * 0.45, ART, H * 0.55)
   tategaki(c, 'ようこそ', 24, H - 150, 22, 30, P.ink)
 
@@ -411,10 +415,10 @@ function paintPass(c, o) {
   rule(c, P, x, TEAR - PAD, 84)
 
   label(c, P, '氏名 / PASSENGER', x, 128)
-  const s = fit(c, o.upper, TEAR - PAD - x, 44)
+  const s = fit(c, o.who, TEAR - PAD - x, 44)
   c.font = `800 ${s}px ${SANS}`
   c.fillStyle = P.ink
-  c.fillText(o.upper, x, 176)
+  c.fillText(o.who, x, 176)
 
   /* Fields across, not down. The body here is ~690 units wide and only
      160 tall once the name has taken its share, so a stacked list runs
@@ -451,10 +455,10 @@ function paintPass(c, o) {
   rule(c, P, sx, W - 34, 124)
   label(c, P, stamped(o.issued), sx, 158, 11)
 
-  const nm = fit(c, o.upper, W - 34 - sx, 20, 700, 10)
+  const nm = fit(c, o.who, W - 34 - sx, 20, 700, 10)
   c.font = `700 ${nm}px ${SANS}`
   c.fillStyle = P.body
-  c.fillText(o.upper, sx, 194)
+  c.fillText(o.who, sx, 194)
 
   /* A barcode is the one motif that says "pass" without a word of
      explanation. Widths from the serial so it is at least a function
@@ -501,7 +505,7 @@ function paintOfuda(c, o) {
 
   const AY = 132
   const AH = 380
-  cover(c, o.art, PAD, AY, W - PAD * 2, AH, 0.2)
+  cover(c, o.art, PAD, AY, W - PAD * 2, AH, 0.2, o.pan)
   fade(c, P, PAD, AY + AH * 0.55, W - PAD * 2, AH * 0.45)
 
   c.strokeStyle = P.edge
@@ -516,11 +520,11 @@ function paintOfuda(c, o) {
 
   label(c, P, `NO. ${o.serial}`, W / 2, AY + AH + 46, 11, 'center')
 
-  const s = fit(c, o.upper, W - PAD * 2, 40)
+  const s = fit(c, o.who, W - PAD * 2, 40)
   c.font = `800 ${s}px ${SANS}`
   c.fillStyle = P.ink
   c.textAlign = 'center'
-  c.fillText(o.upper, W / 2, AY + AH + 108)
+  c.fillText(o.who, W / 2, AY + AH + 108)
   c.textAlign = 'left'
 
   rule(c, P, PAD, W - PAD, AY + AH + 140)
@@ -572,7 +576,7 @@ function paintPrint(c, o) {
   c.fillStyle = P.paper
   c.fillRect(0, 0, W, H)
 
-  cover(c, o.art, PAD, AY, AW, AH, 0.22)
+  cover(c, o.art, PAD, AY, AW, AH, 0.22, o.pan)
   c.strokeStyle = 'rgba(11,11,12,0.4)'
   c.lineWidth = 1
   c.strokeRect(PAD + 0.5, AY + 0.5, AW - 1, AH - 1)
@@ -590,10 +594,10 @@ function paintPrint(c, o) {
   label(c, P, `NO. ${o.serial}`, W - PAD, capY - 2, 12, 'right')
   rule(c, P, PAD, W - PAD, capY + 22)
 
-  const s = fit(c, o.upper, AW, 46)
+  const s = fit(c, o.who, AW, 46)
   c.font = `800 ${s}px ${SANS}`
   c.fillStyle = P.ink
-  c.fillText(o.upper, PAD, capY + 84)
+  c.fillText(o.who, PAD, capY + 84)
 
   if (o.mode === 'message' && o.message.trim()) {
     message(c, P, {
@@ -626,5 +630,5 @@ export const PRESETS = [
    code and the ISSUED row must come from the same instant, or a ticket
    made near midnight prints two different days. */
 export function paintTicket(c, preset, opts) {
-  preset.paint(c, { ...opts, upper: opts.name.toUpperCase() })
+  preset.paint(c, { ...opts, who: opts.name })
 }

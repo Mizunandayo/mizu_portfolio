@@ -4,3 +4,9 @@ dist-ssr
 *.local
 .DS_Store
 .vercel
+
+# Never commit these. The anon key is safe to publish, but this is the
+# file a service-role key eventually lands in by accident.
+.env
+.env.*
+!.env.example

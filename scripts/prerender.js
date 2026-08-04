@@ -63,7 +63,7 @@ fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemap)
 /* robots.txt */
 fs.writeFileSync(
   path.join(dist, 'robots.txt'),
-  `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`
+  `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${SITE_URL}/sitemap.xml\n`
 )
 
 console.log(`\n  ${written} routes prerendered + sitemap.xml + robots.txt\n`)

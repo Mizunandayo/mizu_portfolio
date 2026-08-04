@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ImagePlaceholder } from './placeholders.jsx'
 
 /* ══════════════════════════════════════════════════
@@ -19,10 +19,46 @@ import { ImagePlaceholder } from './placeholders.jsx'
    the viewer two different ideas of where a file lives.
    ══════════════════════════════════════════════════ */
 
-export default function Lightbox({ items, index, slug, onIndex, onClose }) {
+export default function Lightbox({
+  items,
+  index,
+  slug,
+  onIndex,
+  onClose,
+  /* Skips the placeholder's border and hatch. For artwork that is
+     already a finished object rather than a screenshot needing a frame. */
+  bare = false,
+}) {
   const ref = useRef(null)
   const open = index >= 0 && index < items.length
   const item = open ? items[index] : null
+
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const dragRef = useRef(null)
+
+  /* Stepping or closing returns to fit. Carrying a zoom across images
+     lands the next one off-centre at a scale nobody asked for. */
+  useEffect(() => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }, [index])
+
+  const onDown = (e) => {
+    if (zoom === 1) return
+    dragRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+  }
+
+  const onMove = (e) => {
+    const d = dragRef.current
+    if (!d) return
+    setPan({ x: e.clientX - d.x, y: e.clientY - d.y })
+  }
+
+  const onUp = () => {
+    dragRef.current = null
+  }
 
   const step = useCallback(
     (d) => onIndex((index + d + items.length) % items.length),
@@ -73,21 +109,46 @@ export default function Lightbox({ items, index, slug, onIndex, onClose }) {
       onClick={onClose}
     >
       <div className="plb-frame-mizu" onClick={(e) => e.stopPropagation()}>
-        <ImagePlaceholder
-          /* Keyed so stepping swaps the element rather than mutating a
-             src the browser may already have marked failed. */
-          key={item.key ?? item.url ?? item.src}
-          url={item.url}
-          slug={item.url ? undefined : slug}
-          src={item.src}
-          cap={item.cap}
-          /* contain, not cover — the whole point of opening it is to
-             see the parts the grid tile cropped away. */
-          fit="contain"
-          fill
-          showCaption={false}
-          className="plb-fig-mizu"
-        />
+        <div
+          className={`plb-zoom-mizu${zoom > 1 ? ' is-zoomed' : ''}${
+            dragRef.current ? ' is-dragging' : ''
+          }`}
+          style={{ '--z': zoom, '--px': `${pan.x}px`, '--py': `${pan.y}px` }}
+          onDoubleClick={() => {
+            setZoom((z) => (z > 1 ? 1 : 2.2))
+            setPan({ x: 0, y: 0 })
+          }}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+        >
+          {bare ? (
+            <img
+              key={item.key ?? item.url}
+              className="plb-bare-mizu"
+              src={item.url}
+              alt={item.cap || ''}
+              draggable="false"
+            />
+          ) : (
+            <ImagePlaceholder
+              /* Keyed so stepping swaps the element rather than mutating a
+                 src the browser may already have marked failed. */
+              key={item.key ?? item.url ?? item.src}
+              url={item.url}
+              slug={item.url ? undefined : slug}
+              src={item.src}
+              cap={item.cap}
+              /* contain, not cover — the whole point of opening it is to
+                 see the parts the grid tile cropped away. */
+              fit="contain"
+              fill
+              showCaption={false}
+              className="plb-fig-mizu"
+            />
+          )}
+        </div>
       </div>
 
       <button

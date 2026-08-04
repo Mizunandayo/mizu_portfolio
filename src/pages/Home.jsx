@@ -7,6 +7,7 @@ import Stack from '../components/home/Stack.jsx'
 import Hackathons from '../components/home/Hackathons.jsx'
 import Certifications from '../components/home/Certifications.jsx'
 import Contact from '../components/home/Contact.jsx'
+import Gallery from '../components/home/Gallery.jsx'
 import SectionBreak from '../components/shared/SectionBreak.jsx'
 import { metaFor } from '../seo.js'
 
@@ -38,6 +39,8 @@ export default function Home() {
         <Certifications />
         <SectionBreak src="betweencertandcontact.gif" />
         <Contact />
+
+        <Gallery />
 
         {/* Closing plate. Natural aspect rather than a cropped band, so
             the whole image is reachable by scrolling to the end of it. */}

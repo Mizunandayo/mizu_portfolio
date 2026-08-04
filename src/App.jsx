@@ -5,6 +5,7 @@ import PersonalNav from "./components/PersonalNav.jsx";
 import Footer from "./components/Footer.jsx";
 import Home from "./pages/Home.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import Admin from "./pages/Admin.jsx";
 import Boot from "./components/shared/Boot.jsx";
 import { ModeProvider } from "./hooks/useMode.jsx";
 import Welcome from "./components/shared/Welcome.jsx";
@@ -40,25 +41,41 @@ export default function App() {
      one piece of state, rather than a copy inside each nav. */
   const [credits, setCredits] = useState(false);
 
+  /* The panel is a tool, not part of the site. Loader, greeting, music
+     and both navs stay off it — a review queue does not want a portrait
+     slideshow asking which song to play. */
+  const bare = useLocation().pathname.startsWith("/admin");
+
   return (
     <ModeProvider>
-      <Boot onDone={() => setBooted(true)} />
+      {!bare && <Boot onDone={() => setBooted(true)} />}
       <a href="#main" className="skip-mizu">
         Skip to content
       </a>
       <ScrollManager />
       {/* Both navs mount; CSS shows one. Swapping them in React would
           flash the wrong one before hydration settles the mode. */}
-      <Nav onCredits={() => setCredits(true)} />
-      <PersonalNav onCredits={() => setCredits(true)} />
+      {!bare && (
+        <>
+          <Nav />
+          <PersonalNav onCredits={() => setCredits(true)} />
+        </>
+      )}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Footer />
-      <Welcome show={booted} onPickTrack={setMusic} />
-      {music && <MusicPlayer startId={music} onClose={() => setMusic(null)} />}
-      <Credits open={credits} onClose={() => setCredits(false)} />
+      {!bare && (
+        <>
+          <Footer />
+          <Welcome show={booted} onPickTrack={setMusic} />
+          {music && (
+            <MusicPlayer startId={music} onClose={() => setMusic(null)} />
+          )}
+          <Credits open={credits} onClose={() => setCredits(false)} />
+        </>
+      )}
     </ModeProvider>
   );
 }

@@ -14,3 +14,8 @@
    the hero video takes the sound instead. Must be dispatched from
    inside a real gesture's call stack: unmuting needs user activation. */
 export const HERO_SOUND = 'mizu:hero-sound'
+
+/* Ticket editor → gallery section. The two are on opposite ends of the
+   page with a dialog between them, so the gallery listens rather than
+   being handed a setter. */
+export const TICKETS_CHANGED = 'mizu:tickets'

@@ -6,6 +6,10 @@ import {
   SANS,
   MINCHO,
 } from './ticketPresets.js'
+import { submit, EMAIL_RE } from '../../data/tickets.js'
+import { configured } from '../../data/supabase.js'
+import { TICKETS_CHANGED } from '../../events.js'
+import Fubuki from './Fubuki.jsx'
 
 export { ticketStamp } from './ticketPresets.js'
 
@@ -56,6 +60,8 @@ const STICKERS = Array.from(
 )
 
 const MSG_MAX = 500
+/* Matches the CHECK constraint on tickets.name. */
+const NAME_MAX = 40
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
@@ -74,8 +80,45 @@ function containRect(iw, ih, box) {
   return { w, h, dx: (box - w) / 2, dy: (box - h) / 2 }
 }
 
-/* Clamped into whichever preset is showing, in that preset's own
-   coordinate space — its margin is part of the geometry. */
+/* Capped on the LONGER edge, not on width. Width alone makes a 3.2:1
+   boarding pass 344px tall and soft, while a 0.43:1 ofuda comes out
+   2600px tall for no benefit. */
+/* Alpha is preserved. The margin around the plate stays transparent so
+   the ticket sits on whatever is behind it, rather than carrying a patch
+   of one particular background around with it. */
+function scaleTo(src, max) {
+  const k = Math.min(1, max / Math.max(src.width, src.height))
+  const c = document.createElement('canvas')
+  c.width = Math.round(src.width * k)
+  c.height = Math.round(src.height * k)
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height)
+  return c
+}
+
+/* WebP keeps the alpha. Only the fallback needs flattening, since JPEG
+   has none and renders unset pixels black. toBlob hands back a PNG for a
+   type it cannot encode, so the result is checked rather than assumed. */
+function encodeBlob(canvas, q = 0.85) {
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (b) => {
+        if (b && b.type === 'image/webp') return resolve(b)
+
+        const flat = document.createElement('canvas')
+        flat.width = canvas.width
+        flat.height = canvas.height
+        const c = flat.getContext('2d')
+        c.fillStyle = '#0a0a0b'
+        c.fillRect(0, 0, flat.width, flat.height)
+        c.drawImage(canvas, 0, 0)
+        flat.toBlob((j) => resolve(j), 'image/jpeg', q)
+      },
+      'image/webp',
+      q
+    )
+  })
+}
+
 function anchorIn(p, st) {
   const m = marginFor(p)
   return {
@@ -109,6 +152,22 @@ export default function Ticket({ open, name, art, onClose }) {
      would poison the export instead. */
   const [shot, setShot] = useState(null)
   const [shotErr, setShotErr] = useState('')
+
+  /* 'edit' | 'review'. `step` is taken by the preset carousel. */
+  const [stage, setStage] = useState('edit')
+  const [proof, setProof] = useState(null)
+  const proofRef = useRef(null)
+  const [sent, setSent] = useState(false)
+  const [sendErr, setSendErr] = useState('')
+  const [ask, setAsk] = useState(false)
+  const [askClosing, setAskClosing] = useState(false)
+  const [burst, setBurst] = useState(0)
+  const [email, setEmail] = useState('')
+  /* null while typing settles, then true/false. Keeps the field from
+     shouting "invalid" at someone three characters in. */
+  const [emailOk, setEmailOk] = useState(null)
+  const [agree, setAgree] = useState(false)
+  const askRef = useRef(null)
   const pickRef = useRef(null)
   const fromRef = useRef(0)
 
@@ -146,7 +205,18 @@ export default function Ticket({ open, name, art, onClose }) {
     })
   }, [])
 
-  const clean = (name || '').trim() || 'GUEST'
+  const [who, setWho] = useState('')
+  /* Seeded from the greeting each time it opens, then owned here. */
+  useEffect(() => {
+    if (open) setWho((name || '').trim().slice(0, NAME_MAX))
+  }, [open, name])
+
+  const [pan, setPan] = useState(null)
+  const [repos, setRepos] = useState(false)
+  const [dropping, setDropping] = useState(false)
+  const panRef = useRef(null)
+
+  const clean = who.trim() || 'GUEST'
   const serial = useMemo(() => serialOf(clean), [clean])
 
   /* Their picture if they gave one, the slideshow frame otherwise. */
@@ -171,6 +241,39 @@ export default function Ticket({ open, name, art, onClose }) {
     }
     setShotErr('')
     setShot(URL.createObjectURL(file))
+    /* A new picture wants the preset's own framing, not the last one's. */
+    setPan(null)
+    setRepos(false)
+  }
+
+  /* Drag anywhere on the stage while repositioning. Movement is divided
+     by the stage size, so a drag across the whole plate is a full sweep
+     of the crop regardless of how big the preview is on screen. */
+  const startPan = (e) => {
+    const box = stageRef.current?.getBoundingClientRect()
+    if (!box) return
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+    panRef.current = {
+      px: e.clientX,
+      py: e.clientY,
+      x: pan?.x ?? 0.5,
+      y: pan?.y ?? 0.26,
+      w: box.width,
+      h: box.height,
+    }
+  }
+
+  const movePan = (e) => {
+    const s = panRef.current
+    if (!s) return
+    setPan({
+      x: clamp(s.x - (e.clientX - s.px) / s.w, 0, 1),
+      y: clamp(s.y - (e.clientY - s.py) / s.h, 0, 1),
+    })
+  }
+
+  const endPan = () => {
+    panRef.current = null
   }
 
   useEffect(() => {
@@ -193,8 +296,42 @@ export default function Ticket({ open, name, art, onClose }) {
   /* Closing the editor takes the picker with it — a dialog left open
      over a closed parent is unreachable. */
   useEffect(() => {
-    if (!open) setTray(false)
+    if (!open) {
+      setTray(false)
+      setStage('edit')
+      setSent(false)
+      setSendErr('')
+      setAgree(false)
+    }
   }, [open])
+
+  useEffect(() => {
+    return () => {
+      if (proofRef.current) URL.revokeObjectURL(proofRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = askRef.current
+    if (!el) return
+    if (ask && !el.open) el.showModal()
+    if (!ask && el.open) el.close()
+  }, [ask])
+
+  /* Debounced: the check runs 450ms after the last keystroke, and the
+     timer is cleared on every change so it never fires mid-word. */
+  useEffect(() => {
+    if (!email.trim()) {
+      setEmailOk(null)
+      return
+    }
+    setEmailOk(null)
+    const t = window.setTimeout(
+      () => setEmailOk(EMAIL_RE.test(email.trim())),
+      450
+    )
+    return () => clearTimeout(t)
+  }, [email])
 
   /* Decoded once and kept. Re-decoding 19 PNGs on every repaint would
      make dragging stutter. */
@@ -235,8 +372,10 @@ export default function Ticket({ open, name, art, onClose }) {
   const issued = useMemo(() => new Date(), [open])
 
   /* ── Live plate ── */
+  /* `stage` is a dependency because the canvases unmount during review;
+     coming back mounts fresh blank ones that nothing else would repaint. */
   useEffect(() => {
-    if (!open) return
+    if (!open || stage !== 'edit') return
     let dead = false
     ;(async () => {
       await fonts()
@@ -249,6 +388,7 @@ export default function Ticket({ open, name, art, onClose }) {
         const c = canvas.getContext('2d')
         c.scale(dpr, dpr)
         paintTicket(c, p, {
+          pan,
           art: image,
           name: clean,
           serial,
@@ -263,7 +403,7 @@ export default function Ticket({ open, name, art, onClose }) {
     return () => {
       dead = true
     }
-  }, [open, artSrc, clean, serial, mode, message, preset, issued, fonts, loadImg])
+  }, [open, stage, artSrc, clean, serial, mode, message, preset, issued, pan, fonts, loadImg])
 
   /* Swatches. Deliberately not on the same effect as the plate: they
      show the *design*, so they are painted once at open rather than
@@ -271,7 +411,7 @@ export default function Ticket({ open, name, art, onClose }) {
      at logical size and scaled down by CSS, which is one line instead
      of a second set of coordinates to keep in step. */
   useEffect(() => {
-    if (!open) return
+    if (!open || stage !== 'edit') return
     let dead = false
     ;(async () => {
       await fonts()
@@ -295,7 +435,7 @@ export default function Ticket({ open, name, art, onClose }) {
     return () => {
       dead = true
     }
-  }, [open, artSrc, clean, serial, issued, fonts, loadImg])
+  }, [open, stage, artSrc, clean, serial, issued, fonts, loadImg])
 
   /* Stickers are stored in absolute output units, so a preset with
      different dimensions would leave them all in the wrong place —
@@ -338,6 +478,29 @@ export default function Ticket({ open, name, art, onClose }) {
      Written against `stickers` from render scope rather than inside the
      updater — a setState updater must stay pure, and seqRef would be
      double-incremented by StrictMode's second invocation. */
+  /* Drop lands where the pointer is, so the cascade offset that keeps
+     clicked stickers from stacking is not wanted here. */
+  const dropAt = useCallback(
+    (src, cx, cy) => {
+      const box = stageRef.current?.getBoundingClientRect()
+      if (!box) return
+      const key = seqRef.current++
+      setStickers((list) => [
+        ...list,
+        anchorIn(preset, {
+          key,
+          src,
+          x: ((cx - box.left) / box.width) * (preset.w + marginFor(preset) * 2),
+          y: ((cy - box.top) / box.height) * (preset.h + marginFor(preset) * 2),
+          s: sizeFor(preset),
+          r: 0,
+        }),
+      ])
+      setSel(key)
+    },
+    [preset]
+  )
+
   const toggle = useCallback(
     (src) => {
       if (placed.has(src)) {
@@ -457,8 +620,9 @@ export default function Ticket({ open, name, art, onClose }) {
   }, [open, sel])
 
   /* ── Export ── */
-  const download = async () => {
-    setBusy(true)
+  /* Returns the canvas so the preview, the download and the upload all
+     share one paint rather than each re-running it. */
+  const compose = async () => {
     await fonts()
     const image = await loadImg(artSrc)
     const loaded = await Promise.all(stickers.map((s) => loadImg(s.src)))
@@ -472,6 +636,7 @@ export default function Ticket({ open, name, art, onClose }) {
     const pc = plate.getContext('2d')
     pc.scale(DPR, DPR)
     paintTicket(pc, preset, {
+      pan,
       art: image,
       name: clean,
       serial,
@@ -498,18 +663,89 @@ export default function Ticket({ open, name, art, onClose }) {
       c.restore()
     })
 
-    out.toBlob((blob) => {
+    return out
+  }
+
+  const review = async () => {
+    setBusy(true)
+    setSendErr('')
+    try {
+      const out = await compose()
+      const blob = await new Promise((r) => out.toBlob(r, 'image/png'))
+      if (!blob) return
+      if (proofRef.current) URL.revokeObjectURL(proofRef.current)
+      proofRef.current = URL.createObjectURL(blob)
+      setProof(proofRef.current)
+      setSent(false)
+      setStage('review')
+    } finally {
       setBusy(false)
+    }
+  }
+
+  /* Deferred by exactly the exit animation, the way the greeting does
+     it, so the panel plays its leave before being unmounted. */
+  const closeAsk = (then) => {
+    if (askClosing) return
+    const done = () => {
+      setAskClosing(false)
+      setAsk(false)
+      then?.()
+    }
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      return done()
+    }
+    setAskClosing(true)
+    window.setTimeout(done, 460)
+  }
+
+  const send = async (withEmail) => {
+    if (sent) return
+    setBusy(true)
+    setSendErr('')
+    try {
+      const out = await compose()
+      /* The plate is what the lightbox shows full screen, so it is sized
+         for that rather than for the grid tile. */
+      const [thumb, plate] = await Promise.all([
+        encodeBlob(scaleTo(out, 640), 0.82),
+        encodeBlob(scaleTo(out, 1600), 0.9),
+      ])
+      await submit({
+        thumb,
+        plate,
+        name: clean.slice(0, 40),
+        design: preset.name,
+        message: mode === 'message' ? message.trim() : '',
+        email: withEmail || '',
+      })
+      setSent(true)
+      setBurst((n) => n + 1)
+      window.dispatchEvent(new Event(TICKETS_CHANGED))
+    } catch (e) {
+      setSendErr(e.message || 'Could not send. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const download = async () => {
+    setBusy(true)
+    try {
+      const out = await compose()
+      const blob = await new Promise((r) => out.toBlob(r, 'image/png'))
       if (!blob) return
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `mizu-ticket-${clean.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`
       a.click()
-      /* Deferred: revoking in the same tick can beat the download in
-         some browsers and yield an empty file. */
+      /* Revoking in the same tick can beat the download and yield an
+         empty file. */
       window.setTimeout(() => URL.revokeObjectURL(url), 60000)
-    }, 'image/png')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const pct = (n, total) => `${(n / total) * 100}%`
@@ -525,12 +761,24 @@ export default function Ticket({ open, name, art, onClose }) {
         onClose()
       }}
     >
-      <div className="tk-body-mizu">
+      <div className={`tk-body-mizu${repos ? ' is-repos' : ''}`}>
         {/* ── Caption ──
             In normal flow above the card, not floated over it. The
             designs run from 0.52:1 to 2.53:1, so there is no corner of
             the artwork that is free on all five. */}
-        <div className="tk-head-mizu">
+        <div className={`tk-head-mizu${stage === 'review' ? ' is-review' : ''}`}>
+          {stage === 'review' && (
+            <button
+              type="button"
+              className="tk-back-mizu"
+              onClick={() => setStage('edit')}
+              disabled={busy}
+            >
+              <Chev dir="left" />
+              Back to edit
+            </button>
+          )}
+
           <p className="tk-cap-mizu" aria-live="polite">
             <span className="tk-cap-jp-mizu" aria-hidden="true">
               {preset.jp}
@@ -542,21 +790,66 @@ export default function Ticket({ open, name, art, onClose }) {
           </p>
 
           <div className="tk-head-act-mizu">
-            <button
-              type="button"
-              className="tk-save-mizu"
-              onClick={download}
-              disabled={busy}
-            >
-              <DownIcon />
-              {busy ? 'Rendering…' : 'Download PNG'}
-            </button>
+            {stage === 'edit' && (
+              <button
+                type="button"
+                className="tk-save-mizu"
+                onClick={review}
+                disabled={busy}
+              >
+                {busy ? 'Rendering…' : 'Next'}
+                <Chev dir="right" />
+              </button>
+            )}
 
             <button type="button" className="tk-close-mizu" onClick={onClose}>
               Close
             </button>
           </div>
         </div>
+
+        {stage === 'review' ? (
+          <div className="tk-review-mizu">
+            <img className="tk-proof-mizu" src={proof} alt="Your finished ticket" />
+
+            <div className="tk-review-act-mizu">
+              <button
+                type="button"
+                className="tk-save-mizu"
+                onClick={download}
+                disabled={busy}
+              >
+                <DownIcon />
+                {busy ? 'Rendering…' : 'Download PNG'}
+              </button>
+
+              {configured && (
+                <button
+                  type="button"
+                  className="tk-send-mizu"
+                  onClick={() => setAsk(true)}
+                  disabled={busy || sent}
+                >
+                  {sent ? 'Sent for review' : busy ? 'Sending…' : 'Upload to ticket gallery'}
+                </button>
+              )}
+            </div>
+
+            {sendErr && (
+              <p className="tk-review-err-mizu" role="alert">
+                {sendErr}
+              </p>
+            )}
+
+            <p className="tk-review-note-mizu" aria-live="polite">
+              {sent
+                ? 'Sent. Francis reviews every ticket before it appears in the gallery.'
+                : 'Every ticket is reviewed by Francis Daniel before it appears in the gallery.'}
+            </p>
+          </div>
+        ) : (
+        <>
+        {/* ── edit stage ── */}
 
         {/* ── Rail ──
             One card, arrows either side. Peeking neighbours were tried
@@ -578,14 +871,74 @@ export default function Ticket({ open, name, art, onClose }) {
         {/* ── Stage ── */}
         <div
           ref={stageRef}
-          className="tk-stage-mizu"
           /* The ratio drives width, not height. Capping height while
              width stayed at 100% would let height win over
              aspect-ratio, and every child is positioned in percent —
              so the plate and the stickers would stretch. */
+          className={`tk-stage-mizu${repos ? ' is-repos' : ''}${dropping ? ' is-drop' : ''}`}
           style={{ '--ar': OUT_W / OUT_H, aspectRatio: `${OUT_W} / ${OUT_H}` }}
-          onPointerDown={() => setSel(null)}
+          onPointerDown={repos ? startPan : () => setSel(null)}
+          onPointerMove={repos ? movePan : undefined}
+          onPointerUp={repos ? endPan : undefined}
+          onPointerCancel={repos ? endPan : undefined}
+          /* preventDefault on dragover is what makes an element a valid
+             drop target; without it the browser refuses the drop. */
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = 'copy'
+            if (!dropping) setDropping(true)
+          }}
+          onDragLeave={() => setDropping(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDropping(false)
+            const src = e.dataTransfer.getData('text/plain')
+            if (src) dropAt(src, e.clientX, e.clientY)
+          }}
         >
+          {/* Over the plate rather than in the panel: the control acts on
+              what is directly beneath it. */}
+          <div className="tk-tools-mizu">
+            <label
+              className="tk-tool-mizu"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <PhotoIcon />
+              {shot ? 'Change photo' : 'Use my photo'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={onPickPhoto}
+              />
+            </label>
+
+            <span className="tk-tools-end-mizu">
+              <button
+                type="button"
+                className={`tk-tool-mizu${repos ? ' is-on' : ''}`}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  setRepos((v) => !v)
+                  setSel(null)
+                }}
+                aria-pressed={repos}
+              >
+                {repos ? 'Done' : 'Reposition'}
+              </button>
+
+              {pan && (
+                <button
+                  type="button"
+                  className="tk-tool-mizu"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => setPan(null)}
+                >
+                  Recentre
+                </button>
+              )}
+            </span>
+          </div>
+
           <canvas
             ref={plateRef}
             className="tk-plate-mizu"
@@ -705,17 +1058,22 @@ export default function Ticket({ open, name, art, onClose }) {
           {/* A label wrapping a hidden input: the whole control is the
               file picker, with no button-triggers-input plumbing and no
               styling fight with the browser's own widget. */}
-          <div className="tk-photo-mizu">
-            <label className="tk-upload-mizu">
-              <PhotoIcon />
-              {shot ? 'Change photo' : 'Use my photo'}
-              <input
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={onPickPhoto}
-              />
-            </label>
+          <label className="tk-name-mizu">
+            <span>Name on the ticket</span>
+            <input
+              type="text"
+              value={who}
+              maxLength={NAME_MAX}
+              placeholder="Your name"
+              autoComplete="name"
+              onChange={(e) => setWho(e.target.value)}
+            />
+            <span className="tk-count-mizu">
+              {who.length}/{NAME_MAX}
+            </span>
+          </label>
 
+          <div className="tk-photo-mizu">
             {shot && (
               <button
                 type="button"
@@ -756,7 +1114,7 @@ export default function Ticket({ open, name, art, onClose }) {
           <p className="tk-tray-label-mizu">
             Stickers
             <span>
-              tap to add · drag to move · corner to size and turn
+              click or drag one on · drag to move · corner to size and turn
             </span>
 
             {/* Pushed to the far end by margin-left:auto rather than a
@@ -778,6 +1136,11 @@ export default function Ticket({ open, name, art, onClose }) {
                 key={src}
                 type="button"
                 className={`tk-chip-mizu${placed.has(src) ? ' is-on' : ''}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', src)
+                  e.dataTransfer.effectAllowed = 'copy'
+                }}
                 onClick={() => toggle(src)}
                 aria-pressed={placed.has(src)}
                 aria-label={`${placed.has(src) ? 'Remove' : 'Add'} sticker ${
@@ -815,6 +1178,112 @@ export default function Ticket({ open, name, art, onClose }) {
               Clear stickers
             </button>
           )}
+        </div>
+        </>
+        )}
+      </div>
+
+      {/* Inside the dialog on purpose. showModal() promotes this to the
+          top layer, and anything rendered outside paints beneath it no
+          matter its z-index. Fixed positioning still escapes the
+          panel's own overflow. */}
+      <Fubuki key={burst} fire={burst > 0} />
+    </dialog>
+
+    {/* ── Notify-me ── */}
+    <dialog
+      ref={askRef}
+      className={`tk-ask-mizu${askClosing ? ' is-closing' : ''}`}
+      aria-label="Get notified when your ticket is approved"
+      onCancel={(e) => {
+        e.preventDefault()
+        closeAsk()
+      }}
+    >
+      <div className="tk-ask-body-mizu">
+        <button
+          type="button"
+          className="tk-ask-x-mizu"
+          onClick={() => closeAsk()}
+          aria-label="Close"
+        >
+          <XIcon />
+        </button>
+
+        <p className="tk-ask-jp-mizu" aria-hidden="true">お知らせ</p>
+        <h3 className="tk-ask-title-mizu">Want to know when it goes up?</h3>
+        <p className="tk-ask-copy-mizu">
+          Francis reviews every ticket by hand. Leave an email and you will
+          get one message when yours appears in the gallery. Nothing else,
+          ever.
+        </p>
+
+        <label className="tk-ask-field-mizu">
+          <span>Email (optional)</span>
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            /* Consent is tied to the address on screen, so editing it
+               withdraws the tick rather than carrying it over. */
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setAgree(false)
+            }}
+            aria-invalid={emailOk === false}
+          />
+        </label>
+
+        {/* Kept mounted so it can animate out. The 0fr/1fr grid row is
+            what makes the height transition without hardcoding it. */}
+        <div className={`tk-ask-consent-mizu${emailOk ? ' is-on' : ''}`}>
+          <div>
+            <label className="tk-ask-check-mizu">
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+                tabIndex={emailOk ? 0 : -1}
+              />
+              <span>
+                Email me once when my ticket is approved, then automatically delete my email address afterwards.
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <p
+          className={`tk-ask-hint-mizu${emailOk === false ? ' is-bad' : ''}`}
+          aria-live="polite"
+        >
+          {email.trim() === ''
+            ? 'Without email, you will not hear when your ticket is approved and posted on the ticket gallery.'
+            : emailOk === null
+              ? 'Checking…'
+              : emailOk
+                ? 'Looks good.'
+                : 'That does not look like an email address.'}
+        </p>
+
+        <div className="tk-ask-act-mizu">
+          <button
+            type="button"
+            className="tk-send-mizu"
+            onClick={() => closeAsk(() => send(''))}
+            disabled={busy}
+          >
+            Send without email
+          </button>
+          <button
+            type="button"
+            className="tk-save-mizu"
+            onClick={() => closeAsk(() => send(email.trim()))}
+            disabled={busy || !emailOk || !agree}
+          >
+            Notify me
+          </button>
         </div>
       </div>
     </dialog>
@@ -895,6 +1364,23 @@ function Chev({ dir }) {
       strokeLinejoin="round"
     >
       <path d={dir === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
+    </svg>
+  )
+}
+
+function XIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M3.5 3.5 12.5 12.5M12.5 3.5 3.5 12.5" />
     </svg>
   )
 }

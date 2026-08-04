@@ -4495,6 +4495,44 @@ html.wc-open-mizu {
 .pr-mizu:hover::before,
 .pr-mizu:focus-visible::before { clip-path: inset(0 0 0 0); }
 
+/* ── Katana ─────────────────────────────────────── */
+/* The wrapper is a mask, not a picture frame. Its bottom edge sits
+   exactly on the card's top edge, so the blade sliding up inside it is
+   uncovered a row at a time and appears to come out from behind the
+   card. A z-index could not do this: the image is a descendant, and a
+   descendant always paints after its ancestor's background, so it can
+   never go behind the card it lives in.
+   aspect-ratio is safe here because the width is explicit — this is an
+   absolutely positioned box, not a stretch row where the ratio would
+   have nothing to resolve against. */
+.pr-katana-mizu {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 100%;
+  /* Exactly the card's width, so the blade ends on the corners instead
+     of overhanging them. */
+  width: 100%;
+  aspect-ratio: 816 / 306;
+  translate: -50% 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* No fade. The mask is the reveal, and cross-fading it as well would
+   turn a physical movement into a dissolve. */
+.pr-katana-mizu img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateY(100%);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.8));
+  transition: transform 680ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pr-mizu:hover .pr-katana-mizu img,
+.pr-mizu:focus-visible .pr-katana-mizu img { transform: translateY(0); }
+
 /* ── Hover call to action ───────────────────────── */
 /* Sits below the card, so it needs the room the card's own bottom offset
    already leaves. Centred on `translate` and moved on `transform` so the
@@ -4834,7 +4872,15 @@ html.wc-open-mizu {
   .pr-mizu::before,
   .pr-dot-mizu::before,
   .pr-cta-mizu,
+  .pr-katana-mizu img,
   .pr-slip-mizu { transition: none; }
+
+  /* Still appears, just without travelling. */
+  .pr-mizu:hover .pr-katana-mizu img,
+  .pr-mizu:focus-visible .pr-katana-mizu img {
+    transform: none;
+    transition: none;
+  }
 
   .pr-mizu:hover .pr-cta-mizu,
   .pr-mizu:focus-visible .pr-cta-mizu {
@@ -8301,34 +8347,51 @@ a.cr-by-mizu:hover {
   .mp-vol-mizu input[type='range'] { display: none; }
 }
 
-/* ── Hero name: cyberpunk ────────────────────────
-   Chakra Petch. Squared terminals and clipped corners
-   on the diagonals — the technical-signage look that
-   reads cyberpunk without being a novelty face, and it
-   still holds up at 5rem where a display font would
-   fall apart. Personal mode only; recruiter keeps
-   Outfit. */
+/* ── Hero name: manga ────────────────────────────
+   Bangers, condensed and angular like the logo
+   lettering on a tankōbon cover. The face alone is not
+   what sells it though — a heavy black outline around
+   a white fill is, which is also why manga logos read
+   at all in pure black and white. Personal mode only.
+   Weight 400 is not a choice: the family ships one
+   weight, and asking for 700 makes the browser fake it
+   by smearing the outline, which ruins heavy type. */
 .hero-name-mizu {
-  font-family: 'Chakra Petch', 'Outfit', system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.005em;
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 7vw, 5.4rem);
+  /* Bangers sets tight by default; opening it keeps the outlines from
+     welding adjacent letters together. */
+  letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 
 .hero-name-latin-mizu {
-  /* A hairline of the same colour offset behind the type — enough to
-     suggest a chromatic split without introducing colour. */
-  text-shadow: 2px 0 0 rgba(250, 250, 250, 0.18),
-               -2px 0 0 rgba(161, 161, 170, 0.22);
+  /* paint-order is what makes this work: without it the stroke is
+     centred on the glyph edge and eats half the letterform. Painting
+     stroke first puts the whole width outside the fill.
+     Both are in em so the outline holds its proportion from 2.4rem up
+     to 5.4rem instead of swamping the small end. */
+  -webkit-text-stroke: 0.055em #08080a;
+  paint-order: stroke fill;
+  /* Hard offset, no blur — a drawn drop shadow, not a glow. */
+  text-shadow: 0.055em 0.06em 0 #08080a;
 }
 
+/* Weight and size are deliberately absent: the recruiter rule further up
+   already sets 900 at 5.6rem, and its specificity beats the base rule on
+   its own. Restating them here would only override that block. */
 .mode-recruiter .hero-name-mizu {
   font-family: 'Outfit', 'Poppins', system-ui, sans-serif;
   text-transform: none;
   letter-spacing: -0.035em;
 }
 
-.mode-recruiter .hero-name-latin-mizu { text-shadow: none; }
+/* The outline is a personal-mode device; recruiter keeps plain Outfit. */
+.mode-recruiter .hero-name-latin-mizu {
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
 
 /* ── Player: edge grips ──────────────────────────
    Sit just outside the bar so the hit area does not
@@ -8477,3 +8540,1203 @@ a.cr-by-mizu:hover {
   .hero-bg-btn-mizu span { display: none; }
   .hero-bg-btn-mizu { padding: 0 10px; }
 }
+
+/* ══════════════════════════════════════════════════
+   Admin — ticket review.
+
+   Deliberately plain. This is a tool, not a page: no
+   reveal animations, no mode switching, nothing that
+   makes a queue slower to work through.
+   ══════════════════════════════════════════════════ */
+
+.ad-mizu {
+  min-height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px) clamp(18px, 4vw, 40px) 96px;
+  background: #0a0a0b;
+  color: #fafafa;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.ad-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ad-title-mizu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ad-count-mizu {
+  padding: 2px 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0a0a0b;
+  background: #fafafa;
+  border-radius: 999px;
+}
+
+.ad-head-mizu {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  margin-bottom: 26px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.ad-head-act-mizu { display: flex; gap: 10px; }
+
+/* ── Cards ──────────────────────────────────────── */
+.ad-grid-mizu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.ad-card-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(250, 250, 250, 0.04);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 12px;
+}
+
+/* Contain, not cover: a ticket judged on a crop is not judged. */
+.ad-shot-mizu {
+  width: 100%;
+  height: 190px;
+  object-fit: contain;
+  background: #08080a;
+  border-radius: 8px;
+}
+
+.ad-meta-mizu { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.ad-name-mizu { font-size: 0.92rem; font-weight: 600; }
+
+.ad-design-mizu {
+  font-size: 0.74rem;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+/* The whole message, wrapped. Truncating the one field a stranger
+   controls would hide exactly what is being reviewed. */
+.ad-msg-mizu {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(228, 228, 231, 0.92);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 2px solid rgba(250, 250, 250, 0.24);
+  border-radius: 0 6px 6px 0;
+}
+
+.ad-when-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.64rem;
+  color: rgba(161, 161, 170, 0.75);
+}
+
+.ad-act-mizu { display: flex; gap: 10px; margin-top: auto; }
+.ad-act-mizu > * { flex: 1; }
+
+/* ── Controls ───────────────────────────────────── */
+.ad-primary-mizu,
+.ad-ghost-mizu {
+  padding: 9px 16px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-primary-mizu {
+  color: #0a0a0b;
+  background: #fafafa;
+  border: 1px solid #fafafa;
+}
+
+.ad-primary-mizu:hover:not(:disabled) { background: #e4e4e7; }
+
+.ad-ghost-mizu {
+  color: #fafafa;
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.28);
+}
+
+.ad-ghost-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.08);
+  border-color: rgba(250, 250, 250, 0.5);
+}
+
+.ad-primary-mizu:disabled,
+.ad-ghost-mizu:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Sign in ────────────────────────────────────── */
+.ad-signin-mizu,
+.ad-note-mizu {
+  max-width: 380px;
+  margin: clamp(40px, 12vh, 120px) auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ad-note-mizu { max-width: 520px; line-height: 1.6; }
+
+.ad-note-mizu code {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em;
+  padding: 1px 5px;
+  background: rgba(250, 250, 250, 0.1);
+  border-radius: 4px;
+}
+
+.ad-field-mizu { display: flex; flex-direction: column; gap: 6px; }
+
+.ad-field-mizu > span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.ad-field-mizu input {
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  border-radius: 8px;
+}
+
+.ad-field-mizu input:focus {
+  outline: none;
+  border-color: rgba(250, 250, 250, 0.55);
+}
+
+.ad-err-mizu {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #f8b4b4;
+  overflow-wrap: anywhere;
+}
+
+.ad-empty-mizu {
+  padding: 60px 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+/* ── Ticket review step ─────────────────────────── */
+/* Three tracks so the caption is centred on the dialog, not on whatever
+   is left after the buttons. The outer tracks are equal, so an eight
+   character button on one side cannot shift the middle. */
+.tk-head-mizu.is-review {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  flex-wrap: nowrap;
+}
+
+.tk-head-mizu.is-review .tk-cap-mizu { justify-content: center; text-align: center; }
+.tk-head-mizu.is-review .tk-head-act-mizu { justify-self: end; }
+
+.tk-back-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: 6px 12px 6px 8px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-back-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.55);
+}
+
+.tk-back-mizu:disabled { opacity: 0.5; cursor: default; }
+
+.tk-review-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(12px, 2.5vh, 28px) 0 8px;
+}
+
+/* Sized off height, because four of the five designs are portrait and a
+   width cap would leave them tiny. */
+.tk-proof-mizu {
+  max-width: 100%;
+  max-height: min(72vh, 900px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* No shadow and no radius. The plate is transparent around its own
+     shape, so anything drawn on the element's box outlines a rectangle
+     that is not there. */
+}
+
+@media (max-width: 640px) {
+  .tk-head-mizu.is-review { grid-template-columns: auto 1fr; }
+  .tk-head-mizu.is-review .tk-cap-mizu { display: none; }
+  .tk-proof-mizu { max-height: 58vh; }
+}
+
+.tk-review-act-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tk-send-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.38);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-send-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.1);
+  border-color: rgba(250, 250, 250, 0.6);
+}
+
+.tk-send-mizu:disabled { opacity: 0.55; cursor: default; }
+
+.tk-review-note-mizu {
+  max-width: 46ch;
+  text-align: center;
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.tk-review-err-mizu {
+  font-size: 0.74rem;
+  color: #f8b4b4;
+  text-align: center;
+}
+
+/* ── Ticket gallery ─────────────────────────────── */
+/* ── 改札口 — ticket gallery ─────────────────────
+   Photograph behind a heavy scrim. The scrim is not
+   mood: uploads are flattened onto #0a0a0b, so on a
+   bright background every plate would show its own
+   rectangle. Keeping the backdrop near-black lets the
+   flattened margin read as page again. */
+.tg-mizu {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(64px, 12vh, 132px) clamp(18px, 5vw, 72px);
+  background: #0a0a0b;
+}
+
+.tg-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/profile/ticketsbg.jpg') center / cover no-repeat;
+  /* 736px wide across a full section, so it is texture rather than a
+     picture. Blurring hides the upscale and keeps the plates readable. */
+  filter: blur(3px) saturate(0.7);
+  transform: scale(1.06);
+}
+
+.tg-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #0a0a0b 0%, rgba(10,10,11,0.9) 22%, rgba(10,10,11,0.9) 78%, #0a0a0b 100%),
+    rgba(10, 10, 11, 0.62);
+}
+
+/* Tategaki down the edge, the way a station sign is set. */
+.tg-spine-mizu {
+  position: absolute;
+  top: clamp(64px, 12vh, 132px);
+  left: clamp(6px, 1.6vw, 26px);
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(0.8rem, 1.2vw, 1.05rem);
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  color: rgba(250, 250, 250, 0.22);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 900px) { .tg-spine-mizu { display: none; } }
+
+.tg-inner-mizu { max-width: 1280px; margin: 0 auto; }
+
+.tg-head-mizu { margin-bottom: clamp(24px, 4vh, 44px); }
+
+.tg-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.tg-title-mizu {
+  margin-top: 8px;
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.035em;
+  color: #fafafa;
+  -webkit-text-stroke: 0.045em #08080a;
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.05em 0 #08080a;
+}
+
+.tg-lede-mizu {
+  max-width: 54ch;
+  margin-top: 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: rgba(200, 200, 206, 0.9);
+}
+
+/* ── Filters ────────────────────────────────────── */
+.tg-tools-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.tg-tabs-mizu { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.tg-tab-mizu {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 14px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(200, 200, 206, 0.92);
+  background: rgba(10, 10, 11, 0.5);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tg-tab-mizu > span {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.72;
+}
+
+.tg-tab-mizu:hover {
+  color: #fafafa;
+  border-color: rgba(250, 250, 250, 0.4);
+}
+
+.tg-tab-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+.tg-tab-mizu.is-on > span { opacity: 0.68; }
+
+.tg-search-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: rgba(161, 161, 170, 0.95);
+  background: rgba(10, 10, 11, 0.55);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  border-radius: 999px;
+}
+
+.tg-search-mizu:focus-within { border-color: rgba(250, 250, 250, 0.5); }
+
+.tg-search-mizu input {
+  width: clamp(140px, 18vw, 220px);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #fafafa;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+.tg-search-mizu input::-webkit-search-cancel-button { filter: invert(1); }
+
+.tg-count-mizu {
+  margin: 14px 0 22px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+/* ── Grid ───────────────────────────────────────── */
+/* Four across, so a full page is four rows. */
+.tg-grid-mizu {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(16px, 2vw, 30px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 1060px) { .tg-grid-mizu { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .tg-grid-mizu { grid-template-columns: repeat(2, 1fr); } }
+
+.tg-card-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* A fixed box the plate sits inside, so five aspect ratios still line up
+   in a grid. Contain, because a crop would behead the tall designs. */
+.tg-shot-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: clamp(150px, 15vw, 210px);
+}
+
+.tg-shot-mizu img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 380ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tg-card-mizu:hover .tg-shot-mizu img,
+.tg-card-mizu:focus-visible .tg-shot-mizu img {
+  transform: translateY(-6px) scale(1.04);
+}
+
+.tg-card-mizu:focus-visible { outline: none; }
+.tg-card-mizu:focus-visible .tg-name-mizu { text-decoration: underline; }
+
+.tg-empty-mizu {
+  padding: 56px 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+/* ── Pager ──────────────────────────────────────── */
+.tg-pager-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: clamp(30px, 5vh, 54px);
+}
+
+.tg-page-mizu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: rgba(200, 200, 206, 0.92);
+  background: rgba(10, 10, 11, 0.55);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tg-page-mizu:hover:not(:disabled) {
+  color: #fafafa;
+  border-color: rgba(250, 250, 250, 0.45);
+}
+
+.tg-page-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+.tg-page-mizu:disabled { opacity: 0.35; cursor: default; }
+
+.tg-gap-mizu {
+  padding: 0 2px;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(161, 161, 170, 0.6);
+  user-select: none;
+}
+
+
+
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-card-mizu { transition: none; }
+  .tg-card-mizu:hover,
+  .tg-card-mizu:focus-visible { transform: none; }
+}
+
+/* The panel is centred with a max-width, so without this the site's own
+   backdrop shows down both edges. */
+.ad-mizu::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #0a0a0b;
+}
+
+/* ── Notify-me modal ────────────────────────────── */
+/* Same keyframes as the greeting rather than a copy of them, so the two
+   panels cannot drift apart. */
+.tk-ask-mizu {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: min(440px, 92vw);
+  animation: wc-in-mizu 460ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-ask-mizu::backdrop {
+  background: rgba(6, 6, 7, 0.82);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: wc-fade-mizu 460ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-ask-mizu.is-closing { animation: wc-out-mizu 460ms forwards; }
+
+.tk-ask-mizu.is-closing::backdrop {
+  animation: wc-backdrop-out-mizu 460ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.tk-ask-x-mizu {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: rgba(200, 200, 206, 0.9);
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-ask-x-mizu:hover {
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.45);
+}
+
+.tk-ask-body-mizu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px 24px 22px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: #fafafa;
+  background: #0d0d0f;
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 14px;
+}
+
+.tk-ask-jp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.tk-ask-title-mizu {
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tk-ask-copy-mizu {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: rgba(200, 200, 206, 0.92);
+}
+
+.tk-ask-field-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tk-ask-field-mizu > span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.tk-ask-field-mizu input {
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  border-radius: 8px;
+}
+
+.tk-ask-field-mizu input:focus {
+  outline: none;
+  border-color: rgba(250, 250, 250, 0.55);
+}
+
+.tk-ask-field-mizu input[aria-invalid='true'] {
+  border-color: rgba(248, 180, 180, 0.7);
+}
+
+.tk-ask-hint-mizu {
+  min-height: 1.2em;
+  font-size: 0.72rem;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.tk-ask-hint-mizu.is-bad { color: #f8b4b4; }
+
+.tk-ask-act-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.tk-ask-act-mizu > * { flex: 1; justify-content: center; }
+
+/* ── 紙吹雪 ─────────────────────────────────────── */
+.fbk-mizu {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fbk-bit-mizu {
+  position: absolute;
+  left: 50%;
+  bottom: -24px;
+  animation: fbk-x-mizu var(--d) cubic-bezier(0.08, 0.7, 0.28, 1) var(--delay) both;
+}
+
+.fbk-bit-mizu > i {
+  display: block;
+  width: var(--w);
+  height: var(--h);
+  background: rgba(250, 250, 250, var(--o));
+  animation: fbk-y-mizu var(--d) linear var(--delay) both;
+}
+
+/* X decelerates the whole way: the slip is thrown, then the air takes
+   over. Y has its own curve, which is what makes the path an arc. */
+@keyframes fbk-x-mizu {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--x)); }
+}
+
+@keyframes fbk-y-mizu {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  6%   { opacity: 1; }
+  36%  { transform: translateY(calc(-1 * var(--rise))) rotate(calc(var(--rot) * 0.42)); }
+  100% { transform: translateY(26vh) rotate(var(--rot)); opacity: 0; }
+}
+
+/* ── Name field + reposition ────────────────────── */
+.tk-name-mizu {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.tk-name-mizu > span:first-child {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(161, 161, 170, 0.95);
+  white-space: nowrap;
+}
+
+.tk-name-mizu input {
+  min-width: 0;
+  padding: 8px 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.86rem;
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  border-radius: 8px;
+}
+
+.tk-name-mizu input:focus {
+  outline: none;
+  border-color: rgba(250, 250, 250, 0.55);
+}
+
+.tk-repos-mizu {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-repos-mizu:hover {
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.5);
+}
+
+.tk-repos-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+/* Grab cursor and no text selection, so a drag across the plate reads as
+   moving the picture rather than highlighting it. */
+.tk-stage-mizu.is-repos {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tk-stage-mizu.is-repos:active { cursor: grabbing; }
+
+/* Stickers step aside while the crop is being set. */
+.tk-stage-mizu.is-repos .tk-st-mizu { pointer-events: none; opacity: 0.5; }
+
+/* ── Stage tools ────────────────────────────────── */
+.tk-tools-mizu {
+  position: absolute;
+  z-index: 6;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.tk-tool-mizu {
+  padding: 6px 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: rgba(10, 10, 11, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 250, 250, 0.24);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-tool-mizu:hover {
+  background: rgba(20, 20, 22, 0.9);
+  border-color: rgba(250, 250, 250, 0.5);
+}
+
+.tk-tool-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+/* Drop target. Outline rather than a filled tint, so the artwork stays
+   readable while deciding where to let go. */
+.tk-stage-mizu.is-drop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border: 2px dashed rgba(250, 250, 250, 0.65);
+  pointer-events: none;
+}
+
+.tk-chip-mizu { cursor: grab; }
+.tk-chip-mizu:active { cursor: grabbing; }
+
+/* Photo left, framing right. */
+.tk-tools-mizu {
+  left: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tk-tools-end-mizu { display: flex; gap: 6px; }
+
+.tk-tool-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tk-tool-mizu input[type='file'] { display: none; }
+
+/* Reposition focus: everything but the plate steps back, so the only
+   thing left to interact with is the picture being moved. The tools sit
+   inside the rail, which is why Done stays reachable. */
+.tk-body-mizu.is-repos > *:not(.tk-rail-mizu),
+.tk-body-mizu.is-repos .tk-preset-nav-mizu {
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.tk-body-mizu > *,
+.tk-preset-nav-mizu {
+  transition: opacity 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Lifted clear of the dimmed surroundings. */
+.tk-stage-mizu.is-repos {
+  box-shadow: 0 0 0 1px rgba(250, 250, 250, 0.28),
+              0 30px 70px rgba(0, 0, 0, 0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-body-mizu > *,
+  .tk-preset-nav-mizu { transition: none; }
+}
+
+/* ── Consent ────────────────────────────────────── */
+/* 0fr to 1fr animates the row's height without anyone hardcoding what
+   that height is. The inner div carries the slide, and its overflow is
+   what makes the collapse actually clip. */
+.tk-ask-consent-mizu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-ask-consent-mizu > div {
+  overflow: hidden;
+  transform: translateY(-10px);
+  transition: transform 320ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-ask-consent-mizu.is-on {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.tk-ask-consent-mizu.is-on > div { transform: translateY(0); }
+
+.tk-ask-check-mizu {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: 2px;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: rgba(200, 200, 206, 0.92);
+  cursor: pointer;
+}
+
+.tk-ask-check-mizu input {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  accent-color: #fafafa;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-ask-consent-mizu,
+  .tk-ask-consent-mizu > div { transition: none; }
+}
+
+/* ── Admin tabs, delete ─────────────────────────── */
+.ad-tabs-mizu {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 3px;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.12);
+  border-radius: 9px;
+}
+
+.ad-tab-mizu {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.9);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-tab-mizu:hover { color: #fafafa; }
+
+.ad-tab-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+}
+
+/* Fixed width so it never competes with the action beside it. */
+.ad-trash-mizu {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  padding: 9px 0;
+  color: rgba(200, 200, 206, 0.9);
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-trash-mizu:hover:not(:disabled) {
+  color: #f8b4b4;
+  background: rgba(248, 180, 180, 0.1);
+  border-color: rgba(248, 180, 180, 0.55);
+}
+
+.ad-trash-mizu:disabled { opacity: 0.5; cursor: default; }
+
+.ad-confirm-mizu {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: min(420px, 92vw);
+  animation: wc-in-mizu 460ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-confirm-mizu::backdrop {
+  background: rgba(6, 6, 7, 0.84);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.ad-confirm-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: #fafafa;
+  background: #0d0d0f;
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 14px;
+}
+
+.ad-confirm-body-mizu h2 { font-size: 1.02rem; font-weight: 700; }
+
+.ad-confirm-body-mizu p {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: rgba(200, 200, 206, 0.92);
+}
+
+.ad-confirm-act-mizu { display: flex; gap: 10px; margin-top: 6px; }
+.ad-confirm-act-mizu > * { flex: 1; }
+
+.ad-danger-mizu {
+  padding: 9px 16px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2a0d0d;
+  background: #f8b4b4;
+  border: 1px solid #f8b4b4;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-danger-mizu:hover:not(:disabled) { background: #f59a9a; }
+.ad-danger-mizu:disabled { opacity: 0.6; cursor: default; }
+
+.ad-eye-mizu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: transparent;
+  border: 1px solid rgba(250, 250, 250, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-eye-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.5);
+}
+
+/* Struck-through eye reads as "currently hidden", so the button states
+   what is true now and the label says what clicking does. */
+.ad-eye-mizu.is-off {
+  color: rgba(161, 161, 170, 0.95);
+  border-style: dashed;
+}
+
+.ad-eye-mizu:disabled { opacity: 0.5; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-card-mizu img { transition: none; }
+  .tg-card-mizu:hover img,
+  .tg-card-mizu:focus-visible img { transform: none; }
+}
+
+/* ── Lightbox zoom ──────────────────────────────── */
+.plb-zoom-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform: translate(var(--px, 0), var(--py, 0)) scale(var(--z, 1));
+  transition: transform 280ms cubic-bezier(0.16,1,0.3,1);
+  cursor: zoom-in;
+}
+
+.plb-zoom-mizu.is-zoomed { cursor: grab; }
+.plb-zoom-mizu.is-zoomed:active { cursor: grabbing; }
+
+/* No easing while a pointer is driving it, or the image lags the hand. */
+.plb-zoom-mizu.is-dragging { transition: none; }
+
+/* Bare: the ticket is already a finished object, so it gets no border,
+   no radius and no backing. */
+.plb-bare-mizu {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plb-zoom-mizu { transition: none; }
+}
+
+/* Recruiter mode drops the gallery with the rest of the personal layer:
+   visitor tickets are not part of that pitch. */
+.mode-recruiter .tg-mizu { display: none; }

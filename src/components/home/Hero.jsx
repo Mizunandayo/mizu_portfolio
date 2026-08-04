@@ -74,6 +74,11 @@ const LAYERS = [
 const BLANK =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
+/* Where the backdrop's sound sits whenever it is turned on, whether on
+   load or from the greeting's no-music path. One constant so the two
+   cannot drift apart. */
+const VOLUME = 0.35;
+
 /* Role and location come from the strip that was already declared;
    availability is appended rather than hardcoded, so the hero and the
    contact card cannot end up disagreeing about it. */
@@ -83,7 +88,7 @@ const SPEC = [...PROFILE.strip, PROFILE.availability.status];
 export default function Hero() {
   const [bg, setBg] = useState(0);
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(VOLUME);
   const [progress, setProgress] = useState(0);
   const videoRef = useRef(null);
   const gifRef = useRef(null);
@@ -164,11 +169,11 @@ export default function Hero() {
      makes sure sound is on when they switch back to it. */
   useEffect(() => {
     const on = () => {
-      setVolume(1);
+      setVolume(VOLUME);
       setMuted(false);
       const v = videoRef.current;
       if (!v) return;
-      v.volume = 1;
+      v.volume = VOLUME;
       v.muted = false;
       v.play().catch(() => {});
     };

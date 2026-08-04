@@ -31,7 +31,7 @@ const ALL = [
   { label: 'Certs',      href: '#certifications', Icon: IconBadge },
 ]
 
-export default function Nav({ onCredits }) {
+export default function Nav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [active, setActive] = useState('')
@@ -117,17 +117,6 @@ export default function Nav({ onCredits }) {
 
               {/* Right cluster */}
               <div className="notch-right-mizu">
-                {/* Quiet by design — it belongs on the page, but it is
-                    not competing with the contact CTA next to it. */}
-                <button
-                  type="button"
-                  className="notch-credits-mizu"
-                  onClick={onCredits}
-                  title="Credits and disclaimer"
-                >
-                  出典
-                </button>
-
                 <ModeToggle className="notch-mode-mizu" />
 
                 <a href="#contact" onClick={(e) => go(e, '#contact')} className="notch-cta-mizu">
@@ -184,20 +173,6 @@ export default function Nav({ onCredits }) {
               )}
 
               <div className="notch-menu-rule-mizu" />
-
-              {/* Both of these are hidden from the bar at this width, so
-                  the menu is where they stay reachable on a phone. */}
-              <button
-                type="button"
-                className="notch-menu-item-mizu"
-                onClick={() => {
-                  setMenuOpen(false)
-                  onCredits?.()
-                }}
-              >
-                <IconCredits />
-                <span>Credits</span>
-              </button>
 
               <div className="notch-menu-mode-mizu">
                 <span>Mode</span>
@@ -305,15 +280,6 @@ function IconAward() {
   )
 }
 
-function IconCredits() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  )
-}
 
 function IconBadge() {
   return (

@@ -371,6 +371,14 @@ export default function Presence() {
         </span>
       )}
 
+      {/* The wrapper is the mask. Its bottom edge sits on the card's top
+          edge, so the blade sliding up inside it emerges from behind the
+          card. Eager, not lazy: it is above the fold and a lazy load
+          would leave the first hover blank while it fetches. */}
+      <span className="pr-katana-mizu" aria-hidden="true">
+        <img src="/profile/discordpresencehover.png" alt="" />
+      </span>
+
       {/* aria-hidden: the anchor's own label already says it opens Discord,
           so announcing this too would just say it twice. */}
       <span className="pr-cta-mizu" aria-hidden="true">
