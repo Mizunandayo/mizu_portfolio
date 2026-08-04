@@ -18,7 +18,7 @@ export const PROFILE = {
 
   intro:
     'I build AI-powered applications and scalable software systems turning ideas into ' +
-    'production-ready software through modern web technologies, intelligent systems and ' +
+    'production ready software through modern web technologies, intelligent systems and ' +
     'thoughtful system design.',
 
   /* The About section's claim. Stated as a rule rather than a virtue -
@@ -64,6 +64,16 @@ export const PROFILE = {
     github:   'https://github.com/Mizunandayo',
     credly:   'https://www.credly.com/users/francis-daniel-genese',
   },
+
+  /* Discord user ID — the numeric snowflake, not the handle. Enable
+     Developer Mode in Discord (Settings → Advanced), then right-click
+     your own name and Copy User ID.
+
+     Presence is read through Lanyard, which can only see you if its bot
+     shares a server with you: join discord.gg/lanyard once and it works
+     from then on. Without that the API answers 404 and the card simply
+     does not render. */
+  discordId: '714616104630222899',
 
   /* Displayed forms - kept separate from the hrefs above. */
   contactDisplay: {

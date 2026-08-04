@@ -4402,6 +4402,454 @@ html.wc-open-mizu {
 .hero-name-kanji-mizu { display: none; }
 .mode-recruiter .hero-name-kanji-mizu { display: inline; }
 
+/* ══════════════════════════════════════════════════
+   Presence — 在席.  Bottom-right, in the space the mark
+   leaves free. Rendered only while Discord is online.
+   ══════════════════════════════════════════════════ */
+
+.pr-mizu {
+  --pr-pad-x: 14px;
+  --pr-pad-y: 12px;
+  --pr-gap: 14px;
+  /* The avatar's visible face. Everything else in the card scales off
+     this one number. */
+  --pr-face: 68px;
+  /* A decoration is drawn to overhang, so Discord sits the face at 82%
+     inside it. The ring, not the face, is the avatar's real footprint. */
+  --pr-ava: calc(var(--pr-face) / 0.82);
+  /* Cover art, held a step under the avatar's footprint so the face
+     leads and the artwork supports it. */
+  --pr-unit: calc(var(--pr-ava) * 0.85);
+  --pr-dot: 17px;
+  --pr-status: #80848e;
+
+  position: absolute;
+  z-index: 3;
+  right: clamp(24px, 6vw, 88px);
+  bottom: clamp(88px, 12vh, 132px);
+  display: flex;
+  align-items: center;
+  gap: var(--pr-gap);
+  max-width: min(484px, 50vw);
+  padding: var(--pr-pad-y) var(--pr-pad-x);
+  font-family: 'Poppins', system-ui, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  background: rgba(10, 10, 11, 0.66);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
+  animation: hero-pr-mizu 620ms cubic-bezier(0.16,1,0.3,1) both;
+  transition: transform 320ms cubic-bezier(0.16,1,0.3,1),
+              box-shadow 320ms cubic-bezier(0.16,1,0.3,1),
+              border-color 320ms cubic-bezier(0.16,1,0.3,1),
+              background 320ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.pr-mizu.is-online  { --pr-status: #23a55a; }
+.pr-mizu.is-idle    { --pr-status: #f0b232; }
+.pr-mizu.is-dnd     { --pr-status: #f23f43; }
+.pr-mizu.is-offline { --pr-status: #80848e; }
+
+/* `translate`, not `transform`: this animation fills its end state, and a
+   filling animation outranks the element's own transform, so the hover
+   lift would be silently ignored. Independent properties compose. */
+@keyframes hero-pr-mizu {
+  from { opacity: 0; translate: 0 10px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+/* ── Lift ───────────────────────────────────────── */
+.pr-mizu:hover,
+.pr-mizu:focus-visible {
+  transform: translateY(-5px);
+  border-color: rgba(250, 250, 250, 0.4);
+  background: rgba(14, 14, 16, 0.78);
+  /* Tight contact shadow, mid spread, wide diffuse. Offset straight down
+     so the light reads as overhead. */
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.5),
+    0 18px 34px rgba(0, 0, 0, 0.45),
+    0 34px 60px rgba(0, 0, 0, 0.38);
+}
+
+/* ── Hover outline ──────────────────────────────── */
+/* A full rounded outline wiped in from the left. The old version drew
+   two straight strokes along the top and right edges, which cannot work
+   once the corners are round — they would overshoot into the curve.
+   inset() clips the border along with everything else, so the corners
+   are revealed as the wipe reaches them. */
+.pr-mizu::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid rgba(250, 250, 250, 0.6);
+  border-radius: 15px;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 460ms cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+.pr-mizu:hover::before,
+.pr-mizu:focus-visible::before { clip-path: inset(0 0 0 0); }
+
+/* ── Hover call to action ───────────────────────── */
+/* Sits below the card, so it needs the room the card's own bottom offset
+   already leaves. Centred on `translate` and moved on `transform` so the
+   two do not have to restate each other. */
+.pr-cta-mizu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(240, 240, 243, 0.95);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  transform: translateY(-9px);
+  transition: opacity 240ms cubic-bezier(0.16,1,0.3,1),
+              transform 420ms cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+.pr-mizu:hover .pr-cta-mizu,
+.pr-mizu:focus-visible .pr-cta-mizu {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 240ms cubic-bezier(0.16,1,0.3,1) 90ms,
+              transform 420ms cubic-bezier(0.16,1,0.3,1) 90ms;
+}
+
+/* ── Marquee ────────────────────────────────────── */
+/* Held at each end so the turn reads as a pause rather than a bounce.
+   The return leg gets 43% of the cycle against the outbound 33%, which
+   is what makes it come back slower. */
+.pr-mq-mizu {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.pr-mq-mizu > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.pr-mq-mizu.is-scroll > span {
+  animation: pr-mq-mizu var(--mq-dur) ease-in-out infinite;
+}
+
+@keyframes pr-mq-mizu {
+  0%, 12%  { transform: translateX(0); }
+  45%, 57% { transform: translateX(calc(-1 * var(--mq-shift))); }
+  100%     { transform: translateX(0); }
+}
+
+/* ── Name slip ──────────────────────────────────── */
+/* Anchored at `right: 100%` so it never overlaps the card, then rests
+   half-shifted back under the edge with the fade held until it is
+   mostly clear. */
+.pr-slip-mizu {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  padding: 12px 5px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  color: #0a0a0b;
+  background: rgba(250, 250, 250, 0.92);
+  /* Outer corners only: the right edge butts against the card. */
+  border-radius: 5px 0 0 5px;
+  /* Centre on `translate`, slide on `transform`: neither restates the other. */
+  translate: 0 -50%;
+  transform: translateX(55%);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+.pr-mizu:hover .pr-slip-mizu,
+.pr-mizu:focus-visible .pr-slip-mizu {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 420ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1) 110ms;
+}
+
+/* ── Avatar ─────────────────────────────────────── */
+/* The ring is the box and the face sits inside it at Discord's own
+   ratio. Sizing the decoration to the avatar instead crops it, because
+   the art is drawn to overhang on every side. */
+.pr-ava-mizu {
+  position: relative;
+  display: block;
+  width: var(--pr-ava);
+  height: var(--pr-ava);
+  flex-shrink: 0;
+}
+
+.pr-ava-img-mizu {
+  position: absolute;
+  top: 9%;
+  left: 9%;
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pr-deco-mizu {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Discord codes status by shape as well as colour: filled for online, a
+   crescent for idle, a barred circle for dnd, a ring for invisible. The
+   cuts have to be real transparency, not a dark shape laid on top — the
+   dot sits on the avatar, so anything painted over it would have to
+   match a photo it cannot know.
+   The ring is the element and the shape is ::before, because a mask
+   clips to the border box and would eat a box-shadow ring entirely. */
+/* Sits on the face's lower-right at 45°, which is 79% across a box whose
+   face spans 9%–91%. Anchoring to the box edge instead would float it off
+   the avatar the moment the ring grew. */
+.pr-dot-mizu {
+  position: absolute;
+  right: calc(21% - var(--pr-dot) / 2);
+  bottom: calc(21% - var(--pr-dot) / 2);
+  z-index: 2;
+  width: var(--pr-dot);
+  height: var(--pr-dot);
+  border-radius: 50%;
+  background: rgba(10, 10, 11, 0.92);
+}
+
+.pr-dot-mizu::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--pr-status);
+  transition: background 320ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Crescent: an 11px disc with a 4.6px bite up-right, centres 3.58px
+   apart, leaving the moon 4.5px at its thickest. A wider bite thins the
+   upper horn to a wisp; a narrower one stops reading as a crescent. */
+.pr-mizu.is-idle .pr-dot-mizu::before {
+  -webkit-mask-image: radial-gradient(circle 4.6px at 73% 27%, transparent 98%, #000 100%);
+  mask-image: radial-gradient(circle 4.6px at 73% 27%, transparent 98%, #000 100%);
+}
+
+/* Bar: two layers, one transparent across the middle rows and one
+   across the middle columns. Mask layers union by default, so the only
+   place both are clear is the intersection — an inset bar, leaving the
+   disc whole at its left and right edges the way Discord draws it. */
+.pr-mizu.is-dnd .pr-dot-mizu::before {
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 0 37%, transparent 37% 63%, #000 63% 100%),
+    linear-gradient(to right, #000 0 13%, transparent 13% 87%, #000 87% 100%);
+  mask-image:
+    linear-gradient(to bottom, #000 0 37%, transparent 37% 63%, #000 63% 100%),
+    linear-gradient(to right, #000 0 13%, transparent 13% 87%, #000 87% 100%);
+}
+
+/* Ring: a centred hole at half the radius, so wall and hole match. */
+.pr-mizu.is-offline .pr-dot-mizu::before {
+  -webkit-mask-image: radial-gradient(circle 2.75px at 50% 50%, transparent 98%, #000 100%);
+  mask-image: radial-gradient(circle 2.75px at 50% 50%, transparent 98%, #000 100%);
+}
+
+/* ── Text ───────────────────────────────────────── */
+.pr-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pr-top-mizu {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.pr-name-mizu {
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #fafafa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The server tag, the way Discord prints it: badge then label, as one
+   chip rather than two loose elements. */
+.pr-tag-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 2px 7px 2px 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(240, 240, 243, 0.95);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  border-radius: 5px;
+}
+
+.pr-tag-mizu img {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+/* Account badges, in place of the status word. The dot already carries
+   the status, and Discord prints these here rather than the label. */
+.pr-badges-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pr-badges-mizu img {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.pr-line-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  margin-top: 3px;
+}
+
+/* The verb carries the weight and the service name recedes, which is the
+   way round Discord sets it: what he is doing reads before where. */
+.pr-verb-mizu {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pr-title-mizu,
+.pr-sub-mizu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-title-mizu {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(161, 161, 170, 0.92);
+}
+
+.pr-sub-mizu {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(228, 228, 231, 0.92);
+}
+
+.pr-time-mizu {
+  margin-top: 3px;
+  font-size: 0.66rem;
+  font-weight: 400;
+  color: rgba(161, 161, 170, 0.72);
+  /* Digits must not shuffle the line every second. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Cover ──────────────────────────────────────── */
+.pr-cover-mizu {
+  position: relative;
+  display: block;
+  width: var(--pr-unit);
+  height: var(--pr-unit);
+  flex-shrink: 0;
+}
+
+.pr-cover-mizu > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 10px;
+}
+
+/* The second asset is a corner badge on the first, which is exactly
+   what Discord uses it for. */
+.pr-cover-sm-mizu {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(10, 10, 11, 0.92);
+}
+
+/* Recruiter mode drops it with the rest of the personal layer — what I
+   am watching is not part of that pitch. */
+.mode-recruiter .pr-mizu { display: none; }
+
+/* Below this it would land on the copy rather than beside it. */
+@media (max-width: 1000px) {
+  .pr-mizu { display: none; }
+}
+
+/* Reduced motion keeps every hover state, since each one is also the
+   affordance telling you the card is a link. Only the movement goes:
+   the strokes and the slip arrive without travelling, and the lift
+   becomes a shadow change on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .pr-mizu { animation: none; transition: none; }
+
+  .pr-mizu:hover,
+  .pr-mizu:focus-visible { transform: none; }
+
+  .pr-mizu::before,
+  .pr-dot-mizu::before,
+  .pr-cta-mizu,
+  .pr-slip-mizu { transition: none; }
+
+  .pr-mizu:hover .pr-cta-mizu,
+  .pr-mizu:focus-visible .pr-cta-mizu {
+    transform: none;
+    transition: none;
+  }
+
+  .pr-mizu:hover .pr-slip-mizu,
+  .pr-mizu:focus-visible .pr-slip-mizu { transition: none; }
+
+  /* The component already skips marqueeing under reduced motion; this
+     only catches a preference flipped after the measurement ran. */
+  .pr-mq-mizu.is-scroll > span { animation: none; }
+}
+
 .hero-mark-mizu {
   position: absolute;
   z-index: 1;

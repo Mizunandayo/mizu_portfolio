@@ -8,6 +8,7 @@ import {
   ArrowIcon,
 } from "../shared/primitives.jsx";
 import { HERO_SOUND } from "../../events.js";
+import Presence from "../shared/Presence.jsx";
 
 /* ══════════════════════════════════════════════════
    Hero — two presentations of one block.
@@ -385,6 +386,8 @@ export default function Hero() {
           </Pill>
         </div>
       </div>
+
+      <Presence />
 
       <div className="hero-scroll-mizu" aria-hidden="true">
         <div className="hero-scroll-rule-mizu" />
