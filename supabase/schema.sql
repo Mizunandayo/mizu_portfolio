@@ -94,6 +94,15 @@ create policy tickets_anon_upload
   to anon, authenticated
   with check (bucket_id = 'tickets');
 
+-- Deleting needs SELECT too: storage resolves which rows match before it
+-- removes them, and with no read policy it matches none, deletes none,
+-- and answers 200 with an empty list.
+drop policy if exists tickets_admin_object_read on storage.objects;
+create policy tickets_admin_object_read
+  on storage.objects for select
+  to authenticated
+  using (bucket_id = 'tickets' and public.is_admin());
+
 drop policy if exists tickets_admin_object_delete on storage.objects;
 create policy tickets_admin_object_delete
   on storage.objects for delete

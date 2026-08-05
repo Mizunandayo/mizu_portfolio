@@ -157,6 +157,10 @@ export default function Ticket({ open, name, art, onClose }) {
   const [stage, setStage] = useState('edit')
   const [proof, setProof] = useState(null)
   const proofRef = useRef(null)
+  /* The composed canvas, frozen when review opens. `art` comes from the
+     greeting's slideshow and keeps rotating, so re-composing later would
+     download and upload a different picture than the one reviewed. */
+  const frozeRef = useRef(null)
   const [sent, setSent] = useState(false)
   const [sendErr, setSendErr] = useState('')
   const [ask, setAsk] = useState(false)
@@ -620,8 +624,8 @@ export default function Ticket({ open, name, art, onClose }) {
   }, [open, sel])
 
   /* ── Export ── */
-  /* Returns the canvas so the preview, the download and the upload all
-     share one paint rather than each re-running it. */
+  /* Returns the canvas. review() freezes it; download and upload reuse
+     that frozen one rather than painting again. */
   const compose = async () => {
     await fonts()
     const image = await loadImg(artSrc)
@@ -671,6 +675,7 @@ export default function Ticket({ open, name, art, onClose }) {
     setSendErr('')
     try {
       const out = await compose()
+      frozeRef.current = out
       const blob = await new Promise((r) => out.toBlob(r, 'image/png'))
       if (!blob) return
       if (proofRef.current) URL.revokeObjectURL(proofRef.current)
@@ -732,7 +737,7 @@ export default function Ticket({ open, name, art, onClose }) {
   const download = async () => {
     setBusy(true)
     try {
-      const out = await compose()
+      const out = frozeRef.current ?? (await compose())
       const blob = await new Promise((r) => out.toBlob(r, 'image/png'))
       if (!blob) return
       const url = URL.createObjectURL(blob)
@@ -771,7 +776,10 @@ export default function Ticket({ open, name, art, onClose }) {
             <button
               type="button"
               className="tk-back-mizu"
-              onClick={() => setStage('edit')}
+              onClick={() => {
+                frozeRef.current = null
+                setStage('edit')
+              }}
               disabled={busy}
             >
               <Chev dir="left" />

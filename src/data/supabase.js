@@ -144,6 +144,16 @@ export async function removeObjects(bucket, paths) {
     const err = await r.json().catch(() => null)
     throw new Error(err?.message || `Delete failed (${r.status})`)
   }
+
+  /* Storage answers 200 with the list it actually removed, and an RLS
+     refusal comes back as an empty list rather than an error. A 2xx is
+     therefore not evidence that anything was deleted. */
+  const gone = await r.json().catch(() => null)
+  if (Array.isArray(gone) && gone.length < paths.length) {
+    throw new Error(
+      `Storage removed ${gone.length} of ${paths.length} files. The delete policy on storage.objects is probably missing.`
+    )
+  }
 }
 
 export const publicUrl = (bucket, path) =>

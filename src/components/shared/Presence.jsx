@@ -76,8 +76,41 @@ function assetUrl(raw, appId) {
   return `${CDN}/app-assets/${appId}/${raw}.png`
 }
 
-/* Its own component so the ticking second re-renders one span. */
-function Elapsed({ start }) {
+/* Streaming apps put the episode in the cover's alt text, spelled out.
+   Discord compresses it to S1E4 and so does this. */
+const episode = (t) => {
+  const m = /season\s*(\d+)\D+episode\s*(\d+)/i.exec(t || '')
+  return m ? `S${m[1]}E${m[2]}` : null
+}
+
+const EpIcon = () => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.3"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="1.4" y="3.2" width="13.2" height="9.6" rx="1.9" />
+    <path d="M6.6 6.4 10.3 8 6.6 9.6Z" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+const clock = (ms) => {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const pad = (n) => String(n).padStart(2, '0')
+  return s >= 3600
+    ? `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`
+    : `${Math.floor(s / 60)}:${pad(s % 60)}`
+}
+
+/* A bar when Discord gives both ends of the track, a count-up when it
+   only gives the start. Its own component so the ticking second
+   re-renders this and nothing else. */
+function Track({ start, end }) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -85,14 +118,20 @@ function Elapsed({ start }) {
     return () => clearInterval(t)
   }, [])
 
-  const s = Math.max(0, Math.floor((now - start) / 1000))
-  const pad = (n) => String(n).padStart(2, '0')
-  const text =
-    s >= 3600
-      ? `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`
-      : `${Math.floor(s / 60)}:${pad(s % 60)}`
+  if (!end) return <span className="pr-time-mizu">{clock(now - start)} elapsed</span>
 
-  return <span className="pr-time-mizu">{text} elapsed</span>
+  const total = end - start
+  const at = Math.min(Math.max(now - start, 0), total)
+
+  return (
+    <span className="pr-track-mizu">
+      <span className="pr-clock-mizu">{clock(at)}</span>
+      <span className="pr-bar-mizu">
+        <i style={{ '--p': `${(at / total) * 100}%` }} />
+      </span>
+      <span className="pr-clock-mizu">{clock(total)}</span>
+    </span>
+  )
 }
 
 /* Scrolls only when the text actually overruns its column, so short
@@ -251,7 +290,8 @@ export default function Presence() {
         sub: spotify.artist,
         art: spotify.album_art_url,
         alt: spotify.album,
-        start: null,
+        start: spotify.timestamps?.start ?? null,
+        end: spotify.timestamps?.end ?? null,
       }
     : act
       ? {
@@ -261,7 +301,10 @@ export default function Presence() {
           art: assetUrl(act.assets?.large_image, act.application_id),
           small: assetUrl(act.assets?.small_image, act.application_id),
           alt: act.assets?.large_text || act.name,
+          ep: episode(act.assets?.large_text),
+          epFull: act.assets?.large_text || null,
           start: act.timestamps?.start ?? null,
+          end: act.timestamps?.end ?? null,
         }
       : custom
         ? { verb: '', title: custom, sub: '', art: null, start: null }
@@ -342,8 +385,18 @@ export default function Presence() {
               <Marquee className="pr-title-mizu" text={line.title} />
             </span>
 
-            {line.sub && <Marquee className="pr-sub-mizu" text={line.sub} />}
-            {line.start && <Elapsed start={line.start} />}
+            {(line.sub || line.ep) && (
+              <span className="pr-sub-row-mizu">
+                {line.ep && (
+                  <span className="pr-ep-mizu" data-tip={line.epFull}>
+                    <EpIcon />
+                    {line.ep}
+                  </span>
+                )}
+                {line.sub && <Marquee className="pr-sub-mizu" text={line.sub} />}
+              </span>
+            )}
+            {line.start && <Track start={line.start} end={line.end} />}
           </>
         )}
 
