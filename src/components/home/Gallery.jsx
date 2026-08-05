@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { configured } from '../../data/supabase.js'
 import { listApproved } from '../../data/tickets.js'
 import { PRESETS, paintTicket, serialOf } from '../shared/ticketPresets.js'
-import { TICKETS_CHANGED } from '../../events.js'
+import { TICKETS_CHANGED, OPEN_TICKET } from '../../events.js'
 import Lightbox from '../shared/Lightbox.jsx'
 
 const PER_PAGE = 16
@@ -196,13 +196,23 @@ export default function Gallery() {
 
       <div className="tg-inner-mizu">
         <header className="tg-head-mizu">
-          <p className="tg-kicker-mizu">改札口 / Ticket gallery</p>
-          <h2 className="tg-title-mizu">TICKETS</h2>
-          <p className="tg-lede-mizu">
-            Every ticket here was made by someone who visited this page. Make
-            your own from the greeting, and it appears once it has been
-            reviewed.
-          </p>
+          <div>
+            <p className="tg-kicker-mizu">改札口 / Ticket gallery</p>
+            <h2 className="tg-title-mizu">TICKETS</h2>
+            <p className="tg-lede-mizu">
+              Every ticket here was made by someone who visited this page.
+              Make your own and it appears once it has been reviewed.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="tg-grab-mizu"
+            onClick={() => window.dispatchEvent(new Event(OPEN_TICKET))}
+          >
+            入場券
+            <span>Grab your ticket now!</span>
+          </button>
         </header>
 
         <div className="tg-tools-mizu">

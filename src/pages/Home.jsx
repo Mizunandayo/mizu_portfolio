@@ -8,6 +8,7 @@ import Hackathons from '../components/home/Hackathons.jsx'
 import Certifications from '../components/home/Certifications.jsx'
 import Contact from '../components/home/Contact.jsx'
 import Gallery from '../components/home/Gallery.jsx'
+import Subscribe from '../components/home/Subscribe.jsx'
 import SectionBreak from '../components/shared/SectionBreak.jsx'
 import { metaFor } from '../seo.js'
 
@@ -42,10 +43,16 @@ export default function Home() {
 
         <Gallery />
 
+        <Subscribe />
+
         {/* Closing plate. Natural aspect rather than a cropped band, so
             the whole image is reachable by scrolling to the end of it. */}
         <div className="end-plate-mizu" aria-hidden="true">
           <img src="/profile/endsection.jpg" alt="" loading="lazy" decoding="async" />
+        </div>
+
+                <div className="end-plate-mizu" aria-hidden="true">
+          <img src="/profile/endsection2.jpg" alt="" loading="lazy" decoding="async" />
         </div>
       </main>
     </>

@@ -24,6 +24,7 @@ const ITEMS = [
   { href: "#hackathons", kanji: "挑", label: "Hackathons" },
   { href: "#certifications", kanji: "証", label: "Certs" },
   { href: "#contact", kanji: "縁", label: "Contact" },
+  { href: "#gallery", kanji: "券", label: "Tickets" },
 ];
 
 const STORE = "mizu-dock";

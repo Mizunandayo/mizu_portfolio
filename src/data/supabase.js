@@ -105,6 +105,12 @@ export const db = {
       body: JSON.stringify(body),
     }),
   remove: (path) => rest(path, { method: 'DELETE' }),
+
+  /* A security-definer function, so it can do things the caller's own
+     grants would refuse. That is the point: anon can toggle a like
+     without ever holding write access to the table. */
+  rpc: (name, args) =>
+    rest(`rpc/${name}`, { method: 'POST', body: JSON.stringify(args) }),
 }
 
 /* Storage rejects a request with no Authorization even for anon, unlike
@@ -154,6 +160,29 @@ export async function removeObjects(bucket, paths) {
       `Storage removed ${gone.length} of ${paths.length} files. The delete policy on storage.objects is probably missing.`
     )
   }
+}
+
+/* Edge Functions, called with the signed-in admin's own token rather
+   than a shared key. The function checks that uid against the admins
+   table, so a leaked anon key cannot reach anything here. */
+export async function callFunction(name, body) {
+  const s = readSession()
+  if (!s?.access_token) throw new Error('Sign in first.')
+
+  const r = await fetch(`${URL_BASE}/functions/v1/${name}`, {
+    method: 'POST',
+    headers: {
+      apikey: ANON,
+      Authorization: `Bearer ${s.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  const text = await r.text()
+  const json = text ? JSON.parse(text) : null
+  if (!r.ok) throw new Error(json?.error || `Request failed (${r.status})`)
+  return json
 }
 
 export const publicUrl = (bucket, path) =>

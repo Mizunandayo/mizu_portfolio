@@ -11,6 +11,13 @@
          and then collapse once React hydrates. -->
     <script>
       try {
+        // ?mode= wins and is remembered, so a link in an email can choose
+        // which presentation the visitor lands in. Read before paint for
+        // the same reason as the stored value: after paint is a flash.
+        var q = new URLSearchParams(location.search).get('mode')
+        if (q === 'personal' || q === 'recruiter') {
+          localStorage.setItem('mizu-mode', q)
+        }
         if (localStorage.getItem('mizu-mode') === 'recruiter') {
           document.documentElement.classList.add('mode-recruiter')
         }

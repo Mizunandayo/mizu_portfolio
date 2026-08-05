@@ -25,6 +25,11 @@ const LABEL = {
 
 const CDN = 'https://cdn.discordapp.com'
 
+const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
+const FN_BASE = import.meta.env.VITE_SUPABASE_URL
+  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+  : ''
+
 /* public_flags is a bitfield; the icon hashes are fixed and undocumented,
    so every one below was checked against a live CDN response. Active
    Developer (1 << 22) is left out because its hash 404s and a guessed
@@ -74,6 +79,28 @@ function assetUrl(raw, appId) {
   if (raw.startsWith('mp:')) return `https://media.discordapp.net/${raw.slice(3)}`
   if (raw.startsWith('spotify:')) return `https://i.scdn.co/image/${raw.slice(8)}`
   return `${CDN}/app-assets/${appId}/${raw}.png`
+}
+
+/* A game Discord detected by itself carries no assets at all, only an
+   application_id. The tile Discord shows in that case is the app's own
+   icon, whose hash sits behind an endpoint with no CORS header, so it
+   takes a hop through an Edge Function. Resolved once per app per page:
+   an icon does not change while someone is looking at the card. */
+const ICONS = new Map()
+
+function appIcon(appId) {
+  if (!appId || !FN_BASE) return Promise.resolve(null)
+  if (ICONS.has(appId)) return ICONS.get(appId)
+
+  const p = fetch(`${FN_BASE}/app-icon?id=${appId}`, {
+    headers: ANON ? { apikey: ANON } : {},
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => d?.url ?? null)
+    .catch(() => null)
+
+  ICONS.set(appId, p)
+  return p
 }
 
 /* Streaming apps put the episode in the cover's alt text, spelled out.
@@ -211,6 +238,7 @@ function Ago({ since }) {
 
 export default function Presence() {
   const [data, setData] = useState(null)
+  const [gameIcon, setGameIcon] = useState(null)
   const id = PROFILE.discordId
 
   useEffect(() => {
@@ -239,6 +267,25 @@ export default function Presence() {
       clearInterval(t)
     }
   }, [id])
+
+  /* Only when the activity has nothing of its own to show. Keyed on the
+     application id so a poll that returns the same game does not refetch,
+     and cleared between games so one icon never outlives its activity. */
+  useEffect(() => {
+    const a = data?.activities?.find((x) => x.type !== 4)
+    const needs = a && !a.assets?.large_image && a.application_id
+
+    if (!needs) {
+      setGameIcon(null)
+      return undefined
+    }
+
+    let dead = false
+    appIcon(a.application_id).then((url) => {
+      if (!dead) setGameIcon(url)
+    })
+    return () => { dead = true }
+  }, [data?.activities?.find((x) => x.type !== 4)?.application_id])
 
   const status = data?.discord_status
   /* Still bails when the fetch told us nothing — an empty card is worse
@@ -298,7 +345,7 @@ export default function Presence() {
           verb: VERB[act.type] ?? 'Playing',
           title: act.name,
           sub: act.details || act.state || '',
-          art: assetUrl(act.assets?.large_image, act.application_id),
+          art: assetUrl(act.assets?.large_image, act.application_id) || gameIcon,
           small: assetUrl(act.assets?.small_image, act.application_id),
           alt: act.assets?.large_text || act.name,
           ep: episode(act.assets?.large_text),

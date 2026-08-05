@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { listCounts, readMine } from '../../data/likes.js'
+import { LIKES_CHANGED } from '../../events.js'
 import { ORDERED, UPCOMING, formatPeriod } from '../../data/projects.js'
 import { ImagePlaceholder } from '../shared/placeholders.jsx'
 import { Reveal } from '../../hooks/useScrollReveal.jsx'
@@ -26,6 +28,37 @@ const PILLAR = { left: '22%', right: '78%' }
 
 export default function Work() {
   const [open, setOpen] = useState(null)
+  const [likes, setLikes] = useState({})
+  /* Empty on the first render on purpose: localStorage does not exist
+     during the prerender, and seeding from it here would hydrate into a
+     different set of hearts than the HTML shipped with. */
+  const [mine, setMine] = useState(() => new Set())
+
+  /* One query for the whole grid, then patched in place. A like fired
+     from the dialog carries its own new count, so the plate underneath
+     updates without asking the server again. */
+  useEffect(() => {
+    let dead = false
+    listCounts().then((all) => { if (!dead) setLikes(all) }).catch(() => {})
+    setMine(readMine())
+
+    const patch = (e) => {
+      const { slug, likes: n, liked } = e.detail ?? {}
+      if (!slug) return
+      setLikes((prev) => ({ ...prev, [slug]: n }))
+      setMine((prev) => {
+        const next = new Set(prev)
+        liked ? next.add(slug) : next.delete(slug)
+        return next
+      })
+    }
+    window.addEventListener(LIKES_CHANGED, patch)
+
+    return () => {
+      dead = true
+      window.removeEventListener(LIKES_CHANGED, patch)
+    }
+  }, [])
 
   return (
     <section id="work" className="wk-page-mizu">
@@ -55,7 +88,12 @@ export default function Work() {
           <div className="wk-grid-mizu">
             {ORDERED.map((p, i) => (
               <Reveal key={p.slug} delay={Math.min((i % 3) + 1, 6)} className="h-full">
-                <Card project={p} onOpen={() => setOpen(p)} />
+                <Card
+                  project={p}
+                  likes={likes[p.slug]}
+                  liked={mine.has(p.slug)}
+                  onOpen={() => setOpen(p)}
+                />
               </Reveal>
             ))}
 
@@ -161,7 +199,7 @@ function Teaser() {
   )
 }
 
-function Card({ project: p, onOpen }) {
+function Card({ project: p, likes, liked, onOpen }) {
   return (
     <button
       type="button"
@@ -199,6 +237,21 @@ function Card({ project: p, onOpen }) {
         <span className="wk-name-mizu">
           {p.name}
           <span className="wk-kanji-mizu">{p.kanji}</span>
+
+          {/* A read-only tally, not a control: this whole card is
+              already a button and liking lives inside the dialog.
+              Hidden at zero, which is noise rather than information. */}
+          {likes > 0 && (
+            <span className={`wk-likes-mizu${liked ? ' is-mine' : ''}`}>
+              <svg
+                width="18" height="18" viewBox="0 0 24 24"
+                fill="currentColor" aria-hidden="true"
+              >
+                <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 0 1 19.4 13Z" />
+              </svg>
+              {likes}
+            </span>
+          )}
         </span>
 
         <span className="wk-desc-mizu">{p.tagline}</span>

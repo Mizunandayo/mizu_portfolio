@@ -19,3 +19,12 @@ export const HERO_SOUND = 'mizu:hero-sound'
    page with a dialog between them, so the gallery listens rather than
    being handed a setter. */
 export const TICKETS_CHANGED = 'mizu:tickets'
+
+/* Gallery → Welcome. The ticket editor lives beside the greeting, which
+   only shows once a session, so the gallery needs a way back into it. */
+export const OPEN_TICKET = 'mizu:open-ticket'
+
+/* Project dialog → the cards behind it. The like happens inside the
+   modal and the count is on the plate underneath, so the new number
+   rides along on the event rather than costing a second round trip. */
+export const LIKES_CHANGED = 'mizu:likes'

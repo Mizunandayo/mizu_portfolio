@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useViews } from '../../data/views.js';
 import { PROFILE } from "../../data/profile.js";
 import { StarField, PerspectiveGrid, Spotlight } from "../shared/Backdrop.jsx";
 import {
@@ -77,15 +78,19 @@ const BLANK =
 /* Where the backdrop's sound sits whenever it is turned on, whether on
    load or from the greeting's no-music path. One constant so the two
    cannot drift apart. */
-const VOLUME = 0.35;
+const VOLUME = 0.15;
 
 /* Role and location come from the strip that was already declared;
    availability is appended rather than hardcoded, so the hero and the
    contact card cannot end up disagreeing about it. */
-const SPEC = [...PROFILE.strip, PROFILE.availability.status];
+/* Blank entries dropped: availability.status is empty, and an index
+   with a rule and nothing after it reads as a missing row rather than a
+   deliberate one. The live count takes that slot instead. */
+const SPEC = [...PROFILE.strip, PROFILE.availability.status].filter(Boolean);
 
 
 export default function Hero() {
+  const views = useViews();
   const [bg, setBg] = useState(0);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(VOLUME);
@@ -335,6 +340,21 @@ export default function Hero() {
               <span className="hero-spec-val-mizu">{s}</span>
             </span>
           ))}
+
+          {/* Held back until the count comes back. A row that appears
+              saying nothing and then fills in is worse than one that
+              arrives already true. */}
+          {views !== null && (
+            <span className="hero-spec-row-mizu">
+              <span className="hero-spec-no-mizu" aria-hidden="true">
+                {String(SPEC.length + 1).padStart(2, "0")}
+              </span>
+              <span className="hero-spec-dash-mizu" aria-hidden="true" />
+              <span className="hero-spec-val-mizu">
+                {views.toLocaleString()} total {views === 1 ? "view" : "views"}
+              </span>
+            </span>
+          )}
         </div>
 
         <h1

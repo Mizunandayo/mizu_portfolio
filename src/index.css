@@ -70,6 +70,13 @@ html.wc-open-mizu {
   padding-right: var(--wc-gutter, 0px);
 }
 
+/* And the ticket editor's, for the same reason: it can be opened from
+   the gallery with no greeting behind it, and it outlives one. */
+html.tk-open-mizu {
+  overflow: hidden;
+  padding-right: var(--tk-gutter, 0px);
+}
+
 .boot-mizu {
   position: fixed;
   inset: 0;
@@ -1724,7 +1731,6 @@ html.wc-open-mizu {
   margin-bottom: 6px;
 }
 
-
 .mg-meta-mizu {
   display: flex;
   flex-wrap: wrap;
@@ -2193,9 +2199,7 @@ html.wc-open-mizu {
     gap: 16px;
   }
 
-
   .hack-katana-mizu { width: 34px; }
-
 
   .hack-lead-mizu { max-width: 520px; }
 }
@@ -2579,7 +2583,6 @@ html.wc-open-mizu {
   }
   .hkd-carousel-mizu { padding: 14px 16px 16px; }
 }
-
 
 /* ══════════════════════════════════════════════════
    About — centred, portrait-led
@@ -3656,7 +3659,6 @@ html.wc-open-mizu {
 
 /* ── About: lose the photographic plate ────────── */
 .mode-recruiter .about-bg-mizu::before { display: none; }
-
 
 .notch-menu-mode-mizu {
   display: flex;
@@ -7091,6 +7093,9 @@ html.wc-open-mizu {
      outer edge rather than slicing through the middle of the layout. */
   max-height: calc(100vh - 24px);
   overflow-y: auto;
+  /* Hitting the end of the panel would otherwise hand the wheel to the
+     page behind, which is the one thing the lock cannot see coming. */
+  overscroll-behavior: contain;
   /* Belt and braces: nothing here should ever scroll sideways, and a
      stray horizontal bar under a tall design is the one thing that
      would. */
@@ -7518,6 +7523,12 @@ html.wc-open-mizu {
   font-size: 0.62rem;
   color: rgba(161, 161, 170, 0.75);
   pointer-events: none;
+}
+
+.tk-count-mizu.is-need {
+  color: #f8b4b4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* ── Tray ───────────────────────────────────────── */
@@ -8550,14 +8561,37 @@ a.cr-by-mizu:hover {
    ══════════════════════════════════════════════════ */
 
 .ad-mizu {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: clamp(28px, 6vw, 64px) clamp(18px, 4vw, 40px) 96px;
-  background: #0a0a0b;
+  overflow: hidden;
+  padding: clamp(28px, 6vw, 56px) clamp(18px, 4vw, 40px) 96px;
   color: #fafafa;
   font-family: 'Poppins', system-ui, sans-serif;
+  background: #0a0a0b;
 }
+
+/* Same trick as the gallery: uploads are flattened onto #0a0a0b, so the
+   backdrop stays near-black or every plate shows its own rectangle. */
+.ad-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/profile/ticketsabg.jpg') center / cover no-repeat;
+  filter: blur(3px) saturate(0.7);
+  transform: scale(1.06);
+}
+
+.ad-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #0a0a0b 0%, rgba(10,10,11,0.9) 20%, rgba(10,10,11,0.9) 80%, #0a0a0b 100%),
+    rgba(10, 10, 11, 0.6);
+}
+
+.ad-inner-mizu { max-width: 1280px; margin: 0 auto; }
 
 .ad-kicker-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
@@ -8593,156 +8627,196 @@ a.cr-by-mizu:hover {
   justify-content: space-between;
   gap: 18px;
   flex-wrap: wrap;
-  padding-bottom: 20px;
-  margin-bottom: 26px;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
   border-bottom: 1px solid rgba(250, 250, 250, 0.14);
 }
 
 .ad-head-act-mizu { display: flex; gap: 10px; }
 
+/* ── Tabs and filters ───────────────────────────── */
+.ad-tabs-mizu {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 3px;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.12);
+  border-radius: 9px;
+}
+
+.ad-tab-mizu {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.9);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-tab-mizu:hover { color: #fafafa; }
+.ad-tab-mizu.is-on { color: #0a0a0b; background: #fafafa; }
+
+.ad-tools-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.ad-chips-mizu { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.ad-chip-mizu {
+  padding: 6px 13px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.9);
+  background: rgba(10, 10, 11, 0.5);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-chip-mizu:hover { color: #fafafa; border-color: rgba(250, 250, 250, 0.4); }
+.ad-chip-mizu.is-on { color: #0a0a0b; background: #fafafa; border-color: #fafafa; }
+
+.ad-tools-end-mizu { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.ad-search-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  color: rgba(161, 161, 170, 0.95);
+  background: rgba(10, 10, 11, 0.55);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  border-radius: 999px;
+}
+
+.ad-search-mizu:focus-within { border-color: rgba(250, 250, 250, 0.5); }
+
+.ad-search-mizu input {
+  width: clamp(130px, 16vw, 200px);
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: #fafafa;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+.ad-search-mizu input::-webkit-search-cancel-button { filter: invert(1); }
+
+.ad-select-mizu {
+  padding: 7px 13px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: rgba(10, 10, 11, 0.55);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.ad-select-mizu option { background: #101012; color: #fafafa; }
+
 /* ── Cards ──────────────────────────────────────── */
+/* No container. The plate is the tile, the way the gallery does it. */
 .ad-grid-mizu {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: clamp(20px, 2.4vw, 34px);
 }
 
 .ad-card-mizu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  background: rgba(250, 250, 250, 0.04);
-  border: 1px solid rgba(250, 250, 250, 0.14);
-  border-radius: 12px;
+  align-items: center;
+  gap: 7px;
 }
 
-/* Contain, not cover: a ticket judged on a crop is not judged. */
 .ad-shot-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  height: 190px;
+  height: clamp(140px, 14vw, 190px);
+  margin-bottom: 5px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: zoom-in;
+}
+
+.ad-shot-mizu img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-  background: #08080a;
-  border-radius: 8px;
+  transition: transform 340ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.ad-meta-mizu { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ad-shot-mizu:hover img { transform: translateY(-5px) scale(1.03); }
 
-.ad-name-mizu { font-size: 0.92rem; font-weight: 600; }
+.ad-name-mizu { font-size: 0.9rem; font-weight: 600; text-align: center; }
 
-.ad-design-mizu {
-  font-size: 0.74rem;
-  color: rgba(161, 161, 170, 0.95);
-}
-
-/* The whole message, wrapped. Truncating the one field a stranger
-   controls would hide exactly what is being reviewed. */
-.ad-msg-mizu {
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: rgba(228, 228, 231, 0.92);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border-left: 2px solid rgba(250, 250, 250, 0.24);
-  border-radius: 0 6px 6px 0;
-}
-
-.ad-when-mizu {
+.ad-meta-mizu {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.64rem;
-  color: rgba(161, 161, 170, 0.75);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: rgba(161, 161, 170, 0.9);
+  text-align: center;
 }
 
-.ad-act-mizu { display: flex; gap: 10px; margin-top: auto; }
-.ad-act-mizu > * { flex: 1; }
-
-/* ── Controls ───────────────────────────────────── */
-.ad-primary-mizu,
-.ad-ghost-mizu {
-  padding: 9px 16px;
-  font-family: inherit;
-  font-size: 0.78rem;
+.ad-mail-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.66rem;
   font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
-              border-color 200ms cubic-bezier(0.16,1,0.3,1),
-              opacity 200ms cubic-bezier(0.16,1,0.3,1);
+  color: #86d9a4;
 }
 
-.ad-primary-mizu {
-  color: #0a0a0b;
-  background: #fafafa;
-  border: 1px solid #fafafa;
-}
+.ad-act-mizu { display: flex; gap: 8px; width: 100%; margin-top: 6px; }
+.ad-act-mizu > *:first-child { flex: 1; }
 
-.ad-primary-mizu:hover:not(:disabled) { background: #e4e4e7; }
-
-.ad-ghost-mizu {
+.ad-eye-mizu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
   color: #fafafa;
   background: transparent;
   border: 1px solid rgba(250, 250, 250, 0.28);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1);
 }
 
-.ad-ghost-mizu:hover:not(:disabled) {
-  background: rgba(250, 250, 250, 0.08);
+.ad-eye-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.09);
   border-color: rgba(250, 250, 250, 0.5);
 }
 
-.ad-primary-mizu:disabled,
-.ad-ghost-mizu:disabled { opacity: 0.5; cursor: default; }
-
-/* ── Sign in ────────────────────────────────────── */
-.ad-signin-mizu,
-.ad-note-mizu {
-  max-width: 380px;
-  margin: clamp(40px, 12vh, 120px) auto 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.ad-note-mizu { max-width: 520px; line-height: 1.6; }
-
-.ad-note-mizu code {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.86em;
-  padding: 1px 5px;
-  background: rgba(250, 250, 250, 0.1);
-  border-radius: 4px;
-}
-
-.ad-field-mizu { display: flex; flex-direction: column; gap: 6px; }
-
-.ad-field-mizu > span {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(161, 161, 170, 0.95);
-}
-
-.ad-field-mizu input {
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 0.88rem;
-  color: #fafafa;
-  background: rgba(250, 250, 250, 0.06);
-  border: 1px solid rgba(250, 250, 250, 0.2);
-  border-radius: 8px;
-}
-
-.ad-field-mizu input:focus {
-  outline: none;
-  border-color: rgba(250, 250, 250, 0.55);
-}
-
-.ad-err-mizu {
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: #f8b4b4;
-  overflow-wrap: anywhere;
-}
+.ad-eye-mizu:disabled { opacity: 0.5; cursor: default; }
 
 .ad-empty-mizu {
   padding: 60px 0;
@@ -9144,11 +9218,6 @@ a.cr-by-mizu:hover {
   color: rgba(161, 161, 170, 0.6);
   user-select: none;
 }
-
-
-
-
-
 
 @media (prefers-reduced-motion: reduce) {
   .tg-card-mizu { transition: none; }
@@ -9836,3 +9905,1664 @@ a.cr-by-mizu:hover {
 @media (prefers-reduced-motion: reduce) {
   .pr-ep-mizu[data-tip]::after { transition: none; transform: none; }
 }
+
+/* ── Admin controls (restored) ──────────────────── */
+.ad-primary-mizu,
+.ad-ghost-mizu {
+  padding: 9px 16px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              opacity 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Approve is the affirmative action, so it carries the only colour on
+   the card. Deep enough that white type still reads on it. */
+.ad-primary-mizu {
+  color: #eafff1;
+  background: #14532d;
+  border: 1px solid #1d6d3c;
+}
+
+.ad-primary-mizu:hover:not(:disabled) {
+  background: #1a6636;
+  border-color: #2a8a50;
+}
+
+.ad-ghost-mizu {
+  color: #fafafa;
+  background: rgba(10, 10, 11, 0.5);
+  border: 1px solid rgba(250, 250, 250, 0.28);
+}
+
+.ad-ghost-mizu:hover:not(:disabled) {
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.5);
+}
+
+.ad-primary-mizu:disabled,
+.ad-ghost-mizu:disabled { opacity: 0.5; cursor: default; }
+
+.ad-note-mizu {
+  position: relative;
+  max-width: 380px;
+  margin: clamp(40px, 12vh, 120px) auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ad-note-mizu { max-width: 520px; line-height: 1.6; }
+
+.ad-note-mizu code {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em;
+  padding: 1px 5px;
+  background: rgba(250, 250, 250, 0.1);
+  border-radius: 4px;
+}
+
+.ad-field-mizu { display: flex; flex-direction: column; gap: 6px; }
+
+.ad-field-mizu > span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.ad-field-mizu input {
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  border-radius: 8px;
+}
+
+.ad-field-mizu input:focus {
+  outline: none;
+  border-color: rgba(250, 250, 250, 0.55);
+}
+
+.ad-err-mizu {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #f8b4b4;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/* ── Card frame ─────────────────────────────────── */
+/* A panel again, but on the admin side only. This is a work surface, not
+   a gallery: the edges say where one ticket ends and the next begins
+   while you are clicking approve and delete at speed. */
+.ad-card-mizu {
+  padding: 16px 16px 18px;
+  background: rgba(14, 14, 16, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.42),
+    0 14px 30px rgba(0, 0, 0, 0.36);
+  transition: transform 320ms cubic-bezier(0.16,1,0.3,1),
+              border-color 320ms cubic-bezier(0.16,1,0.3,1),
+              box-shadow 320ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-card-mizu:hover {
+  transform: translateY(-3px);
+  border-color: rgba(250, 250, 250, 0.3);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.5),
+    0 22px 46px rgba(0, 0, 0, 0.44);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-card-mizu { transition: none; }
+  .ad-card-mizu:hover { transform: none; }
+}
+
+/* Header becomes a row so the call to action sits opposite the title. */
+.tg-head-mizu {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.tg-grab-mizu {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 13px 24px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.94rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0a0a0b;
+  background: #fafafa;
+  border: 1px solid #fafafa;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 300ms cubic-bezier(0.16,1,0.3,1),
+              box-shadow 300ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tg-grab-mizu > span {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.tg-grab-mizu:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-grab-mizu { transition: none; }
+  .tg-grab-mizu:hover { transform: none; }
+}
+
+/* ── 瓦版 — kawaraban / subscribe ────────────────
+   No container. The plate is the section and the type
+   lies on it, the way ink lies on a printed sheet.
+
+   The plate fills the band edge to edge. The height
+   runs well past what the type needs, which is what
+   lets a 3:4 picture cover a landscape band without
+   losing most of itself to the crop. */
+.kw-mizu {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  align-items: center;
+  min-height: min(135vw, 211vh, 2250px);
+  padding: clamp(48px, 8vh, 96px) clamp(18px, 5vw, 72px);
+  background: #0a0a0b;
+}
+
+/* Full bleed. Anchored right of centre so the crop keeps the storefront
+   rather than centring on it and cutting both edges off. */
+.kw-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/profile/subscribebg.jpg') 70% center / cover no-repeat;
+}
+
+/* Reads across the picture rather than sitting on a slab, so the wash
+   has to do the work a card used to: opaque under the type, thinning to
+   almost nothing over the plate. */
+.kw-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(72% 58% at 50% 50%, rgba(10, 10, 11, 0.9) 0%, rgba(10, 10, 11, 0.62) 46%, transparent 78%),
+    linear-gradient(90deg, #0a0a0b 0%, rgba(10, 10, 11, 0.42) 22%, rgba(10, 10, 11, 0.42) 78%, #0a0a0b 100%),
+    linear-gradient(180deg, #0a0a0b 0%, transparent 14%, transparent 86%, #0a0a0b 100%);
+}
+
+/* Narrow enough that the type covers the whole width, so the sideways
+   wash has nothing left to shade and goes flat instead. */
+@media (max-width: 1100px) {
+  .kw-mizu { min-height: min(225vw, 195vh, 1770px); }
+  .kw-bg-mizu { background-position: center; }
+  .kw-bg-mizu::after {
+    background:
+      linear-gradient(180deg, #0a0a0b 0%, rgba(10,10,11,0.82) 18%, rgba(10,10,11,0.82) 82%, #0a0a0b 100%),
+      rgba(10, 10, 11, 0.6);
+  }
+}
+
+.kw-spine-mizu {
+  position: absolute;
+  top: clamp(48px, 8vh, 96px);
+  left: clamp(6px, 1.6vw, 26px);
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(0.8rem, 1.2vw, 1.05rem);
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  color: rgba(250, 250, 250, 0.3);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 1040px) { .kw-spine-mizu { display: none; } }
+
+/* ── The type ───────────────────────────────────── */
+.kw-body-mizu {
+  position: relative;
+  max-width: 56ch;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.kw-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.kw-title-mizu {
+  margin-top: 10px;
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-size: clamp(2.6rem, 8.4vw, 6rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: 0.035em;
+  color: #fafafa;
+  -webkit-text-stroke: 0.045em #08080a;
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.05em 0 #08080a;
+}
+
+.kw-lede-mizu {
+  max-width: 52ch;
+  margin: 14px auto 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.92);
+}
+
+/* Subordinate to the lede on purpose. Without a line of it the masthead
+   is decoration, but it is the footnote, not the pitch. */
+.kw-note-mizu {
+  max-width: 46ch;
+  margin: 18px auto 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(250, 250, 250, 0.16);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.74rem;
+  line-height: 1.65;
+  color: rgba(161, 161, 170, 0.88);
+}
+
+/* ── Form ───────────────────────────────────────── */
+.kw-form-mizu { margin-top: clamp(22px, 3.2vh, 32px); }
+
+/* A ruled line to write on, not a box. A rounded input on a printed
+   sheet is the exact thing this section is avoiding. */
+.kw-field-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.kw-label-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: rgba(200, 200, 206, 0.8);
+}
+
+.kw-field-mizu input {
+  width: 100%;
+  padding: 7px 2px;
+  /* Stated rather than inherited: several browsers reset an input's
+     alignment to start in their own stylesheet, so the centred body
+     around it does not reach inside the field. */
+  text-align: center;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  color: #fafafa;
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid rgba(250, 250, 250, 0.34);
+  border-radius: 0;
+  outline: none;
+  transition: border-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kw-field-mizu input::placeholder { color: rgba(161, 161, 170, 0.55); }
+.kw-field-mizu input:focus { border-bottom-color: #fafafa; }
+.kw-field-mizu input[aria-invalid='true'] { border-bottom-color: #e0554c; }
+
+/* Same 0fr/1fr row the ticket's consent uses: the height animates
+   without a hardcoded number to keep in sync with the copy. */
+.kw-consent-mizu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kw-consent-mizu > div {
+  overflow: hidden;
+  transform: translateY(-10px);
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kw-consent-mizu.is-on { grid-template-rows: 1fr; opacity: 1; }
+.kw-consent-mizu.is-on > div { transform: translateY(0); }
+
+.kw-check-mizu {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: 44ch;
+  margin-inline: auto;
+  padding-top: 14px;
+  text-align: left;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: rgba(200, 200, 206, 0.92);
+  cursor: pointer;
+}
+
+.kw-check-mizu input {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  accent-color: #fafafa;
+  cursor: pointer;
+}
+
+.kw-act-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.kw-send-mizu {
+  padding: 11px 22px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #0a0a0b;
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              background 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kw-send-mizu:hover:not(:disabled) {
+  background: #b3271f;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.kw-send-mizu:disabled { opacity: 0.32; cursor: not-allowed; }
+
+/* Errors only, and below the button rather than beside it, so the
+   button stays centred whether or not anything is wrong. */
+.kw-hint-mizu {
+  max-width: 34ch;
+  margin: 12px auto 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #f8b4b4;
+}
+
+/* ── Stamped ────────────────────────────────────── */
+.kw-done-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: clamp(22px, 3.2vh, 32px);
+  text-align: left;
+}
+
+/* The seal lands rather than fades. A hanko is pressed, so the motion is
+   a drop and a settle, overshooting once on the way down. */
+.kw-seal-mizu {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #e0554c;
+  border: 2.5px solid #e0554c;
+  border-radius: 6px;
+  opacity: 0.92;
+  rotate: -9deg;
+  animation: kw-stamp-mizu 520ms cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+@keyframes kw-stamp-mizu {
+  from { opacity: 0; scale: 2.1; rotate: 4deg; }
+  60%  { opacity: 1; scale: 0.94; rotate: -11deg; }
+  to   { opacity: 0.92; scale: 1; rotate: -9deg; }
+}
+
+.kw-done-head-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.kw-done-sub-mizu {
+  margin-top: 3px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: rgba(200, 200, 206, 0.9);
+}
+
+/* Identical in both modes. The gallery above it is personal-only, so in
+   recruiter mode the band follows the meishi card directly. */
+
+@media (prefers-reduced-motion: reduce) {
+  .kw-seal-mizu { animation: none; }
+  .kw-send-mizu,
+  .kw-consent-mizu,
+  .kw-consent-mizu > div { transition: none; }
+  .kw-send-mizu:hover:not(:disabled) { transform: none; }
+}
+
+/* ── Admin: subscribers ─────────────────────────── */
+.ad-chip-mizu.is-wide {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ad-chip-mizu:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ad-subs-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+  list-style: none;
+  padding: 0;
+}
+
+/* Same elevated slab as the ticket cards, laid out as a row because an
+   address has no artwork to look at. */
+.ad-sub-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: rgba(10, 10, 11, 0.58);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.9);
+}
+
+/* Struck through rather than hidden. The row is the record that someone
+   asked to be left alone, so it has to stay legible and unmistakable. */
+.ad-sub-mizu.is-off { opacity: 0.55; }
+.ad-sub-mizu.is-off .ad-sub-mail-mizu a { text-decoration: line-through; }
+
+.ad-sub-who-mizu { min-width: 0; }
+
+.ad-sub-mail-mizu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+/* Stated rather than implied by colour alone: an unconfirmed address is
+   the one thing on this row that must not be misread. */
+.ad-sub-tag-mizu {
+  padding: 2px 8px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f2c14e;
+  border: 1px solid rgba(242, 193, 78, 0.45);
+  border-radius: 999px;
+}
+
+.ad-sub-mail-mizu a { color: inherit; text-decoration: none; }
+.ad-sub-mail-mizu a:hover { text-decoration: underline; }
+
+.ad-sub-meta-mizu {
+  margin-top: 3px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.68rem;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.ad-sub-act-mizu { display: flex; align-items: center; gap: 8px; }
+
+/* ── 瓦版 — subscription confirmed ───────────────
+   Where confirm-subscribe lands. Its own page rather
+   than a strip on the home page: arriving from an
+   inbox, the whole screen should be the answer. */
+.kwd-mizu {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  display: grid;
+  align-items: center;
+  padding: clamp(48px, 10vh, 120px) clamp(20px, 6vw, 80px);
+  background: #0a0a0b;
+}
+
+.kwd-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url('/profile/subscribebg.jpg') 70% center / cover no-repeat;
+}
+
+.kwd-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #0a0a0b 0%, rgba(10,10,11,0.92) 34%, rgba(10,10,11,0.6) 60%, rgba(10,10,11,0.4) 100%),
+    rgba(10, 10, 11, 0.3);
+}
+
+.kwd-body-mizu { position: relative; max-width: 52ch; }
+
+.kwd-kicker-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.95);
+}
+
+.kwd-row-mizu {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+/* The failure states borrow the seal's shape but not its landing: a
+   stamp coming down hard on "that link expired" reads as celebration. */
+.kw-seal-mizu.is-flat {
+  color: rgba(212, 212, 216, 0.75);
+  border-color: rgba(212, 212, 216, 0.4);
+  rotate: -4deg;
+  animation: none;
+}
+
+.kwd-head-mizu {
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: 0.035em;
+  color: #fafafa;
+  -webkit-text-stroke: 0.045em #08080a;
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.05em 0 #08080a;
+}
+
+.kwd-copy-mizu {
+  margin-top: 18px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.92);
+}
+
+.kwd-back-mizu {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 12px 24px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #0a0a0b;
+  background: #fafafa;
+  text-decoration: none;
+  transition: background 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kwd-back-mizu:hover { background: #b3271f; color: #fff; transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kwd-back-mizu { transition: none; }
+  .kwd-back-mizu:hover { transform: none; }
+}
+
+/* ── 遊び場 — playground dock and compose ────────
+   The dock is fixed rather than a column in the grid:
+   the panel scrolls a long list and the navigation
+   should not go with it. */
+.ad-dock-mizu {
+  position: fixed;
+  top: 50%;
+  left: clamp(10px, 1.6vw, 22px);
+  z-index: 20;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: rgba(10, 10, 11, 0.72);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.95);
+}
+
+.ad-dock-mark-mizu {
+  margin-bottom: 4px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: rgba(250, 250, 250, 0.34);
+  user-select: none;
+}
+
+.ad-dockb-mizu {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 46px;
+  padding: 9px 0 7px;
+  color: rgba(200, 200, 206, 0.85);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: color 180ms cubic-bezier(0.16,1,0.3,1),
+              background 180ms cubic-bezier(0.16,1,0.3,1),
+              border-color 180ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-dockb-mizu:hover {
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.07);
+  border-color: rgba(250, 250, 250, 0.16);
+}
+
+.ad-dockb-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+.ad-dockb-mizu.is-exit { margin-top: 8px; color: rgba(224, 85, 76, 0.9); }
+.ad-dockb-mizu.is-exit:hover { color: #e0554c; background: rgba(224, 85, 76, 0.12); }
+
+.ad-dockjp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* Name on hover, out to the side. The dock stays narrow and the labels
+   are still there for anyone who needs them. */
+.ad-docktip-mizu {
+  position: absolute;
+  left: calc(100% + 10px);
+  white-space: nowrap;
+  padding: 5px 10px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: rgba(10, 10, 11, 0.92);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 7px;
+  opacity: 0;
+  translate: -6px 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, translate 160ms ease;
+}
+
+.ad-dockb-mizu:hover .ad-docktip-mizu,
+.ad-dockb-mizu:focus-visible .ad-docktip-mizu { opacity: 1; translate: 0 0; }
+
+/* Room for the dock, and only when it is there. */
+.ad-mizu.has-dock .ad-inner-mizu { padding-left: clamp(64px, 6vw, 92px); }
+
+@media (max-width: 720px) {
+  .ad-dock-mizu {
+    top: auto;
+    bottom: 12px;
+    left: 50%;
+    translate: -50% 0;
+    flex-direction: row;
+  }
+  .ad-dock-mark-mizu { display: none; }
+  .ad-docktip-mizu { display: none; }
+  .ad-dockb-mizu.is-exit { margin-top: 0; margin-left: 8px; }
+  .ad-mizu.has-dock .ad-inner-mizu { padding-left: 0; padding-bottom: 96px; }
+}
+
+.ad-sec-mizu {
+  margin-bottom: 16px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ad-lede-mizu {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ad-field-mizu textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: #fafafa;
+  background: rgba(5, 5, 5, 0.6);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+}
+
+.ad-field-mizu textarea:focus { border-color: rgba(250, 250, 250, 0.44); }
+
+/* Two states in one control, so the choice is legible at a glance
+   rather than being a checkbox you have to read. */
+.ad-seg-mizu {
+  display: inline-flex;
+  padding: 3px;
+  background: rgba(5, 5, 5, 0.6);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 999px;
+}
+
+.ad-segb-mizu {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.9);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.ad-segb-mizu.is-on { color: #0a0a0b; background: #fafafa; }
+
+.ad-note-line-mizu {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+.ad-ok-mizu {
+  margin-top: 12px;
+  padding: 9px 13px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8fd6a4;
+  background: rgba(45, 106, 63, 0.18);
+  border: 1px solid rgba(143, 214, 164, 0.32);
+  border-radius: 8px;
+}
+
+/* ── Selection ──────────────────────────────────── */
+.ad-pick-mizu {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #fafafa;
+  cursor: pointer;
+}
+
+.ad-pick-mizu:disabled { cursor: not-allowed; opacity: 0.3; }
+
+.ad-sub-mizu { gap: 14px; }
+
+/* ── 遊び場 — the gate ───────────────────────────
+   Laid out like the kawaraban band: the plate is the
+   page and the type sits left of it, no card. A login
+   box centred in a rectangle is the one thing this
+   site does not do anywhere else. */
+.ad-mizu.is-gate {
+  display: grid;
+  align-items: center;
+  padding-bottom: clamp(28px, 6vw, 56px);
+}
+
+/* Sharper and brighter than the panel's own backdrop. Nothing is being
+   read over the right of it here, so the picture can carry the page. */
+/* ▼ The sign-in background. Change this one line to swap the picture;
+   drop the file in public/profile/ and name it here. Sharper and
+   brighter than the panel's own backdrop, since nothing is being read
+   over the right of it. */
+.ad-mizu.is-gate .ad-bg-mizu {
+  background-image: url('/profile/contacts.png');
+  filter: none;
+  transform: scale(1.02);
+}
+
+.ad-mizu.is-gate .ad-bg-mizu::after {
+  background:
+    linear-gradient(90deg,
+      #0a0a0b 0%, rgba(10,10,11,0.94) 30%,
+      rgba(10,10,11,0.6) 54%, rgba(10,10,11,0.28) 100%),
+    linear-gradient(180deg, #0a0a0b 0%, transparent 14%, transparent 86%, #0a0a0b 100%);
+}
+
+.ad-gate-mizu {
+  position: relative;
+  max-width: 44ch;
+  margin-right: auto;
+  padding-left: clamp(8px, 4vw, 60px);
+}
+
+/* One line at every width. The vw term is what guarantees it: at about
+   6.5em of advance for these 17 glyphs, 10vw always fits inside the
+   viewport, so nowrap can never push it off the edge. */
+.ad-gate-title-mizu {
+  margin-top: 8px;
+  white-space: nowrap;
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 10vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: 0.035em;
+  color: #fafafa;
+  -webkit-text-stroke: 0.045em #08080a;
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.05em 0 #08080a;
+}
+
+.ad-gate-lede-mizu {
+  margin-top: 14px;
+  font-size: 0.87rem;
+  line-height: 1.75;
+  color: rgba(212, 212, 216, 0.9);
+}
+
+.ad-gate-fields-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: clamp(24px, 4vh, 36px);
+  max-width: 380px;
+}
+
+/* Ruled lines, matching the subscribe band. A boxed input on a
+   photograph reads as a form pasted over a picture. */
+.ad-gate-field-mizu { display: flex; flex-direction: column; gap: 6px; }
+
+.ad-gate-field-mizu span {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: rgba(200, 200, 206, 0.8);
+}
+
+.ad-gate-field-mizu input {
+  width: 100%;
+  padding: 8px 2px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  color: #fafafa;
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid rgba(250, 250, 250, 0.34);
+  border-radius: 0;
+  outline: none;
+  transition: border-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ad-gate-field-mizu input::placeholder { color: rgba(161, 161, 170, 0.5); }
+.ad-gate-field-mizu input:focus { border-bottom-color: #fafafa; }
+
+.ad-gate-act-mizu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+.ad-gate-go-mizu {
+  padding: 12px 26px;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #0a0a0b;
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 220ms cubic-bezier(0.16,1,0.3,1),
+              color 220ms cubic-bezier(0.16,1,0.3,1),
+              transform 220ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ad-gate-go-mizu:hover:not(:disabled) { background: #2d6a3f; color: #fff; transform: translateY(-2px); }
+.ad-gate-go-mizu:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ad-gate-hint-mizu { font-size: 0.72rem; color: rgba(161, 161, 170, 0.85); }
+.ad-gate-err-mizu { font-size: 0.76rem; font-weight: 600; color: #f8b4b4; }
+
+/* ── Subscribers: stats, banner, per-row send ──── */
+.ad-stats-mizu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ad-stat-mizu {
+  padding: 14px 18px;
+  background: rgba(10, 10, 11, 0.6);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-left: 3px solid rgba(250, 250, 250, 0.26);
+  border-radius: 10px;
+}
+
+.ad-stat-mizu.is-good { border-left-color: #2d6a3f; }
+.ad-stat-mizu.is-warn { border-left-color: #f2c14e; }
+
+.ad-statn-mizu {
+  font-family: 'Bangers', 'Chakra Petch', system-ui, sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: #fafafa;
+}
+
+.ad-statl-mizu {
+  margin-top: 5px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ad-field-mizu small {
+  font-size: 0.68rem;
+  line-height: 1.55;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+.ad-only-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(200, 200, 206, 0.92);
+  background: rgba(250, 250, 250, 0.06);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.ad-only-mizu:hover {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+/* ── 瓦版 — the email as a writing surface ────────
+   Measurements mirror the template in send-update:
+   600px, #0d0d0f, the same type ramp. The two have to
+   be changed together, which is the price of the
+   composer and the preview being one thing. */
+.es-mizu {
+  width: 100%;
+  max-width: 600px;
+  background: #0d0d0f;
+  border: 1px solid rgba(250, 250, 250, 0.1);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+}
+
+.es-banner-mizu {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1280 / 598;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.es-banner-mizu img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.es-banner-mizu span { font-size: 0.72rem; color: rgba(161, 161, 170, 0.7); }
+
+.es-pad-mizu { padding: 32px 36px 34px; }
+
+.es-kicker-mizu {
+  margin-bottom: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8a8a93;
+}
+
+/* An input that has given up looking like one. The point of the whole
+   panel is that there is no seam between writing and previewing. */
+.es-head-mizu {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #fafafa;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  border-radius: 0;
+  outline: none;
+}
+
+.es-body-mizu {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #d4d4d8;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  outline: none;
+  resize: vertical;
+}
+
+.es-body-mizu.is-read p { margin: 0 0 14px; }
+.es-body-mizu.is-read p:last-child { margin-bottom: 0; }
+
+/* Only while it is being written in. A dashed rule on a sent copy would
+   be claiming it is editable. */
+input.es-head-mizu:hover,
+textarea.es-body-mizu:hover { border-bottom-color: rgba(250, 250, 250, 0.16); }
+input.es-head-mizu:focus,
+textarea.es-body-mizu:focus { border-bottom-color: rgba(250, 250, 250, 0.44); }
+
+input.es-head-mizu::placeholder,
+textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
+
+.es-ctarow-mizu { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
+
+.es-cta-mizu {
+  display: inline-block;
+  padding: 13px 26px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: #0a0a0b;
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  outline: none;
+}
+
+.es-cta-mizu.is-read { margin-top: 24px; }
+.es-cta-mizu::placeholder { color: rgba(10, 10, 11, 0.45); }
+.es-nocta-mizu { font-size: 0.7rem; color: rgba(161, 161, 170, 0.75); }
+
+.es-rule-mizu {
+  height: 1px;
+  margin: 30px 0 16px;
+  background: #26262a;
+}
+
+.es-sign-mizu {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a8a93;
+}
+
+.es-sign-mizu span { color: #d4d4d8; text-decoration: underline; }
+
+.es-fine-mizu {
+  margin-top: 14px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6f6f78;
+}
+
+/* ── Write / sent layout ─────────────────────────── */
+.ad-write-mizu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: clamp(18px, 2.4vw, 32px);
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .ad-write-mizu { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ad-sheetcol-mizu { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+.ad-subject-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.ad-subject-mizu > span {
+  flex: none;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ad-subject-mizu input,
+.ad-subject-mizu p {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fafafa;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+.ad-subject-mizu input::placeholder { color: rgba(161, 161, 170, 0.5); }
+
+/* Sticky, because the sheet is tall and the send button should not
+   require scrolling back past what you just wrote. */
+.ad-side-mizu {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  background: rgba(10, 10, 11, 0.62);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 14px;
+}
+
+@media (max-width: 1080px) {
+  .ad-side-mizu { position: static; }
+}
+
+.ad-side-mizu .ad-sec-mizu { margin-bottom: 0; }
+.ad-side-mizu .ad-field-mizu { gap: 7px; }
+.ad-side-mizu .ad-seg-mizu { width: 100%; }
+.ad-side-mizu .ad-segb-mizu { flex: 1; text-align: center; }
+
+.ad-side-mizu code {
+  padding: 1px 6px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  color: #d4d4d8;
+  background: rgba(5, 5, 5, 0.7);
+  border-radius: 4px;
+}
+
+.ad-sidesend-mizu {
+  display: grid;
+  gap: 9px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(250, 250, 250, 0.12);
+}
+
+.ad-sidesend-mizu .ad-primary-mizu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── Sent archive ───────────────────────────────── */
+.ad-sentlist-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  list-style: none;
+  padding: 0;
+}
+
+.ad-sentrow-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 18px;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  background: rgba(10, 10, 11, 0.58);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.ad-sentrow-mizu:hover {
+  border-color: rgba(250, 250, 250, 0.34);
+  transform: translateY(-2px);
+}
+
+.ad-sentwho-mizu { display: grid; gap: 4px; min-width: 0; }
+
+.ad-sentsub-mizu {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.ad-sentmeta-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.ad-sentgo-mizu { flex: none; color: rgba(161, 161, 170, 0.7); }
+
+.ad-rcpt-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0;
+  list-style: none;
+}
+
+.ad-rcpt-mizu li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: rgba(212, 212, 216, 0.9);
+  word-break: break-all;
+}
+
+.ad-rcpt-mizu.is-bad li { color: #f8b4b4; }
+
+/* The real 1280:598, so what is framed is what is sent. */
+/* ── Recipient picker ───────────────────────────── */
+.pp-mizu {
+  width: min(560px, calc(100vw - 32px));
+  padding: 0;
+  color: #fafafa;
+  background: rgba(14, 14, 16, 0.97);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.95);
+}
+
+.pp-mizu::backdrop { background: rgba(2, 2, 2, 0.7); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+
+.pp-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.pp-head-mizu { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.pp-head-mizu h2 { margin-top: 6px; font-size: 1.2rem; font-weight: 700; }
+
+.pp-count-mizu {
+  flex: none;
+  padding: 5px 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  color: #0a0a0b;
+  background: #fafafa;
+  border-radius: 999px;
+}
+
+.pp-tools-mizu { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pp-tools-mizu .ad-search-mizu { flex: 1; }
+
+.pp-list-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: min(46vh, 340px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pp-list-mizu label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+  color: rgba(212, 212, 216, 0.92);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.pp-list-mizu label:hover { background: rgba(250, 250, 250, 0.05); }
+
+.pp-list-mizu label.is-on {
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.09);
+  border-color: rgba(250, 250, 250, 0.24);
+}
+
+.pp-list-mizu label > span { min-width: 0; word-break: break-all; }
+
+.pp-act-mizu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* ── The banner as its own control ──────────────── */
+.es-banner-mizu.is-live { position: relative; cursor: pointer; display: block; }
+.es-banner-mizu.is-live input { display: none; }
+
+/* Named on hover rather than always. A permanent "change" badge on a
+   preview is chrome pretending to be content. */
+.es-swap-mizu {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: rgba(212, 212, 216, 0.9);
+  background: rgba(6, 6, 8, 0.72);
+  opacity: 0;
+  transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.es-swap-mizu strong { font-size: 0.86rem; font-weight: 700; color: #fafafa; }
+
+.es-banner-mizu.is-live:hover .es-swap-mizu,
+.es-banner-mizu.is-live:focus-within .es-swap-mizu { opacity: 1; }
+
+/* ── Banner crop dialog ─────────────────────────── */
+.bc-mizu {
+  width: min(660px, calc(100vw - 32px));
+  padding: 0;
+  color: #fafafa;
+  background: rgba(14, 14, 16, 0.97);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.95);
+}
+
+.bc-mizu::backdrop {
+  background: rgba(2, 2, 2, 0.76);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.bc-body-mizu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.bc-head-mizu h2 { margin-top: 6px; font-size: 1.2rem; font-weight: 700; }
+
+.bc-lede-mizu {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+/* The real 1280:598, so what is framed is what is sent. */
+.bc-frame-mizu {
+  position: relative;
+  aspect-ratio: 1280 / 598;
+  overflow: hidden;
+  background: #0d0d0f;
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.bc-frame-mizu:active { cursor: grabbing; }
+
+.bc-frame-mizu img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.bc-hint-mizu {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  translate: -50% 0;
+  padding: 4px 11px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fafafa;
+  background: rgba(10, 10, 11, 0.78);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.bc-zoom-mizu { display: flex; align-items: center; gap: 12px; }
+
+.bc-zoom-mizu span {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(200, 200, 206, 0.85);
+}
+
+.bc-zoom-mizu input { flex: 1; accent-color: #fafafa; cursor: pointer; }
+
+.bc-act-mizu { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ── Project likes ──────────────────────────────── */
+/* The heart sits on the title's line, pushed to the far end. Baseline
+   rather than centre so it reads as part of the line and not as a badge
+   floating beside it. */
+.pdlg-titlerow-mizu {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pdlg-titlerow-mizu .pdlg-title-mizu { margin-bottom: 10px; min-width: 0; }
+
+.lk-wrap-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.lk-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: rgba(212, 212, 216, 0.9);
+  background: rgba(250, 250, 250, 0.05);
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              transform 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.lk-mizu:hover:not(:disabled) {
+  color: #fafafa;
+  background: rgba(250, 250, 250, 0.1);
+  border-color: rgba(250, 250, 250, 0.34);
+  transform: translateY(-1px);
+}
+
+.lk-mizu.is-on {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.44);
+}
+
+.lk-mizu:disabled { cursor: default; }
+
+.lk-heart-mizu { display: inline-flex; }
+
+/* Keyed on the like count, so it replays on each new like and never on
+   an unlike. Taking something back should not be celebrated. */
+.lk-mizu.is-on .lk-heart-mizu { animation: lk-pop-mizu 420ms cubic-bezier(0.2, 1.5, 0.3, 1); }
+
+@keyframes lk-pop-mizu {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(1.42); }
+  100% { transform: scale(1); }
+}
+
+.lk-n-mizu { font-variant-numeric: tabular-nums; }
+
+.lk-err-mizu { font-size: 0.68rem; color: #f8b4b4; }
+
+@media (max-width: 620px) {
+  .pdlg-titlerow-mizu { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lk-mizu { transition: none; }
+  .lk-mizu:hover:not(:disabled) { transform: none; }
+  .lk-mizu.is-on .lk-heart-mizu { animation: none; }
+}
+
+/* Tally on the plate. Pushed to the end of the name's line, and pulled
+   back to the baseline the name sits on so it does not ride high next to
+   a much larger glyph. */
+.wk-likes-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 1.08rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  /* Neutral unless it is yours. Colouring every tally coral read as
+     "you liked all of these", which was a claim the number could not
+     support. */
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.wk-card-mizu:hover .wk-likes-mizu { color: rgba(212, 212, 216, 0.95); }
+
+.wk-likes-mizu.is-mine,
+.wk-card-mizu:hover .wk-likes-mizu.is-mine { color: #ff6b6b; }
+
+/* The row is a button, so the delete cannot live inside it. Sits beside
+   it instead and shares the slab's own frame. */
+.ad-sentlist-mizu li {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ad-sentlist-mizu .ad-sentrow-mizu { flex: 1; min-width: 0; }
+.ad-sentlist-mizu .ad-trash-mizu { flex: none; align-self: center; }

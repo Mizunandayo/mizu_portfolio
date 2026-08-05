@@ -30,6 +30,18 @@ const NAME_TO_SLUG = {
   'sounddevice': null, 'One Euro Filter': null, 'FABRIK': null,
   'Three.js': 'threedotjs', 'NumPy': 'numpy',
   'Material UI': 'mui', 'Zustand': null, 'Immer': 'immer',
+  /* Mitsu, named exactly as the stack data spells them: this map is
+     keyed on what the projects actually say, not on the brand's own
+     name, because that is what TechIcon looks up. */
+  'PySide6 · Qt': 'qt', 'TFLite XNNPACK': 'tensorflow', 'Poppins': 'googlefonts',
+  'Windows 11': null, 'VS Code': null, 'Pillow': null, 'Hatchling': null,
+  'ctypes · user32': null, 'State machine': null, 'SHA-256 pin': null,
+  'OpenAI Python': null, 'GPT-5.6': null, 'MCP server': null,
+  'language-pack': null, 'Supabase Postgres': 'supabase',
+  'Recharts': null, 'lucide-react': 'lucide', 'prism': null,
+  'Constant-time key': null, 'Stream tokens': null, 'CSP + headers': null,
+  'Secret Manager': null, 'GPT-4.1': null, 'GPT-4o': null, 'GPT-4o mini': null,
+  'AI/ML API': null, 'React Simple Maps': null, 'Upstash Redis': 'upstash',
   'D3.js': 'd3', 'React Simple Maps': null,
   'Lucide': 'lucide', 'Prism': null,
   'Pydantic': 'pydantic', 'SQLAlchemy': 'sqlalchemy', 'Alembic': null,

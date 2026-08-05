@@ -6,7 +6,7 @@ import {
   SANS,
   MINCHO,
 } from './ticketPresets.js'
-import { submit, EMAIL_RE } from '../../data/tickets.js'
+import { submit, tidyName, EMAIL_RE, NAME_MAX } from '../../data/tickets.js'
 import { configured } from '../../data/supabase.js'
 import { TICKETS_CHANGED } from '../../events.js'
 import Fubuki from './Fubuki.jsx'
@@ -60,8 +60,6 @@ const STICKERS = Array.from(
 )
 
 const MSG_MAX = 500
-/* Matches the CHECK constraint on tickets.name. */
-const NAME_MAX = 40
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
@@ -212,7 +210,7 @@ export default function Ticket({ open, name, art, onClose }) {
   const [who, setWho] = useState('')
   /* Seeded from the greeting each time it opens, then owned here. */
   useEffect(() => {
-    if (open) setWho((name || '').trim().slice(0, NAME_MAX))
+    if (open) setWho(tidyName(name))
   }, [open, name])
 
   const [pan, setPan] = useState(null)
@@ -220,7 +218,11 @@ export default function Ticket({ open, name, art, onClose }) {
   const [dropping, setDropping] = useState(false)
   const panRef = useRef(null)
 
-  const clean = who.trim() || 'GUEST'
+  /* Same rule as the database, from the same place, so the button and
+     the constraint can never disagree about what counts as a name. */
+  const typed = tidyName(who)
+  const named = typed.length > 0
+  const clean = typed || 'YOUR NAME'
   const serial = useMemo(() => serialOf(clean), [clean])
 
   /* Their picture if they gave one, the slideshow frame otherwise. */
@@ -285,6 +287,22 @@ export default function Ticket({ open, name, art, onClose }) {
     if (!el) return
     if (open && !el.open) el.showModal()
     if (!open && el.open) el.close()
+  }, [open])
+
+  /* Its own lock, not the greeting's. showModal() makes the page inert
+     to clicks but leaves the wheel alone, and the editor outlives the
+     greeting — opened from the gallery it has no greeting at all, and
+     closing the greeting over it would otherwise hand the page back. */
+  useEffect(() => {
+    if (!open) return
+    const root = document.documentElement
+    const gutter = window.innerWidth - root.clientWidth
+    root.style.setProperty('--tk-gutter', `${gutter}px`)
+    root.classList.add('tk-open-mizu')
+    return () => {
+      root.classList.remove('tk-open-mizu')
+      root.style.removeProperty('--tk-gutter')
+    }
   }, [open])
 
   /* The picker sits on top of the editor, which is itself on top of the
@@ -671,6 +689,10 @@ export default function Ticket({ open, name, art, onClose }) {
   }
 
   const review = async () => {
+    if (!named) {
+      setSendErr('Add a name to your ticket first.')
+      return
+    }
     setBusy(true)
     setSendErr('')
     try {
@@ -706,10 +728,16 @@ export default function Ticket({ open, name, art, onClose }) {
 
   const send = async (withEmail) => {
     if (sent) return
+    if (!named) {
+      setSendErr('Add a name to your ticket first.')
+      return
+    }
     setBusy(true)
     setSendErr('')
     try {
-      const out = await compose()
+      /* The frozen canvas, not a fresh paint. Re-composing here uploads
+         whatever slide the greeting has rotated to since review opened. */
+      const out = frozeRef.current ?? (await compose())
       /* The plate is what the lightbox shows full screen, so it is sized
          for that rather than for the grid tile. */
       const [thumb, plate] = await Promise.all([
@@ -719,7 +747,7 @@ export default function Ticket({ open, name, art, onClose }) {
       await submit({
         thumb,
         plate,
-        name: clean.slice(0, 40),
+        name: typed,
         design: preset.name,
         message: mode === 'message' ? message.trim() : '',
         email: withEmail || '',
@@ -803,7 +831,8 @@ export default function Ticket({ open, name, art, onClose }) {
                 type="button"
                 className="tk-save-mizu"
                 onClick={review}
-                disabled={busy}
+                disabled={busy || !named}
+                title={named ? undefined : 'Add a name first'}
               >
                 {busy ? 'Rendering…' : 'Next'}
                 <Chev dir="right" />
@@ -1063,9 +1092,6 @@ export default function Ticket({ open, name, art, onClose }) {
             </button>
           </div>
 
-          {/* A label wrapping a hidden input: the whole control is the
-              file picker, with no button-triggers-input plumbing and no
-              styling fight with the browser's own widget. */}
           <label className="tk-name-mizu">
             <span>Name on the ticket</span>
             <input
@@ -1076,8 +1102,11 @@ export default function Ticket({ open, name, art, onClose }) {
               autoComplete="name"
               onChange={(e) => setWho(e.target.value)}
             />
-            <span className="tk-count-mizu">
-              {who.length}/{NAME_MAX}
+            <span
+              className={`tk-count-mizu${named ? '' : ' is-need'}`}
+              aria-live="polite"
+            >
+              {named ? `${typed.length}/${NAME_MAX}` : 'Required'}
             </span>
           </label>
 

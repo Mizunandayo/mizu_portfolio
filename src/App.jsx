@@ -6,6 +6,7 @@ import Footer from "./components/Footer.jsx";
 import Home from "./pages/Home.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Admin from "./pages/Admin.jsx";
+import Subscribed from "./pages/Subscribed.jsx";
 import Boot from "./components/shared/Boot.jsx";
 import { ModeProvider } from "./hooks/useMode.jsx";
 import Welcome from "./components/shared/Welcome.jsx";
@@ -44,7 +45,10 @@ export default function App() {
   /* The panel is a tool, not part of the site. Loader, greeting, music
      and both navs stay off it — a review queue does not want a portrait
      slideshow asking which song to play. */
-  const bare = useLocation().pathname.startsWith("/admin");
+  const path = useLocation().pathname;
+  /* Both are tools rather than parts of the site: no loader, no
+     greeting, no music, no navs. */
+  const bare = path.startsWith("/admin") || path.startsWith("/subscribed");
 
   return (
     <ModeProvider>
@@ -64,6 +68,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/subscribed" element={<Subscribed />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!bare && (

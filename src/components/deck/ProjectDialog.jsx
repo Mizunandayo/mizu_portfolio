@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { formatPeriod } from '../../data/projects.js'
+import LikeButton from './LikeButton.jsx'
 import { Layers, Pill, ArrowIcon, GitHubIcon, PlayIcon, ExternalIcon } from '../shared/primitives.jsx'
 import { ImagePlaceholder, YouTubePlaceholder } from '../shared/placeholders.jsx'
 import { shotsFor } from '../../data/projectMedia.js'
@@ -33,14 +34,22 @@ export default function ProjectDialog({ project: p, onClose }) {
   /* Which still is open full size. -1 is closed. */
   const [shot, setShot] = useState(-1)
 
-  const close = useCallback(() => onClose(), [onClose])
+  /* Held in a ref so the effect below can key on nothing. onClose comes
+     in as an inline arrow, so it is a new function on every parent
+     render — with it in the deps, anything that re-rendered the grid
+     tore this effect down and ran it again, which closes the dialog and
+     immediately reopens it. Liking a project did exactly that. */
+  const closeRef = useRef(onClose)
+  useEffect(() => { closeRef.current = onClose }, [onClose])
+
+  const close = useCallback(() => closeRef.current(), [])
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     if (!el.open) el.showModal()
 
-    const onCancel = (e) => { e.preventDefault(); close() }
+    const onCancel = (e) => { e.preventDefault(); closeRef.current() }
     el.addEventListener('cancel', onCancel)
 
     const prevOverflow = document.body.style.overflow
@@ -57,7 +66,7 @@ export default function ProjectDialog({ project: p, onClose }) {
       document.body.style.paddingRight = prevPad
       if (el.open) el.close()
     }
-  }, [close])
+  }, [])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 })
@@ -129,11 +138,15 @@ export default function ProjectDialog({ project: p, onClose }) {
 
           <div className="pdlg-body-mizu">
             {/* 2 — Title */}
-            <h2 id="pdlg-title" className="pdlg-title-mizu">
-              {p.name}
-              <span className="pdlg-title-kanji-mizu">{p.kanji}</span>
-              {p.award && <span className="pdlg-award-mizu">{p.award}</span>}
-            </h2>
+            <div className="pdlg-titlerow-mizu">
+              <h2 id="pdlg-title" className="pdlg-title-mizu">
+                {p.name}
+                <span className="pdlg-title-kanji-mizu">{p.kanji}</span>
+                {p.award && <span className="pdlg-award-mizu">{p.award}</span>}
+              </h2>
+
+              <LikeButton slug={p.slug} />
+            </div>
 
             <p className="pdlg-meta-mizu">
               {[p.event, p.role, p.duration, formatPeriod(p.period)].join('  ·  ')}

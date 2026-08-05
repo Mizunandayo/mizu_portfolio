@@ -26,6 +26,16 @@ export function metaFor(path) {
     }
   }
 
+  if (path === '/subscribed') {
+    return {
+      title:       `Subscription — ${PROFILE.name}`,
+      description: 'Confirming a subscription to portfolio updates.',
+      path,
+      image:       `${SITE.url}/og/default.png`,
+      jsonLd:      null,
+    }
+  }
+
   return {
     title:       `Not found — ${PROFILE.name}`,
     description: 'That page does not exist.',

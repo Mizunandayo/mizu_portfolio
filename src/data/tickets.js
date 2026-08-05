@@ -9,6 +9,15 @@ const ADMIN_COLS = `${COLS},notify_email,hidden`
 
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i
 
+/* Mirrors public.tidy_name in schema.sql. \s misses the zero-width
+   joiners and the word joiner, which look blank but are not spaces. */
+const CTRL = /[\u0000-\u001f\u007f]/g
+const BLANK = /[\s\u00a0\u1680\u2000-\u200d\u2028\u2029\u202f\u205f\u2060\u3000\ufeff]+/g
+
+export const NAME_MAX = 40
+export const tidyName = (v) =>
+  String(v ?? '').replace(CTRL, '').replace(BLANK, ' ').trim().slice(0, NAME_MAX)
+
 function shape(row) {
   return {
     ...row,
@@ -46,13 +55,16 @@ export async function listApproved(limit = 24) {
    a missing file is visible in the panel and can be rejected, whereas a
    file with no row is invisible and stays forever. */
 export async function submit({ thumb, plate, name, design, message, email }) {
+  const who = tidyName(name)
+  if (!who) throw new Error('Your ticket needs a name.')
+
   const key = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   const ext = thumb.type === 'image/webp' ? 'webp' : 'jpg'
   const thumb_path = `${key}-t.${ext}`
   const plate_path = plate ? `${key}-p.${ext}` : null
 
   await db.insert('tickets', {
-    name,
+    name: who,
     design,
     message: message || null,
     thumb_path,

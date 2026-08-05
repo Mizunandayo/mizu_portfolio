@@ -62,18 +62,55 @@ export const PROJECTS = [
     ],
 
     stack: [
-      { category: 'Core Languages', items: [{ name: 'Python', ver: '3.12' }, { name: 'TypeScript' }] },
-      { category: 'AI & SDKs', items: [
-        { name: 'OpenAI transcription' },
-        { name: 'GPT-5.6 Responses API', role: 'function calling' },
-        { name: 'Codex' }] },
-      { category: 'Computer Vision', items: [
-        { name: 'MediaPipe Hand Landmarker' }, { name: 'OpenCV' }, { name: 'One Euro filtering' }] },
-      { category: 'Desktop Control', items: [
-        { name: 'pywin32' }, { name: 'Mixed-DPI desktop geometry' }, { name: 'PySide6' }] },
-      { category: 'Development Ecosystem', items: [
-        { name: 'pytest' }, { name: 'Ruff' }, { name: 'Black' },
-        { name: 'React' }, { name: 'Vite' }, { name: 'Tailwind CSS' }, { name: 'Vercel' }] },
+      { category: 'Perception',
+        note: 'Runs on-device, every frame, with no network dependency.',
+        items: [
+          { name: 'MediaPipe', ver: '0.10.35', role: 'Hand tracking' },
+          { name: 'TFLite XNNPACK', role: 'Inference' },
+          { name: 'OpenCV', ver: '5.0.0', role: 'Camera' },
+          { name: 'NumPy', role: 'Array math' },
+          { name: 'One Euro Filter', role: 'Smoothing' }] },
+      { category: 'Voice & Cognition',
+        note: 'Explicit, user-initiated network actions only.',
+        items: [
+          { name: 'GPT-5.6', role: 'Reasoning' },
+          { name: 'gpt-4o-mini-transcribe', role: 'Transcription' },
+          { name: 'OpenAI Python', ver: '2.45.0', role: 'SDK' },
+          { name: 'sounddevice', ver: '0.5.3', role: 'Mic capture' }] },
+      { category: 'Window Control',
+        note: 'Direct Win32 access, with no abstraction layer in between.',
+        items: [
+          { name: 'pywin32', ver: '312', role: 'Win32 API' },
+          { name: 'ctypes · user32', role: 'Native calls' },
+          { name: 'screeninfo', ver: '0.8.1', role: 'Monitors' },
+          { name: 'State machine', role: 'Gestures' },
+          { name: 'Windows 11', role: 'Platform' }] },
+      { category: 'Interface',
+        note: 'One toolkit for every designed surface.',
+        items: [
+          { name: 'PySide6 · Qt', ver: '6.11.1', role: 'GUI toolkit' },
+          { name: 'Pillow', ver: '12.3.0', role: 'Text render' },
+          { name: 'Poppins', role: 'Typeface' }] },
+      { category: 'Application',
+        note: 'Typed configuration and secrets that fail closed at startup.',
+        items: [
+          { name: 'Python', ver: '3.11', role: 'Language' },
+          { name: 'Pydantic', ver: '2.13.0', role: 'Validation' },
+          { name: 'tomllib', role: 'Config' },
+          { name: 'python-dotenv', ver: '1.2.0', role: 'Secrets' },
+          { name: 'SHA-256 pin', role: 'Integrity' }] },
+      { category: 'Tooling & Delivery',
+        note: '100 tests, two linters, and a clean gate before every commit.',
+        items: [
+          { name: 'Codex', role: 'Build partner' },
+          { name: 'VS Code', role: 'Editor' },
+          { name: 'pytest', ver: '9.1.0', role: 'Tests' },
+          { name: 'Ruff', ver: '0.15.0', role: 'Lint' },
+          { name: 'Black', ver: '26.5.0', role: 'Format' },
+          { name: 'uv', role: 'Packaging' },
+          { name: 'Hatchling', role: 'Build backend' },
+          { name: 'Git', role: 'Version control' },
+          { name: 'GitHub', role: 'Source host' }] },
     ],
 
     media: [
@@ -147,18 +184,49 @@ export const PROJECTS = [
     ],
 
     stack: [
-      { category: 'Core Languages', items: [{ name: 'Python', ver: '3.12' }, { name: 'TypeScript' }] },
-      { category: 'AI & SDKs', items: [
-        { name: 'LangGraph' }, { name: 'Gemini 2.5 Pro' }, { name: 'Gemini 2.5 Flash' },
-        { name: 'gemini-embedding-001' }, { name: 'MCP Adapters' }] },
-      { category: 'Backend & Infrastructure', items: [
-        { name: 'FastAPI' }, { name: 'PostgreSQL' }, { name: 'pgvector' },
-        { name: 'Upstash Redis' }, { name: 'Google Cloud Run' }, { name: 'Docker' },
-        { name: 'Secret Manager' }] },
-      { category: 'Development Ecosystem', items: [
-        { name: 'Next.js', ver: '16' }, { name: 'React', ver: '19' },
-        { name: 'Tailwind CSS', ver: 'v4' }, { name: 'GitLab MCP' },
-        { name: 'tree-sitter' }, { name: 'Server-Sent Events' }] },
+      { category: 'Agent & LLM', items: [
+        { name: 'LangGraph', role: 'Agent orchestration' },
+        { name: 'Gemini 2.5 Pro', role: 'Diagnosis reasoning' },
+        { name: 'Gemini 2.5 Flash', role: 'Fix generation' },
+        { name: 'gemini-embedding-001', role: '768-D embeddings' },
+        { name: 'MCP adapters', role: 'Agent ↔ MCP bridge' }] },
+      { category: 'Backend', items: [
+        { name: 'Python', ver: '3.12', role: 'Runtime' },
+        { name: 'FastAPI', role: 'Async API' },
+        { name: 'Pydantic', ver: 'v2', role: 'Typed schemas' },
+        { name: 'asyncpg', role: 'Postgres driver' },
+        { name: 'slowapi', role: 'Rate limiting' },
+        { name: 'structlog', role: 'Structured logs' },
+        { name: 'sse-starlette', role: 'Live SSE stream' },
+        { name: 'uv', role: 'Packaging' }] },
+      { category: 'Code Analysis', items: [
+        { name: 'tree-sitter', role: 'Syntax gate' },
+        { name: 'language-pack', role: 'Multi-language parsers' },
+        { name: 'defusedxml', role: 'XXE-hardened JUnit' }] },
+      { category: 'Data', items: [
+        { name: 'Supabase Postgres', role: 'Primary store' },
+        { name: 'pgvector', role: 'Similarity search · HNSW' },
+        { name: 'Upstash Redis', role: 'Shared rate-limit store' }] },
+      { category: 'Integration', items: [
+        { name: 'GitLab MCP', role: 'Reads, CI, merge requests' },
+        { name: 'MCP server', role: 'Minari exposed as tools' }] },
+      { category: 'Frontend', items: [
+        { name: 'Next.js', ver: '16', role: 'App router' },
+        { name: 'React', ver: '19', role: 'UI runtime' },
+        { name: 'TypeScript', role: 'Type safety' },
+        { name: 'Tailwind CSS', ver: 'v4', role: 'Design tokens' },
+        { name: 'Recharts', role: 'Trend & forecast charts' },
+        { name: 'Framer Motion', role: 'Animation' },
+        { name: 'lucide-react', role: 'Icons' },
+        { name: 'prism', role: 'Diff highlighting' }] },
+      { category: 'Infra & Security', items: [
+        { name: 'Google Cloud Run', role: 'API host · Tokyo' },
+        { name: 'Vercel', role: 'Frontend host' },
+        { name: 'Docker', role: 'Python 3.12 + Node 20' },
+        { name: 'Secret Manager', role: 'Secrets at rest' },
+        { name: 'Constant-time key', role: 'HMAC API auth' },
+        { name: 'Stream tokens', role: 'Per-run SSE auth' },
+        { name: 'CSP + headers', role: 'Hardened responses' }] },
     ],
 
     media: [
@@ -231,17 +299,41 @@ export const PROJECTS = [
     ],
 
     stack: [
-      { category: 'Core Languages', items: [{ name: 'TypeScript' }, { name: 'Python', ver: '3.12' }] },
+      { category: 'Core Languages', items: [
+        { name: 'TypeScript' }, { name: 'Python', ver: '3.12' }] },
+      { category: 'Inference', items: [
+        { name: 'AI/ML API', role: 'Provider gateway' },
+        { name: 'GPT-4.1', role: 'Deep reasoning · extraction' },
+        { name: 'GPT-4o', role: 'Vision · automation' },
+        { name: 'GPT-4o mini', role: 'Fast triage' },
+        { name: 'Gemini', ver: '2.5', role: 'Pro / Flash fallback' }] },
       { category: 'Web Data', items: [
-        { name: 'Bright Data MCP Server' }, { name: 'Web Unlocker' }, { name: 'SERP API' },
-        { name: 'Web Scraper API' }, { name: 'Scraping Browser' }] },
-      { category: 'AI & SDKs', items: [
-        { name: 'AI/ML API', role: 'GPT-4o Mini · 4.1 · Vision' }, { name: 'Gemini' },
-        { name: 'LangGraph' }, { name: 'LangChain' }, { name: 'Langfuse' }] },
-      { category: 'Data & Infrastructure', items: [
-        { name: 'Next.js', ver: '16' }, { name: 'FastAPI' }, { name: 'PostgreSQL', role: 'pgvector' },
-        { name: 'Supabase' }, { name: 'Redis' }, { name: 'WeasyPrint' },
-        { name: 'Vercel' }, { name: 'Railway' }, { name: 'Docker' }] },
+        { name: 'Bright Data MCP Server', role: 'Orchestration' },
+        { name: 'Web Unlocker', role: 'Legislature sites' },
+        { name: 'SERP API', role: 'News + press' },
+        { name: 'Web Scraper API', role: 'Lobbyist data' },
+        { name: 'Scraping Browser', role: 'JS-rendered pages' }] },
+      { category: 'AI Orchestration', items: [
+        { name: 'LangGraph', ver: '0.2' }, { name: 'LangChain' },
+        { name: 'Langfuse', role: 'Tracing' },
+        { name: 'WeasyPrint', ver: '68' }, { name: 'Jinja2' },
+        { name: 'Celery', role: 'Task queue' }, { name: 'SQLAlchemy' },
+        { name: 'Alembic', role: 'Migrations' },
+        { name: 'Sentry', role: 'Error monitoring' }] },
+      { category: 'Frontend', items: [
+        { name: 'Next.js', ver: '16' }, { name: 'React', ver: '19' },
+        { name: 'Tailwind CSS', ver: 'v4' }, { name: 'Framer Motion', ver: '11' },
+        { name: 'Zustand' }, { name: 'Immer' },
+        { name: 'Vercel AI SDK', role: 'Streaming' },
+        { name: 'D3.js', ver: 'v7' }, { name: 'Recharts' },
+        { name: 'Lucide React' }, { name: 'React Simple Maps' }] },
+      { category: 'Backend & Data', items: [
+        { name: 'FastAPI' }, { name: 'PostgreSQL', role: 'pgvector HNSW' },
+        { name: 'Supabase' }, { name: 'Upstash Redis', role: 'Cache' }] },
+      { category: 'Infrastructure', items: [
+        { name: 'Vercel', role: 'Frontend host' },
+        { name: 'Railway', role: 'Backend host' },
+        { name: 'Docker' }] },
     ],
 
     media: [
@@ -801,11 +893,9 @@ export const bySlug = (slug) => PROJECTS.find((p) => p.slug === slug)
 export const UPCOMING = {
   name:     'Haru',
   kanji:    '春',
-  kicker:   'Link-in-bio · portfolio builder',
+  kicker:   '',
   tagline:
-    'A customizable digital identity platform where creators, gamers, ' +
-    'and developers can build a unique online presence - part ' +
-    'link-in-bio, part mini portfolio builder.',
+    'Lets you build a unique online presence' 
 }
 
 /** The project's own live site - where its work-grid card points.

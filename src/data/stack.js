@@ -26,6 +26,7 @@ export const STACK = [
       { name: 'Llama 3.3 70B' }, { name: 'Qwen2.5 72B' },
       { name: 'Langfuse', role: 'tracing' },
       { name: 'Vercel AI SDK', role: 'streaming' },
+      { name: 'OpenAI Python', ver: '2.45.0', role: 'SDK' },
     ],
   },
   {
@@ -36,6 +37,7 @@ export const STACK = [
       { name: 'ROCm', ver: '7.2' },
       { name: 'vLLM', ver: '0.17' },
       { name: 'TensorFlow Lite', role: 'XNNPACK' },
+      { name: 'AMD Developer Cloud', role: 'MI300X access' },
     ],
   },
   {
@@ -59,6 +61,7 @@ export const STACK = [
       { name: 'MuJoCo', ver: '3.x', role: 'server validation' },
       { name: 'Three.js' },
       { name: 'FABRIK', role: 'inverse kinematics' },
+      { name: 'Forward Kinematics', role: 'pose solving' },
     ],
   },
   {
@@ -82,6 +85,10 @@ export const STACK = [
       { name: 'D3.js', ver: 'v7' }, { name: 'Recharts' }, { name: 'ApexCharts' },
       { name: 'React Simple Maps' },
       { name: 'Lucide' }, { name: 'Prism', role: 'diff highlighting' },
+      { name: 'Poppins', role: 'typeface' },
+      { name: 'Axios' }, { name: 'jsPDF' }, { name: 'html2canvas' },
+      { name: 'LocalStorage', role: 'offline state' },
+      { name: 'MiniKit' }, { name: 'Farcaster SDK' },
     ],
   },
   {
@@ -94,6 +101,10 @@ export const STACK = [
       { name: 'Socket.IO' }, { name: 'sse-starlette' }, { name: 'WebSocket' },
       { name: 'Jinja2' }, { name: 'WeasyPrint', role: 'PDF' },
       { name: 'discord.js', ver: 'v14' },
+      { name: 'Nodemailer' }, { name: 'Multer', role: 'uploads' },
+      { name: 'node-fetch' }, { name: 'CORS' },
+      { name: 'Firebase Cloud Functions' },
+      { name: 'Smart Contracts', role: 'on-chain logic' },
     ],
   },
   {
@@ -104,6 +115,31 @@ export const STACK = [
       { name: 'Redis', role: 'Upstash' }, { name: 'Firebase' },
       { name: 'Docker' }, { name: 'Google Cloud Run' }, { name: 'Secret Manager' },
       { name: 'Vercel' }, { name: 'Railway' }, { name: 'Cloudinary' },
+      { name: 'Cloud Firestore' }, { name: 'Firebase Auth' },
+      { name: 'Firebase Storage' }, { name: 'Firebase Analytics' },
+      { name: 'Firebase Hosting' },
+    ],
+  },
+  {
+    category: 'Desktop & Native',
+    note: 'Windows-native surfaces, driven without an abstraction layer.',
+    items: [
+      { name: 'PySide6 · Qt', ver: '6.11.1' },
+      { name: 'pywin32', ver: '312', role: 'Win32 API' },
+      { name: 'ctypes · user32', role: 'native calls' },
+      { name: 'screeninfo', ver: '0.8.1', role: 'monitor geometry' },
+      { name: 'Windows 11', role: 'platform' },
+      { name: 'Pillow', ver: '12.3.0', role: 'text render' },
+      { name: 'tomllib', role: 'typed config' },
+    ],
+  },
+  {
+    category: 'APIs & Integrations',
+    note: 'Third-party services called directly rather than scraped.',
+    items: [
+      { name: 'Google Maps JS API' }, { name: 'Google Places API' },
+      { name: 'Gmail API' }, { name: 'PhilSMS API' },
+      { name: 'Rev21Labs Sentiment API' },
     ],
   },
   {
@@ -118,6 +154,8 @@ export const STACK = [
       { name: 'structlog' }, { name: 'Sentry' },
       { name: 'pytest' }, { name: 'Vitest' }, { name: 'Ruff' }, { name: 'Black' },
       { name: 'ESLint' },
+      { name: 'Constant-time key', role: 'HMAC API auth' },
+      { name: 'Stream tokens', role: 'per-run SSE auth' },
     ],
   },
   {
@@ -128,6 +166,10 @@ export const STACK = [
       { name: 'tree-sitter', role: 'syntax gate' },
       { name: 'python-dotenv' }, { name: 'Postman' },
       { name: 'Codex', role: 'build partner' },
+      { name: 'npm' }, { name: 'Nodemon' }, { name: 'Tailwind CLI' },
+      { name: 'VS Code' }, { name: 'Firebase CLI' },
+      { name: 'Firebase Emulator Suite' },
+      { name: 'language-pack', role: 'tree-sitter grammars' },
     ],
   },
 ]

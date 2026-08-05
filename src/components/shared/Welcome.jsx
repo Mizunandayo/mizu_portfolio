@@ -3,6 +3,7 @@ import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
 import { HERO_SOUND } from '../../events.js'
 import Ticket, { ticketStamp } from './Ticket.jsx'
+import { OPEN_TICKET } from '../../events.js'
 
 /* ══════════════════════════════════════════════════
    Welcome — 入場券, the guide's greeting as a ticket.
@@ -56,6 +57,13 @@ export default function Welcome({ show, onPickTrack }) {
   const [name, setName] = useState('')
   const [ticket, setTicket] = useState(false)
 
+  /* Openable from the gallery long after the greeting has been dismissed. */
+  useEffect(() => {
+    const on = () => setTicket(true)
+    window.addEventListener(OPEN_TICKET, on)
+    return () => window.removeEventListener(OPEN_TICKET, on)
+  }, [])
+
   const ref = useRef(null)
   const audioRef = useRef(null)
   const previewRef = useRef(null)
@@ -81,12 +89,15 @@ export default function Welcome({ show, onPickTrack }) {
     setSlide((s) => (s + d + SLIDES.length) % SLIDES.length)
   }, [])
 
+  /* Also while the ticket panel is up. Opened from the gallery the
+     greeting is closed, and gating on `open` alone froze the artwork on
+     whichever frame it happened to be showing. */
   useEffect(() => {
-    if (!open) return
+    if (!open && !ticket) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = window.setTimeout(() => go(1), SLIDE_MS)
     return () => clearTimeout(t)
-  }, [open, slide, go])
+  }, [open, ticket, slide, go])
 
   /* ── Track preview ──────────────────────────────
      Hovering auditions a track, softer than the real thing so an
@@ -255,7 +266,19 @@ export default function Welcome({ show, onPickTrack }) {
       .catch(() => {})
   }
 
-  if (!open) return null
+  /* The greeting goes, the ticket editor stays. Returning null here used
+     to take the <Ticket> sibling with it, so the gallery's button set
+     state on a component that rendered nothing. */
+  if (!open) {
+    return (
+      <Ticket
+        open={ticket}
+        name={name}
+        art={SLIDES[slide]}
+        onClose={() => setTicket(false)}
+      />
+    )
+  }
 
   return (
     <>
