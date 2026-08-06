@@ -15,6 +15,7 @@ import {
 import EmailSheet from './EmailSheet.jsx'
 import BannerCrop from './BannerCrop.jsx'
 import PickPeople from './PickPeople.jsx'
+import { SITE } from '../../data/profile.js'
 
 /* ══════════════════════════════════════════════════
    購読 — the list, what gets written to it, and what
@@ -31,6 +32,10 @@ import PickPeople from './PickPeople.jsx'
    ══════════════════════════════════════════════════ */
 
 const DEFAULT_BANNER = '/profile/emailbanner/emailbannerimg.png'
+
+/* Shown in the composer's preview only. The real mail builds its own
+   from SITE_URL on the server, so this is the local echo of it. */
+const SITE_HOST = SITE.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
 /* A path is fine in the field but the email needs a real URL, since an
    inbox fetches it from somewhere that is not this page. */
@@ -404,7 +409,7 @@ export default function Subscribers() {
               body={body} onBody={setBody}
               ctaLabel={ctaLabel} onCta={setCtaLabel}
               onPickFile={setCropFile}
-              site="mizu-portfolio.vercel.app"
+              site={SITE_HOST}
             />
           </div>
 
@@ -658,7 +663,7 @@ export default function Subscribers() {
               heading={open.heading}
               body={open.body}
               ctaLabel={open.cta_label ?? ''}
-              site="mizu-portfolio.vercel.app"
+              site={SITE_HOST}
             />
           </div>
 

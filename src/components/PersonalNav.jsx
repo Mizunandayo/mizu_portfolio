@@ -85,6 +85,14 @@ export default function PersonalNav({ onCredits }) {
     /* Half the dock, plus a margin, expressed in the same percentage
        the position is written in. */
     const edgePct = ((size / 2 + 14) / run) * 100;
+
+    /* Longer than the run it sits along — a short window, or a phone on
+       its side. The clamp below inverts here (its floor rises above its
+       ceiling) and answers with a position off the near edge, which is
+       how the dock ended up half above the top of the screen. Centred is
+       the only sane answer, and the strip scrolls at these sizes. */
+    if (edgePct >= 50) return 50;
+
     return Math.min(100 - edgePct, Math.max(edgePct, along));
   }, []);
 
@@ -163,6 +171,17 @@ export default function PersonalNav({ onCredits }) {
     setDrag(null);
   };
 
+  /* Cancel is the browser taking the gesture for itself — on a phone,
+     the swipe that scrolls the strip when it is longer than the screen.
+     That is not a drag ending, so nothing is docked: treating it as one
+     threw the nav to whichever edge the finger happened to be near
+     halfway through a scroll. */
+  const onPointerCancel = () => {
+    startRef.current = null;
+    movedRef.current = false;
+    setDrag(null);
+  };
+
   /* A press that turned into a drag must not also navigate — the click
      fires after pointerup, so the flag is still set when it lands. */
   const onNavigate = (e, href) => {
@@ -233,7 +252,7 @@ export default function PersonalNav({ onCredits }) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {/* Two nested boxes carrying the same silhouette: the outer is
           the ink, the inner the surface inset by the border width. A
@@ -244,7 +263,7 @@ export default function PersonalNav({ onCredits }) {
           also clips absolutely-positioned descendants, and the rope
           hangs outside the box. */}
       <div className="pnav-body-mizu">
-        <div className="pnav-face-mizu">
+        <div className="pnav-face-mizu pnav-scroll-mizu">
           <span className="pnav-grip-mizu" aria-hidden="true">
             <i />
             <i />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { PROFILE } from '../data/profile.js'
+import { useMode } from '../hooks/useMode.jsx'
 import ModeToggle from './shared/ModeToggle.jsx'
 
 /* ══════════════════════════════════════════════════
@@ -31,7 +32,21 @@ const ALL = [
   { label: 'Certs',      href: '#certifications', Icon: IconBadge },
 ]
 
-export default function Nav() {
+/* Menu only. On a phone this bar carries personal mode as well, where
+   the floating dock is hidden — so everything the dock could reach has
+   to be here or it can be reached from nowhere. Kept out of ALL because
+   the notch itself has room for six links, not nine. */
+const MORE = [
+  { label: 'Contact',   href: '#contact',   Icon: IconMail },
+  /* Recruiter mode hides the ticket wall outright
+     (.mode-recruiter .tg-mizu { display: none }), so this link would
+     scroll to a section that is not on the page. */
+  { label: 'Tickets',   href: '#gallery',   Icon: IconTicket, personal: true },
+  { label: 'Subscribe', href: '#subscribe', Icon: IconBell },
+]
+
+export default function Nav({ onCredits }) {
+  const { isRecruiter } = useMode()
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [active, setActive] = useState('')
@@ -159,7 +174,7 @@ export default function Nav() {
           <div id="notch-menu" className="notch-menu-mizu">
             <nav aria-label="Mobile">
               {isHome ? (
-                ALL.map(({ label, href, Icon }) => (
+                [...ALL, ...MORE.filter((i) => !i.personal || !isRecruiter)].map(({ label, href, Icon }) => (
                   <a key={label} href={href} onClick={(e) => go(e, href)} className="notch-menu-item-mizu">
                     <Icon />
                     <span>{label}</span>
@@ -173,6 +188,23 @@ export default function Nav() {
               )}
 
               <div className="notch-menu-rule-mizu" />
+
+              {/* Artwork and music attributions for the personal
+                  presentation. Recruiter mode strips every one of those
+                  flourishes, so there is nothing left to credit. */}
+              {!isRecruiter && (
+                <button
+                  type="button"
+                  className="notch-menu-item-mizu"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onCredits?.()
+                  }}
+                >
+                  <IconCredits />
+                  <span>Credits</span>
+                </button>
+              )}
 
               <div className="notch-menu-mode-mizu">
                 <span>Mode</span>
@@ -286,6 +318,42 @@ function IconBadge() {
     <svg {...s}>
       <path d="M12 2.8 4.6 5.9v5.4c0 4.9 3.2 8.7 7.4 10.4 4.2-1.7 7.4-5.5 7.4-10.4V5.9L12 2.8Z" />
       <path d="M9 11.9l2.2 2.2 4.2-4.4" />
+    </svg>
+  )
+}
+
+function IconMail() {
+  return (
+    <svg {...s}>
+      <rect x="2.5" y="5" width="19" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  )
+}
+
+function IconTicket() {
+  return (
+    <svg {...s}>
+      <path d="M3 8.5A2 2 0 0 0 5 6.5h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 3v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-3Z" />
+      <path d="M14 6.5v11" />
+    </svg>
+  )
+}
+
+function IconBell() {
+  return (
+    <svg {...s}>
+      <path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5" />
+      <path d="M13.7 20a2 2 0 0 1-3.4 0" />
+    </svg>
+  )
+}
+
+function IconCredits() {
+  return (
+    <svg {...s}>
+      <path d="M4 4.5h11a2.5 2.5 0 0 1 2.5 2.5v12.5H6.5A2.5 2.5 0 0 1 4 17Z" />
+      <path d="M8 9h6M8 12.5h4" />
     </svg>
   )
 }

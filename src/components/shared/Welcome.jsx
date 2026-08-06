@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
 import { HERO_SOUND } from '../../events.js'
+import { WELCOME_STORE as STORE } from '../../greeting.js'
 import Ticket, { ticketStamp } from './Ticket.jsx'
 import { OPEN_TICKET } from '../../events.js'
 
@@ -24,7 +25,6 @@ import { OPEN_TICKET } from '../../events.js'
    than looking broken.
    ══════════════════════════════════════════════════ */
 
-const STORE = 'mizu-welcome'
 const VOICE = '/profile/waguriaudio.mp3'
 /* Matches the exit animation. The panel has to finish leaving before
    React takes it out, or the dip never renders. */

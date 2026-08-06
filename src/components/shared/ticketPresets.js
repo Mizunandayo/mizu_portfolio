@@ -1,4 +1,4 @@
-import { PROFILE } from '../../data/profile.js'
+import { PROFILE, SITE } from '../../data/profile.js'
 
 /* ══════════════════════════════════════════════════
    Ticket presets — five layouts, one drawing surface.
@@ -222,7 +222,12 @@ const rows = (issued, short) => [
   ['席 / SEAT', short ? 'GENERAL ADMISSION' : 'GENERAL ADMISSION — ALL NINE PROJECTS'],
 ]
 
-const handle = () => PROFILE.contact.github.replace(/^https?:\/\//, '')
+/* The site, not the GitHub profile. A ticket is a souvenir of this page,
+   so the line at its foot should be the way back to it. Read from
+   SITE.url rather than written out, so a domain change lands on all five
+   presets at once. */
+const handle = () =>
+  SITE.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
 /* Shrinks to fit its band the same way the name does. Wrapping depends
    on the size and the size depends on the wrap, so it is settled by

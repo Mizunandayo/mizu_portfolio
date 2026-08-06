@@ -53,10 +53,13 @@ export default function App() {
       </a>
       <ScrollManager />
       {/* Both navs mount; CSS shows one. Swapping them in React would
-          flash the wrong one before hydration settles the mode. */}
+          flash the wrong one before hydration settles the mode.
+
+          Credits goes to both, because on a phone the notch bar carries
+          personal mode too and its menu is then the only way in. */}
       {!bare && (
         <>
-          <Nav />
+          <Nav onCredits={() => setCredits(true)} />
           <PersonalNav onCredits={() => setCredits(true)} />
         </>
       )}

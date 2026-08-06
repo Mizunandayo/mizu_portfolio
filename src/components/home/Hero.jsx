@@ -9,6 +9,8 @@ import {
   ArrowIcon,
 } from "../shared/primitives.jsx";
 import { HERO_SOUND } from "../../events.js";
+import { greetingPending } from "../../greeting.js";
+import { useMode } from "../../hooks/useMode.jsx";
 import Presence from "../shared/Presence.jsx";
 
 /* ══════════════════════════════════════════════════
@@ -36,7 +38,7 @@ const LAYERS = [
 /* Where the backdrop's sound sits whenever it is turned on, whether on
    load or from the greeting's no-music path. One constant so the two
    cannot drift apart. */
-const VOLUME = 0.15;
+const VOLUME = 0.35;
 
 /* Role and location come from the strip that was already declared;
    availability is appended rather than hardcoded, so the hero and the
@@ -48,6 +50,7 @@ const SPEC = [...PROFILE.strip, PROFILE.availability.status].filter(Boolean);
 
 
 export default function Hero() {
+  const { isRecruiter } = useMode();
   const views = useViews();
   const [bg, setBg] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -82,6 +85,25 @@ export default function Hero() {
     if (v) v.volume = volume;
   }, [volume, bg]);
 
+  /* Silent while the greeting is still to come. It covers the hero and
+     offers a playlist of its own, so a backdrop talking underneath it
+     is two soundtracks at once. Declining the playlist fires HERO_SOUND
+     below and hands the sound back.
+
+     Set on the elements as well as in state: the play() below runs in
+     this same commit, before React has re-rendered with the new
+     attribute, so state alone would let a moment of audio through.
+     Deliberately not the initial useState value either — the hero is
+     prerendered, and a first render that disagrees with the server's is
+     a hydration mismatch. */
+  useEffect(() => {
+    if (!greetingPending()) return;
+    setMuted(true);
+    vids.current.forEach((v) => {
+      if (v) v.muted = true;
+    });
+  }, []);
+
   /* Sound is on by default, but a browser refuses to autoplay audible
      media until the page has been interacted with — so try it audible
      and fall back to muted when refused. The backdrop still plays
@@ -106,6 +128,22 @@ export default function Hero() {
       v.play().catch(() => {});
     });
   }, [bg]);
+
+  /* Recruiter mode hides the plate — and `display: none` does not stop
+     a <video>. It carries on playing and, more to the point, carries on
+     making sound, while the volume control that could have silenced it
+     is hidden by the same switch. Pausing rather than muting: a hidden
+     video is decoding frames nobody is watching either.
+
+     Nothing is done to `muted`, so coming back to personal mode
+     resumes at whatever the visitor had chosen before they left. */
+  useEffect(() => {
+    if (isRecruiter) {
+      vids.current.forEach((v) => v?.pause());
+      return;
+    }
+    active()?.play().catch(() => {});
+  }, [isRecruiter]);
 
   /* The greeting fires this when the visitor declines the playlist.
      It arrives inside that click's call stack, so the user activation
@@ -344,9 +382,15 @@ export default function Hero() {
             LinkedIn
           </Pill>
         </div>
-      </div>
 
-      <Presence />
+        {/* Inside the copy column, not beside it. On a desktop it is
+            absolutely positioned and lands in the same corner either
+            way; below 1000px it drops into the flow, and being in this
+            column is what lines it up with the copy — as a sibling its
+            left edge tracked the section padding instead, which differs
+            from the copy's by the width of the spine. */}
+        <Presence />
+      </div>
 
       <div className="hero-scroll-mizu" aria-hidden="true">
         <div className="hero-scroll-rule-mizu" />

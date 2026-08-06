@@ -25,6 +25,17 @@ html {
      slides sideways, so the hero visibly shifts the instant the loader
      releases, as though a different hero had replaced it. */
   scrollbar-gutter: stable;
+  /* The page scrolls one way. `clip` rather than `hidden` on purpose:
+     hidden would make the root a scroll container, which breaks
+     position:sticky and hands scrollIntoView a different scrollport to
+     aim at. clip refuses the overflow without any of that.
+
+     body already carries overflow-x:hidden, which propagates to the
+     viewport only while the root's own overflow is visible — a
+     condition three different scroll locks here temporarily break by
+     setting overflow on <html>. Declaring it on the root as well means
+     it does not depend on that. */
+  overflow-x: clip;
 }
 
 body {
@@ -3734,6 +3745,12 @@ html.tk-open-mizu {
   overflow: hidden;
   min-height: 100dvh;
   background: #050505;
+  /* On the section, not on the copy column: the spine and the presence
+     card are its siblings, so a value declared there is invisible to
+     them and both ended up repeating the clamp by hand. */
+  --hero-pad: clamp(24px, 6vw, 88px);
+  --hero-foot: clamp(88px, 12vh, 132px);
+  --hero-spine: 54px;
 }
 
 /* ── Personal plate ──────────────────────────────── */
@@ -3817,11 +3834,6 @@ html.tk-open-mizu {
   align-items: flex-start;
   justify-content: flex-end;
   min-height: 100dvh;
-  /* Declared once so the spine can align to the same left edge the copy
-     is indented from. Two hardcoded clamps would drift apart. */
-  --hero-pad: clamp(24px, 6vw, 88px);
-  --hero-foot: clamp(88px, 12vh, 132px);
-  --hero-spine: 54px;
   padding: 140px var(--hero-pad) var(--hero-foot);
   /* Room for the spine to stand in without overlapping the copy. */
   padding-left: calc(var(--hero-pad) + var(--hero-spine));
@@ -3834,8 +3846,8 @@ html.tk-open-mizu {
    here, and the one that is easy to leave out. */
 .hero-spine-mizu {
   position: absolute;
-  left: clamp(24px, 6vw, 88px);
-  bottom: clamp(88px, 12vh, 132px);
+  left: var(--hero-pad);
+  bottom: var(--hero-foot);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -3961,7 +3973,13 @@ html.tk-open-mizu {
   align-items: baseline;
   flex-wrap: wrap;
   gap: clamp(0.5rem, 1.8vw, 1.4rem);
-  max-width: 15ch;
+  /* The 100% is what stops it overflowing the page. This is a flex item
+     in a column whose align-items is flex-start (centre in recruiter),
+     so it is sized to its content rather than stretched — 15ch is then
+     a limit it may sit under, not one the parent's width can enforce.
+     At 390px, 15ch of the 40px display face is 360px against a 326px
+     content box, and the name ran off the right of the screen. */
+  max-width: min(15ch, 100%);
   margin-bottom: 18px;
   font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
   font-weight: 800;
@@ -4126,7 +4144,8 @@ html.tk-open-mizu {
   padding: 1px;
   background: rgba(212, 212, 216, 0.5);
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6);
-  transition: background 200ms cubic-bezier(0.16,1,0.3,1);
+  transition: transform 420ms cubic-bezier(0.16,1,0.3,1),
+              background 200ms cubic-bezier(0.16,1,0.3,1);
 }
 
 .pnav-mizu.is-dragging .pnav-body-mizu { background: rgba(250, 250, 250, 0.85); }
@@ -4275,6 +4294,12 @@ html.tk-open-mizu {
   padding: 0;
   cursor: grab;
   touch-action: none;
+  /* Travels with the plate when it tucks, rather than jumping to the
+     edge the instant the class lands. Same curve and length as the
+     slide it is following. */
+  transition: left 420ms cubic-bezier(0.16,1,0.3,1),
+              top 420ms cubic-bezier(0.16,1,0.3,1),
+              bottom 420ms cubic-bezier(0.16,1,0.3,1);
 }
 
 .pnav-rope-mizu:active { cursor: grabbing; }
@@ -4405,10 +4430,46 @@ html.tk-open-mizu {
 .notch-mizu { display: none; }
 .mode-recruiter .notch-mizu { display: flex; }
 
-@media (max-width: 620px) {
-  .pnav-face-mizu { gap: 1px; padding: 18px 6px 9px; }
-  .pnav-brand-mizu,
-  .pnav-item-mizu { width: 30px; height: 30px; }
+/* On a phone the dock is the wrong instrument: twelve tiles come to
+   about 420px, which is a third of the screen standing on the content,
+   and dragging it to an edge is a gesture nobody has on a touchscreen
+   anyway. The notch bar already collapses to a burger below 1024px and
+   its menu holds every destination, so personal mode borrows it. */
+@media (max-width: 760px) {
+  .pnav-mizu { display: none; }
+  .notch-mizu { display: flex; }
+}
+
+/* ── When the dock is taller than the window ───────
+   Twelve tiles come to about 500px. Phones hand over to
+   the notch bar above, but a short desktop window is
+   still the dock's problem: below roughly 640px of
+   height the column runs past both ends and the items
+   at the far end cannot be reached at all. So it
+   scrolls, capped on that axis only — the other one has
+   to keep letting the eave and the rope out. */
+.pnav-scroll-mizu {
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.pnav-scroll-mizu::-webkit-scrollbar { width: 0; height: 0; }
+
+/* touch-action is intersected with every ancestor's, not read off the
+   element alone — so the shell's `none`, which is what stops a drag
+   being stolen by the browser, also cancels any pan- value set here.
+   Both ends have to be relaxed for the strip to scroll at all. */
+@media (max-height: 640px) {
+  .pnav-mizu.is-right,
+  .pnav-mizu.is-left { touch-action: pan-y; }
+
+  .pnav-mizu.is-right .pnav-face-mizu,
+  .pnav-mizu.is-left .pnav-face-mizu {
+    max-height: calc(100vh - 92px);
+    max-height: calc(100dvh - 92px);
+    overflow-y: auto;
+    touch-action: pan-y;
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -4449,8 +4510,8 @@ html.tk-open-mizu {
 
   position: absolute;
   z-index: 3;
-  right: clamp(24px, 6vw, 88px);
-  bottom: clamp(88px, 12vh, 132px);
+  right: var(--hero-pad);
+  bottom: var(--hero-foot);
   display: flex;
   align-items: center;
   gap: var(--pr-gap);
@@ -4878,9 +4939,51 @@ html.tk-open-mizu {
    am watching is not part of that pitch. */
 .mode-recruiter .pr-mizu { display: none; }
 
-/* Below this it would land on the copy rather than beside it. */
+/* Below this there is no column beside the copy for it to sit in, so it
+   goes underneath instead of being dropped.
+
+   Back into normal flow rather than repositioned: as an absolute box it
+   would need the copy's height as a number, and that changes with every
+   viewport. In the flow the hero grows by exactly the card's height,
+   which is the whole reason it fits. */
 @media (max-width: 1000px) {
-  .pr-mizu { display: none; }
+  /* Back in flow, so it becomes the last row of the copy column and
+     inherits that column's left edge — no offset of its own to keep in
+     step. The hero grows by the card's height on its own: min-height is
+     a floor, not a fixed height.
+
+     relative rather than static: ::before is the outline that hugs the
+     card at inset:-1px, and a static card would hand it the copy column
+     as its containing block — drawing that border around the whole
+     block instead. The offsets have to be cleared by hand, since on a
+     relative box they shift it rather than place it. */
+  .pr-mizu {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: min(460px, 100%);
+    max-width: none;
+    margin-top: clamp(24px, 4.5vh, 44px);
+  }
+
+  /* Hover-only flourishes with nowhere to go on a touch screen: the
+     blade would be cut off by the section's overflow, and the slip
+     hangs off the left edge into the page margin. */
+  .pr-katana-mizu,
+  .pr-slip-mizu,
+  .pr-cta-mizu { display: none; }
+}
+
+/* Narrow enough that the avatar, the text and the cover art stop
+   fitting side by side at full size. Everything in the card scales off
+   --pr-face, so one number does it. */
+@media (max-width: 560px) {
+  .pr-mizu {
+    --pr-face: 52px;
+    --pr-gap: 11px;
+    --pr-pad-x: 11px;
+    --pr-pad-y: 10px;
+  }
 }
 
 /* Reduced motion keeps every hover state, since each one is also the
@@ -5304,7 +5407,12 @@ html.tk-open-mizu {
      chips leaves the chips nowhere to go. */
   .tn-drawer-mizu { grid-template-columns: 1fr; }
 
-  .tn-plate-mizu {
+  /* Personal only. Recruiter mode already renders the plate as a plain
+     block label, and `.mode-recruiter .tn-plate-mizu` outranks a bare
+     class here — so this used to land half-applied on it: its padding
+     was overridden but the hairline was not, leaving a rule under the
+     category heading that appears at no other width. */
+  html:not(.mode-recruiter) .tn-plate-mizu {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
@@ -5449,6 +5557,68 @@ html.tk-open-mizu {
   color: rgba(161, 161, 170, 0.88);
   font-variant-numeric: tabular-nums;
   margin-left: 6px;
+}
+
+/* ── Recruiter, on a phone ─────────────────────────
+   The same shape personal mode takes at this width:
+   the category stops being a column beside the chips
+   and becomes a heading above them, with its note on
+   the line under it, so the run gets the full width
+   to wrap into.
+
+   It has to sit *after* the recruiter block above,
+   not before it. Every rule here is `.mode-recruiter
+   .x` — the same (0,2,0) as the desktop rules it is
+   overriding — so being inside a media query buys no
+   extra weight and source order decides the whole
+   thing. Placed earlier in the file this block parsed,
+   matched, and still lost. */
+@media (max-width: 760px) {
+  .mode-recruiter .tn-drawer-mizu {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* Block, not flex. The kanji, the rule and the count are all
+     display:none in this mode, so the plate holds exactly two things:
+     a heading and the sentence under it. Stacking is what block does,
+     with no basis or wrap behaviour to get right. */
+  .mode-recruiter .tn-plate-mizu {
+    display: block;
+    padding: 16px 2px 12px;
+  }
+
+  .mode-recruiter .tn-cat-mizu {
+    display: block;
+    font-size: 0.78rem;
+  }
+
+  .mode-recruiter .tn-note-mizu {
+    display: block;
+    margin: 6px 0 0;
+    font-size: 0.78rem;
+  }
+
+  .mode-recruiter .tn-face-mizu { padding: 0 2px 16px; }
+  .mode-recruiter .tn-items-mizu { gap: 8px; }
+
+  .mode-recruiter .tn-tool-mizu {
+    gap: 8px;
+    padding: 7px 10px;
+    /* A flex item will not shrink below its content unless told to, so
+       without this one long chip still sets the row's width. */
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mode-recruiter .tn-tool-name-mizu {
+    font-size: 0.9rem;
+    min-width: 0;
+    /* Insurance for the longest names on the narrowest screens: the
+       chip grows a line taller instead of running past its border. */
+    white-space: normal;
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -7055,7 +7225,28 @@ html.tk-open-mizu {
    mask is dropped rather than re-authored: its two holes are pinned to
    a vertical seam that no longer exists here. */
 @media (max-width: 700px) {
-  .wc-mizu { --cover: auto; }
+  /* Stacked, the ticket is taller than the phone it is on, and nothing
+     was scrolling: the dialog is `overflow: visible` and the rule below
+     hands the text box's own scroller back to the page. So the panel
+     itself becomes the scroller, the way the issued ticket already
+     does — the track then rides the outer edge instead of slicing
+     through the middle of the layout.
+
+     dvh, not vh: on a phone vh is the height with the URL bar retracted,
+     so a vh-capped dialog is taller than what is actually on screen and
+     the last rows sit under the browser chrome. */
+  .wc-mizu {
+    --cover: auto;
+    margin: 12px auto;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Reaching the end must not hand the wheel to the page behind —
+       the only thing the scroll lock cannot see coming. */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 
   .wc-body-mizu {
     -webkit-mask-image: none;

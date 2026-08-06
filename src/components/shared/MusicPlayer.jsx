@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { TRACKS } from '../../data/music.js'
+import { useMode } from '../../hooks/useMode.jsx'
 
 /* ══════════════════════════════════════════════════
    Music player — floating, draggable, collapsible.
@@ -32,6 +33,7 @@ const fmt = (s) => {
 }
 
 export default function MusicPlayer({ startId, onClose }) {
+  const { isRecruiter } = useMode()
   const first = Math.max(0, TRACKS.findIndex((t) => t.id === startId))
 
   const [index, setIndex] = useState(first)
@@ -56,6 +58,23 @@ export default function MusicPlayer({ startId, onClose }) {
   const startRef = useRef(null)
   const movedRef = useRef(false)
   const track = TRACKS[index]
+
+  /* The playlist is offered by the greeting, which recruiter mode never
+     shows. Switching into it takes the sound with it — a track playing
+     under a presentation that never offered one, from a player that is
+     part of the layer being stripped, is the worst of both.
+
+     Through a ref because App passes a fresh arrow every render, and in
+     the dependency array that would close the player on any re-render
+     rather than on the mode changing. */
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    if (!isRecruiter) return
+    audioRef.current?.pause()
+    closeRef.current?.()
+  }, [isRecruiter])
 
 
   

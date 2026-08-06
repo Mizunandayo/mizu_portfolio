@@ -17,7 +17,7 @@ const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf-8')
 const serverEntry = pathToFileURL(path.join(distSsr, 'entry-server.js')).href
 const { render, routes } = await import(serverEntry)
 
-const SITE_URL = 'https://mizu-portfolio.vercel.app'
+const SITE_URL = 'https://mizuuu.vercel.app'
 
 let written = 0
 

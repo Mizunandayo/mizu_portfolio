@@ -109,7 +109,7 @@ export const CHANNELS = [
 
 /* Site-level constants. */
 export const SITE = {
-  url:   'https://mizu-portfolio.vercel.app',
+  url:   'https://mizuuu.vercel.app',
   title: 'Francis Daniel Genese - Agentic AI Engineer',
   description:
     'Agentic AI Engineer building AI-powered applications and scalable systems. Nine shipped ' +
