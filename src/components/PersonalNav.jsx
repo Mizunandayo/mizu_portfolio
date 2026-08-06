@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PROFILE } from "../data/profile.js";
 import { useMode } from "../hooks/useMode.jsx";
+import { scrollToHash } from "../scroll.js";
 
 /* ══════════════════════════════════════════════════
    Personal nav — floating, draggable, kanji-led.
@@ -25,6 +26,7 @@ const ITEMS = [
   { href: "#certifications", kanji: "証", label: "Certs" },
   { href: "#contact", kanji: "縁", label: "Contact" },
   { href: "#gallery", kanji: "券", label: "Tickets" },
+  { href: "#subscribe", kanji: "報", label: "Subscribe" },
 ];
 
 const STORE = "mizu-dock";
@@ -36,14 +38,21 @@ export default function PersonalNav({ onCredits }) {
   const { toggle } = useMode();
   /* Hung high on the right rather than centred: the hero's own copy
      runs down the left, so the top right is the one quiet corner, and a
-     dock that hangs reads as suspended from the frame. 18 is the same
-     floor `snap` clamps to, so this is a position the visitor can
-     return to by dragging. */
-  const [dock, setDock] = useState({ edge: "right", pos: 18 });
+     dock that hangs reads as suspended from the frame.
+
+     `pos` is the dock's midpoint as a percentage of the run, so how high
+     it can sit depends on how tall it is. 18 clipped 水 off the top edge
+     on a short viewport. `fit` below measures the thing and works out
+     the real floor rather than guessing a number that happens to suit
+     one screen. */
+  const [dock, setDock] = useState({ edge: "right", pos: 26 });
   const [drag, setDrag] = useState(null);
   const [open, setOpen] = useState(false);
   const [pull, setPull] = useState(0);
 
+  /* The dock measures itself so its own height can decide how close to
+     an edge it is allowed to sit. */
+  const shellRef = useRef(null);
   const startRef = useRef(null);
   const movedRef = useRef(false);
   const ropeRef = useRef(null);
@@ -58,6 +67,27 @@ export default function PersonalNav({ onCredits }) {
     }
   }, []);
 
+  /* The dock's own size decides how close to an edge its midpoint may
+     sit. Measured rather than assumed: the column grows with the number
+     of items, and a flat percentage that fitted eight of them clips at
+     nine. Falls back to the old bounds if it cannot be measured yet. */
+  const fit = useCallback((edge, along) => {
+    const el = shellRef.current;
+    const { innerWidth: w, innerHeight: h } = window;
+    const run = edge === "left" || edge === "right" ? h : w;
+    const size =
+      edge === "left" || edge === "right"
+        ? el?.offsetHeight ?? 0
+        : el?.offsetWidth ?? 0;
+
+    if (!size || !run) return Math.min(82, Math.max(18, along));
+
+    /* Half the dock, plus a margin, expressed in the same percentage
+       the position is written in. */
+    const edgePct = ((size / 2 + 14) / run) * 100;
+    return Math.min(100 - edgePct, Math.max(edgePct, along));
+  }, []);
+
   const snap = useCallback((x, y) => {
     const { innerWidth: w, innerHeight: h } = window;
     const edges = { left: x, right: w - x, top: y, bottom: h - y };
@@ -70,7 +100,7 @@ export default function PersonalNav({ onCredits }) {
        room to lay itself out. */
     const along =
       edge === "left" || edge === "right" ? (y / h) * 100 : (x / w) * 100;
-    const next = { edge, pos: Math.min(82, Math.max(18, along)) };
+    const next = { edge, pos: fit(edge, along) };
 
     setDock(next);
     try {
@@ -78,7 +108,24 @@ export default function PersonalNav({ onCredits }) {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [fit]);
+
+  /* Re-checked once the dock has a measurable height, and again on
+     resize. The stored default is a starting guess; this is what stops
+     a tall column or a short window from putting 水 above the top edge.
+     Not persisted, because the visitor's own choice should survive a
+     window they happened to shrink. */
+  useEffect(() => {
+    const settle = () =>
+      setDock((d) => {
+        const pos = fit(d.edge, d.pos);
+        return pos === d.pos ? d : { ...d, pos };
+      });
+
+    settle();
+    window.addEventListener("resize", settle);
+    return () => window.removeEventListener("resize", settle);
+  }, [fit]);
 
   const onPointerDown = (e) => {
     if (e.button !== 0) return;
@@ -124,9 +171,7 @@ export default function PersonalNav({ onCredits }) {
       return;
     }
     e.preventDefault();
-    document
-      .querySelector(href)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToHash(href);
   };
 
   /* ── Rope ────────────────────────────────────────
@@ -181,6 +226,7 @@ export default function PersonalNav({ onCredits }) {
 
   return (
     <nav
+      ref={shellRef}
       className={`pnav-mizu is-${dock.edge}${drag ? " is-dragging" : ""}${open ? " is-open" : ""}${pull ? " is-pulling" : ""}`}
       style={style}
       aria-label="Primary"

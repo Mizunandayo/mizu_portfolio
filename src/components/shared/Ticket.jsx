@@ -1073,6 +1073,24 @@ export default function Ticket({ open, name, art, onClose }) {
 
         {/* ── Detail block ── */}
         <div className="tk-panel-mizu">
+          <label className="tk-name-mizu">
+            <span>Name on the ticket</span>
+            <input
+              type="text"
+              value={who}
+              maxLength={NAME_MAX}
+              placeholder="Your name"
+              autoComplete="name"
+              onChange={(e) => setWho(e.target.value)}
+            />
+            <span
+              className={`tk-count-mizu${named ? '' : ' is-need'}`}
+              aria-live="polite"
+            >
+              {named ? `${typed.length}/${NAME_MAX}` : 'Required'}
+            </span>
+          </label>
+
           <div className="tk-seg-mizu" role="group" aria-label="Ticket body">
             <button
               type="button"
@@ -1091,24 +1109,6 @@ export default function Ticket({ open, name, art, onClose }) {
               Your message
             </button>
           </div>
-
-          <label className="tk-name-mizu">
-            <span>Name on the ticket</span>
-            <input
-              type="text"
-              value={who}
-              maxLength={NAME_MAX}
-              placeholder="Your name"
-              autoComplete="name"
-              onChange={(e) => setWho(e.target.value)}
-            />
-            <span
-              className={`tk-count-mizu${named ? '' : ' is-need'}`}
-              aria-live="polite"
-            >
-              {named ? `${typed.length}/${NAME_MAX}` : 'Required'}
-            </span>
-          </label>
 
           <div className="tk-photo-mizu">
             {shot && (

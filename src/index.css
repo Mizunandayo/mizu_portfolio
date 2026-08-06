@@ -3906,6 +3906,21 @@ html.tk-open-mizu {
    manager is scanning for. */
 .hero-spec-row-mizu:last-child .hero-spec-val-mizu { color: #fafafa; }
 
+/* The count is the one live number on the page, so it carries a little
+   more weight than the two fixed facts above it. Scoped to this row on
+   purpose: 01 and 02 keep their size, and the index and rule beside
+   them stay put, so the column still lines up. */
+.hero-spec-val-mizu.is-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-size: 0.76rem;
+  letter-spacing: 0.2em;
+  color: #fafafa;
+}
+
+.hero-spec-val-mizu.is-views svg { flex-shrink: 0; opacity: 0.85; }
+
 .hero-spec-row-mizu:last-child .hero-spec-dash-mizu {
   background: rgba(250, 250, 250, 0.7);
 }
@@ -8078,6 +8093,21 @@ a.cr-by-mizu:hover {
 
 .mp-mizu.is-dragging { cursor: grabbing; transition: none; }
 
+/* Belt to the draggable="false" braces on the elements themselves.
+   Safari honours this property where it ignores the attribute, and a
+   native image drag swallows the pointer events the player moves on. */
+.mp-mizu img,
+.mp-mini-mizu img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* The cover is the whole hit area when collapsed, so the button has to
+   keep taking pointer events even though its image does not. */
+.mp-mini-mizu { touch-action: none; }
+
 .mp-bar-mizu {
   position: relative;
   display: flex;
@@ -11655,3 +11685,30 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 
 .ad-sentlist-mizu .ad-sentrow-mizu { flex: 1; min-width: 0; }
 .ad-sentlist-mizu .ad-trash-mizu { flex: none; align-self: center; }
+
+/* Both names under the kana. Sits with the heading rather than in the
+   prose: it is identification, not narrative, and someone scanning the
+   section should not have to read a paragraph to connect the two. */
+.ab-aka-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.ab-aka-mizu strong { font-weight: 700; color: #fafafa; }
+.ab-aka-mizu > span[aria-hidden] { color: rgba(161, 161, 170, 0.5); }
+
+.ab-aka-kanji-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(244, 244, 245, 0.62);
+}

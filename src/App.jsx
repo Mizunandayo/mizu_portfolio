@@ -9,6 +9,7 @@ import Admin from "./pages/Admin.jsx";
 import Subscribed from "./pages/Subscribed.jsx";
 import Boot from "./components/shared/Boot.jsx";
 import { ModeProvider } from "./hooks/useMode.jsx";
+import { scrollToHash } from "./scroll.js";
 import Welcome from "./components/shared/Welcome.jsx";
 import MusicPlayer from "./components/shared/MusicPlayer.jsx";
 import Credits from "./components/shared/Credits.jsx";
@@ -18,13 +19,7 @@ function ScrollManager() {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {
-    if (hash) {
-      const el = document.querySelector(hash);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-    }
+    if (hash && scrollToHash(hash)) return;
     window.scrollTo(0, 0);
   }, [pathname, hash]);
 

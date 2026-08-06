@@ -10,6 +10,10 @@ export const PROFILE = {
   shortName: 'Francis',
   kanji:     '水',
   brand:     'MIZU',
+  /* The name the work is signed with online. Kept beside the legal one
+     rather than instead of it: a recruiter searching either should land
+     on the same person. */
+  alias:     'Mizu',
   role:      'Agentic AI Engineer',
   tagline:   'Agentic AI · LLM Applications · Intelligent Systems',
   location:  'Philippines',

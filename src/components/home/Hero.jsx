@@ -283,7 +283,8 @@ export default function Hero() {
                 {String(SPEC.length + 1).padStart(2, "0")}
               </span>
               <span className="hero-spec-dash-mizu" aria-hidden="true" />
-              <span className="hero-spec-val-mizu">
+              <span className="hero-spec-val-mizu is-views">
+                <EyeIcon />
                 {views.toLocaleString()} total {views === 1 ? "view" : "views"}
               </span>
             </span>
@@ -367,6 +368,19 @@ const I = {
   strokeLinejoin: "round",
   "aria-hidden": "true",
 };
+
+/* Sized in em so it tracks the row's own font-size rather than needing
+   a second number to keep in step with it. */
+const EyeIcon = () => (
+  <svg
+    width="1.15em" height="1.15em" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+  >
+    <path d="M1.8 12S5.5 5.4 12 5.4 22.2 12 22.2 12 18.5 18.6 12 18.6 1.8 12 1.8 12Z" />
+    <circle cx="12" cy="12" r="2.9" />
+  </svg>
+);
 
 const LayerIcon = () => (
   <svg {...I}>

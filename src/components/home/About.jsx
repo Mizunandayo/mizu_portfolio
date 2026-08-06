@@ -28,6 +28,18 @@ export default function About() {
           <header className="ab-head-mizu">
             <p className="ab-kicker-mizu">About</p>
             <p className="ab-kana-mizu" aria-hidden="true">自己紹介</p>
+
+            {/* Both names, on one line. The alias is how the work is
+                signed everywhere else on the internet, so leaving it out
+                of the introduction makes the two people look separate. */}
+            <p className="ab-aka-mizu">
+              {PROFILE.name}
+              <span aria-hidden="true">·</span>
+              known online as <strong>{PROFILE.alias}</strong>
+              <span className="ab-aka-kanji-mizu" aria-hidden="true">
+                {PROFILE.kanji}
+              </span>
+            </p>
           </header>
         </Reveal>
 

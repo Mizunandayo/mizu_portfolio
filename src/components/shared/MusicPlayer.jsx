@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { TRACKS } from '../../data/music.js'
 
 /* ══════════════════════════════════════════════════
@@ -41,7 +41,10 @@ export default function MusicPlayer({ startId, onClose }) {
   const [duration, setDuration] = useState(0)
   const [missing, setMissing] = useState(false)
   const [loop, setLoop] = useState('all')
-  const [volume, setVolume] = useState(0.8)
+  /* Quiet by default. This starts playing the moment the greeting is
+     dismissed, so it arrives underneath what someone is reading rather
+     than over it. A saved value still wins. */
+  const [volume, setVolume] = useState(0.25)
   const [muted, setMuted] = useState(false)
   const [pos, setPos] = useState(null)
   const [drag, setDrag] = useState(null)
@@ -155,9 +158,10 @@ export default function MusicPlayer({ startId, onClose }) {
     }
     /* Clamped so the player can never be dropped off-screen where it
        could not be dragged back. */
+    const { clientWidth: vw, clientHeight: vh } = document.documentElement
     setDrag({
-      x: Math.min(window.innerWidth - s.w - EDGE, Math.max(EDGE, e.clientX - s.dx)),
-      y: Math.min(window.innerHeight - s.h - EDGE, Math.max(EDGE, e.clientY - s.dy)),
+      x: Math.min(Math.max(EDGE, vw - s.w - EDGE), Math.max(EDGE, e.clientX - s.dx)),
+      y: Math.min(Math.max(EDGE, vh - s.h - EDGE), Math.max(EDGE, e.clientY - s.dy)),
     })
   }
 
@@ -202,11 +206,36 @@ export default function MusicPlayer({ startId, onClose }) {
     setDrag(null)
   }
 
+  /* Kept reachable whenever the player's own size changes under it.
+     Expanding while parked at the right edge would otherwise put most of
+     the panel past the viewport, transport buttons included, with no way
+     to drag it back. Measured after layout so the real size is known,
+     and guarded so it does not loop on its own update. */
+  useLayoutEffect(() => {
+    const el = rootRef.current
+    if (!el || !pos || drag) return
+
+    const settle = () => {
+      const { width: w, height: h } = el.getBoundingClientRect()
+      const { clientWidth: vw, clientHeight: vh } = document.documentElement
+      const x = Math.min(Math.max(EDGE, vw - w - EDGE), Math.max(EDGE, pos.x))
+      const y = Math.min(Math.max(EDGE, vh - h - EDGE), Math.max(EDGE, pos.y))
+      if (x !== pos.x || y !== pos.y) setPos({ x, y })
+    }
+
+    settle()
+    window.addEventListener('resize', settle)
+    return () => window.removeEventListener('resize', settle)
+  }, [collapsed, width, pos, drag])
+
   if (!track) return null
 
   const at = drag ?? pos
   const place = at ? { left: `${at.x}px`, top: `${at.y}px`, right: 'auto', bottom: 'auto' } : {}
-  const style = { ...place, ...(width ? { width: `${width}px` } : {}) }
+  const style = {
+    ...place,
+    ...(width && !collapsed ? { width: `${width}px` } : {}),
+  }
 
   const pct = duration > 0 ? (time / duration) * 100 : 0
   const audio = (
@@ -242,7 +271,7 @@ export default function MusicPlayer({ startId, onClose }) {
           onClick={() => { if (movedRef.current) return; setCollapsed(false) }}
           aria-label={`Expand player — ${track.title}`}
         >
-          <img src={track.cover} alt="" />
+          <img src={track.cover} alt="" draggable="false" />
           <span className={`mp-mini-eq-mizu${playing ? ' is-on' : ''}`} aria-hidden="true">
             <i /><i /><i />
           </span>
@@ -276,7 +305,13 @@ export default function MusicPlayer({ startId, onClose }) {
         <IconClose />
       </button>
 
-      <img className="mp-cover-mizu" src={track.cover} alt="" aria-hidden="true" />
+      <img
+        className="mp-cover-mizu"
+        src={track.cover}
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+      />
 
       {/* Edge grips. Their own pointer handlers, and stopPropagation on
           each, or a resize also drags the player. */}
