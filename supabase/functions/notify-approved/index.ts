@@ -7,17 +7,21 @@ const SITE = Deno.env.get('SITE_URL') ?? 'https://mizu.dev'
    itself a spam signal. */
 const REPLY_TO = Deno.env.get('REPLY_TO') ?? USER
 
-/* Separate from SITE_URL on purpose: an inbox has to fetch this over
+/* Its own banner and its own override, so it cannot be swapped by a
+   setting meant for the subscription mail.
+
+   Separate from SITE_URL on purpose: an inbox has to fetch this over
    HTTPS, so it cannot come from a dev server. Point it at storage and it
    works before the site is deployed and after the domain changes. */
 const BANNER =
-  Deno.env.get('BANNER_URL') ?? `${SITE}/profile/emailbanner/emailbannerimg.png`
+  Deno.env.get('TICKET_BANNER_URL') ??
+  `${SITE}/profile/emailbanner/emailticketnotificationbanner.png`
 const SB_URL = Deno.env.get('SUPABASE_URL')!
 const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 /* Printed on every run, so the logs say which build actually answered.
    Bump it when the template changes. */
-const BUILD = 'v4 design-led heading and subject'
+const BUILD = 'v6 matched layout'
 
 const ok = (msg: string) => new Response(msg, { status: 200 })
 
@@ -100,17 +104,24 @@ Deno.serve(async (req) => {
       ].join('\n'),
       /* Tables and inline styles, because Outlook renders mail through
          Word and Gmail strips <head>. Nothing here is a flex row or a
-         class, and every colour is stated rather than inherited. */
-      /* Tables and inline styles, because Outlook renders mail through
-         Word and Gmail strips <head>. The outer wrapper is transparent so
-         the card sits on the client's own background; the shadow is
-         ignored by Outlook and that is fine. */
+         class, and every colour is stated rather than inherited.
+
+         The outer wrapper stays transparent so the card sits on the
+         client's own background; the shadow is ignored by Outlook and
+         that is fine. */
       html: `
+<!-- Poppins first, a real fallback after. Gmail and Outlook strip
+     @font-face, so most inboxes land on the system sans; Apple Mail and
+     iOS honour it. The stack is what makes both acceptable rather than
+     one of them broken. -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+</style>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0">
   <tr>
-    <td align="center" style="padding:32px 12px">
+    <td align="center" style="padding:40px 12px">
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;border-radius:14px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
 
         <tr>
           <td style="padding:0;line-height:0">
@@ -123,27 +134,28 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:32px 36px 0">
-            <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8a93">
+          <td style="padding:40px 44px 0">
+            <p style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#7d7d87">
               入場券 &nbsp;/&nbsp; Approved
             </p>
-            <h1 style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:26px;line-height:1.25;font-weight:700;color:#fafafa">
+            <h1 style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:31px;line-height:1.18;font-weight:800;letter-spacing:-0.4px;color:#fafafa">
               ${esc(head)}
             </h1>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8">
-              Hi ${esc(name)}, I have reviewed it and it is now live at the
-              bottom of the page with everyone else's.
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.75;color:#c4c4cc">
+              Hi <span style="color:#fafafa;font-weight:600">${esc(name)}</span>,
+              I have reviewed it and it is now live at the bottom of the page
+              with everyone else's.
             </p>
           </td>
         </tr>
 
         <tr>
-          <td style="padding:24px 36px 30px">
+          <td style="padding:32px 44px 0">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="background:#fafafa">
+                <td style="background:#fafafa;border-radius:8px">
                   <a href="${esc(SITE)}/#gallery"
-                     style="display:inline-block;padding:13px 26px;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0b;text-decoration:none">
+                     style="display:inline-block;padding:15px 30px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.2px;color:#0a0a0b;text-decoration:none">
                     See it in the gallery
                   </a>
                 </td>
@@ -153,12 +165,17 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:0 36px 30px">
-            <div style="height:1px;background:#26262a;line-height:1px;font-size:0">&nbsp;</div>
-            <p style="margin:16px 0 6px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#6f6f78">
+          <td style="padding:36px 44px 0">
+            <div style="height:1px;background:#212127;line-height:1px;font-size:0">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 44px 0">
+            <p style="margin:0 0 8px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:#63636d">
               記録抹消 &nbsp;/&nbsp; Deleted
             </p>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#a1a1aa">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#9a9aa4">
               Your address is gone from the database. It was kept only long
               enough to send this.
             </p>
@@ -166,14 +183,19 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:0 36px 34px">
-            <p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8">
-              Thank you for making one. I appreciate you taking the time
-              more than you would probably guess.
+          <td style="padding:28px 44px 0">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.75;color:#c4c4cc">
+              Thank you for making one. I appreciate you taking the time more
+              than you would probably guess.
             </p>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8a8a93">
-              Francis Daniel Genese<br />
-              <a href="${esc(SITE)}" style="color:#d4d4d8;text-decoration:underline">${esc(SITE)}</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:32px 44px 40px">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8a8a93">
+              <span style="color:#d4d4d8;font-weight:600">Francis Daniel Genese</span><br />
+              <a href="${esc(SITE)}" style="color:#8a8a93;text-decoration:underline">${esc(SITE.replace(/^https?:\/\//, ''))}</a>
             </p>
           </td>
         </tr>

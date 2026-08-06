@@ -104,6 +104,10 @@ export default function Credits({ open, onClose }) {
                     <li key={it.name}>
                       <span className="cr-name-mizu">{it.name}</span>
 
+                      {/* Where it appears. A credit nobody can locate on
+                          the page is a gesture; this makes it checkable. */}
+                      {it.use && <span className="cr-use-mizu">{it.use}</span>}
+
                       {/* Linked when the source can be pointed at —
                           attribution that leads back to the creator is
                           worth more than a name in plain text. */}

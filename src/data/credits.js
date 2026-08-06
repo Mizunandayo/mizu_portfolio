@@ -49,27 +49,56 @@ const TYPE = [
 
 /* Fill these in as works are identified — Google Lens, SauceNAO or
    trace.moe will name most anime stills from a single frame. Format:
-   { name: 'Series or work', by: '© Studio / Publisher' }
+   { name: 'Series or work', by: '© Studio / Publisher', use: 'where' }
    Optional `href` links the entry to its source.
 
-   Left mostly empty rather than guessed: a wrong attribution is worse
-   than an honest gap, and the note below covers the gap.
+   Two levels of attribution, and both are worth having. An individual
+   uploader can rarely be named once a work has been through an
+   aggregator, but the rights holder of the series it comes from almost
+   always can — and "© Tatsuki Fujimoto / Shueisha" is a credit where
+   "via Pinterest" is only a note about where it was found.
 
-   The hero clip is the one item with a creator who can be named, so it
-   is named. Credit is not permission and does not licence anything —
-   what it does is make a creator who finds it far more likely to send a
-   message than a takedown notice. If Kioy agrees to the use, change
-   `by` to read "used with permission".
+   `use` names the surface each one appears on. It is what makes an
+   entry checkable rather than decorative: a rights holder can see at a
+   glance exactly what is theirs and where, and so can I when a file is
+   swapped out.
 
-   The link is the canonical post URL. The share link TikTok hands you
-   carries is_from_webapp, sender_device and web_id — and web_id is the
-   copying browser's own device identifier, which has no business in a
-   public credits list. */
+   Guessing is still worse than a gap. Anything not confidently
+   identified stays out and is covered by the note below.
+
+   Credit is not permission and does not licence anything — what it does
+   is make a creator who finds it far more likely to send a message than
+   a takedown notice. If Kioy agrees to the use, change `by` to read
+   "used with permission".
+
+   The TikTok link is the canonical post URL. The share link TikTok
+   hands you carries is_from_webapp, sender_device and web_id — and
+   web_id is the copying browser's own device identifier, which has no
+   business in a public credits list. */
 const ARTWORK = [
   {
     name: 'Hero background clip',
     by: 'Kioy · @kioyuie3 on TikTok',
+    use: 'Hero backdrop',
     href: 'https://www.tiktok.com/@kioyuie3/video/7658900062600269076',
+  },
+  {
+    name: 'Chainsaw Man',
+    by: '© Tatsuki Fujimoto / Shueisha',
+    use: 'Subscribe section plate',
+    href: 'https://chainsawman.dog/',
+  },
+  {
+    name: 'Chainsaw Man: Reze Arc',
+    by: '© Tatsuki Fujimoto / Shueisha · MAPPA',
+    use: 'Admin sign-in plate · photographer unknown',
+    href: 'https://chainsawman.dog/',
+  },
+  {
+    name: 'Laid-Back Camp / ゆるキャン△',
+    by: '© あfろ / Houbunsha',
+    use: 'Email banner',
+    href: 'https://yurucamp.jp/',
   },
 ]
 
@@ -79,7 +108,11 @@ export const CREDITS = [
     group: 'Artwork & video',
     jp: '画像',
     items: ARTWORK,
-    note: 'Additional artwork and video sourced via Pinterest and other aggregators; original creators unidentified.',
+    note:
+      'Series and rights holders are named where the work could be identified. ' +
+      'The rest was found through Pinterest, TikTok and similar aggregators, ' +
+      'which strip original attribution, so the individual creators remain unknown. ' +
+      'Naming where something was found is not a credit, and none is claimed.',
   },
   { group: 'Typefaces', jp: '書体', items: TYPE },
 ]

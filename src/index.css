@@ -9,6 +9,13 @@
    verbatim; -mizu classes are portfolio additions.
    ══════════════════════════════════════════════════ */
 
+/* The subscribe plate, named once and used twice. Point this at a .gif
+   and both the band and the /subscribed page follow: a CSS
+   background-image animates a GIF exactly as an <img> does. */
+html {
+  --kw-plate: url('/profile/sada.jpg');
+}
+
 /* ── Reset / Base ──────────────────────────────── */
 html {
   scroll-behavior: smooth;
@@ -4901,7 +4908,10 @@ html.tk-open-mizu {
 .hero-mark-mizu {
   position: absolute;
   z-index: 1;
-  top: 50%;
+  /* Sat slightly high rather than dead centre: the readout and the name
+     occupy the lower left, so a mark on the exact midline reads as
+     hanging off the bottom of the plate rather than resting on it. */
+  top: 44%;
   /* Centred on the right half rather than pinned to the edge: that
      half runs 50%–100%, so its middle is 75%. */
   left: 74%;
@@ -7987,6 +7997,7 @@ html.tk-open-mizu {
   display: flex;
   align-items: baseline;
   gap: 12px;
+  flex-wrap: wrap;
   padding: 7px 0;
   border-bottom: 1px solid rgba(250, 250, 250, 0.07);
 }
@@ -7997,6 +8008,18 @@ html.tk-open-mizu {
   font-weight: 600;
   color: rgba(240, 240, 243, 0.96);
   flex-shrink: 0;
+}
+
+/* Sits with the name, not with the attribution: it says where the work
+   is, which belongs to the left-hand identity rather than to the
+   right-hand credit. Wraps onto its own line when the row is tight. */
+.cr-use-mizu {
+  flex-shrink: 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.6);
 }
 
 .cr-by-mizu {
@@ -8452,104 +8475,161 @@ a.cr-by-mizu:hover {
   z-index: 4;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
+/* Pills rather than boxes, and one shared surface: a soft translucent
+   slab over the plate, lifted a touch on hover so the pair behaves like
+   one control rather than two chips that happen to sit together. */
 .hero-bg-btn-mizu,
-.hero-vol-mizu > button {
+.hero-vol-mizu {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 12px;
+  height: 36px;
+  color: rgba(244, 244, 245, 0.92);
+  background: rgba(10, 10, 12, 0.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
+  transition: background 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-bg-btn-mizu {
+  gap: 9px;
+  padding: 0 15px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(244, 244, 245, 0.9);
-  border: 1px solid rgba(250, 250, 250, 0.24);
-  background: rgba(8, 8, 8, 0.6);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
   cursor: pointer;
-  transition: border-color 180ms cubic-bezier(0.16,1,0.3,1),
-              background 180ms cubic-bezier(0.16,1,0.3,1),
-              color 180ms cubic-bezier(0.16,1,0.3,1);
 }
 
 .hero-bg-btn-mizu:hover,
-.hero-vol-mizu > button:hover {
-  border-color: rgba(250, 250, 250, 0.6);
-  background: rgba(14, 14, 14, 0.78);
+.hero-vol-mizu:hover,
+.hero-vol-mizu:focus-within {
   color: #fff;
+  background: rgba(18, 18, 22, 0.66);
+  border-color: rgba(250, 250, 250, 0.34);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.8);
 }
 
-.hero-vol-mizu > button { padding: 0 9px; gap: 0; }
+.hero-bg-btn-mizu:active { transform: translateY(0); }
 
-/* The slider is folded away until the cluster is hovered — width, not
+/* The track is folded away until the pill is hovered. Width, not
    display, so it can actually animate open. */
 .hero-vol-mizu {
-  display: flex;
-  align-items: center;
   gap: 0;
-  height: 32px;
-  padding-right: 0;
-  border: 1px solid transparent;
-  transition: padding-right 260ms cubic-bezier(0.16,1,0.3,1);
+  padding: 0;
+  overflow: hidden;
+  transition: background 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              padding-right 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-vol-mizu:hover,
+.hero-vol-mizu:focus-within { padding-right: 16px; }
+
+/* The icon carries no surface of its own: the pill around it is the
+   surface, so the two never read as a button inside a button. */
+.hero-vol-mizu > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .hero-vol-mizu input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   width: 0;
-  height: 3px;
+  height: 5px;
   margin: 0;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  /* A range input gives CSS no handle on its own value, so the fill is
+     drawn from a custom property the component keeps in step. */
+  background: linear-gradient(
+    to right,
+    #fafafa 0 calc(var(--vol, 0) * 100%),
+    rgba(255, 255, 255, 0.22) calc(var(--vol, 0) * 100%) 100%
+  );
   opacity: 0;
   cursor: pointer;
   outline: none;
-  transition: width 260ms cubic-bezier(0.16,1,0.3,1),
-              opacity 200ms cubic-bezier(0.16,1,0.3,1),
-              margin 260ms cubic-bezier(0.16,1,0.3,1);
+  transition: width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              margin 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* focus-within too, or the slider collapses the instant it is tabbed
    to and the keyboard user is adjusting something invisible. */
 .hero-vol-mizu:hover input[type='range'],
 .hero-vol-mizu:focus-within input[type='range'] {
-  width: 76px;
+  width: 84px;
   opacity: 1;
-  margin: 0 12px 0 4px;
+  margin-left: 2px;
 }
 
 .hero-vol-mizu input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  background: #fafafa;
+  background: #fff;
   border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-vol-mizu input[type='range']::-moz-range-thumb {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  background: #fafafa;
+  background: #fff;
   border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-vol-mizu input[type='range']:hover::-webkit-slider-thumb,
+.hero-vol-mizu input[type='range']:active::-webkit-slider-thumb { transform: scale(1.18); }
+.hero-vol-mizu input[type='range']:hover::-moz-range-thumb,
+.hero-vol-mizu input[type='range']:active::-moz-range-thumb { transform: scale(1.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-btn-mizu,
+  .hero-vol-mizu,
+  .hero-vol-mizu input[type='range'] { transition: none; }
+  .hero-bg-btn-mizu:hover,
+  .hero-vol-mizu:hover { transform: none; }
 }
 
 /* The generated backdrop is recruiter's, so the switch goes with it. */
 .mode-recruiter .hero-bg-ctl-mizu { display: none; }
 
+/* Icon only on a phone, and a circle rather than a squashed pill: at
+   36px tall a label-less capsule reads as a mistake. */
 @media (max-width: 560px) {
   .hero-bg-btn-mizu span { display: none; }
-  .hero-bg-btn-mizu { padding: 0 10px; }
+  .hero-bg-btn-mizu { width: 36px; padding: 0; justify-content: center; gap: 0; }
 }
 
 /* ══════════════════════════════════════════════════
@@ -10099,7 +10179,7 @@ a.cr-by-mizu:hover {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: url('/profile/subscribebg.jpg') 70% center / cover no-repeat;
+  background: var(--kw-plate) 70% center / cover no-repeat;
 }
 
 /* Reads across the picture rather than sitting on a slab, so the wash
@@ -10377,8 +10457,17 @@ a.cr-by-mizu:hover {
   color: rgba(200, 200, 206, 0.9);
 }
 
-/* Identical in both modes. The gallery above it is personal-only, so in
-   recruiter mode the band follows the meishi card directly. */
+/* Recruiter mode drops the plate. The height only existed to give a 3:4
+   picture room, so without it the band collapses to what the type
+   actually needs, and the wash has nothing left to shade. */
+.mode-recruiter .kw-bg-mizu { display: none; }
+
+.mode-recruiter .kw-mizu {
+  min-height: 0;
+  padding-block: clamp(64px, 12vh, 132px);
+}
+
+.mode-recruiter .kw-spine-mizu { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .kw-seal-mizu { animation: none; }
@@ -10484,7 +10573,7 @@ a.cr-by-mizu:hover {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: url('/profile/subscribebg.jpg') 70% center / cover no-repeat;
+  background: var(--kw-plate) 70% center / cover no-repeat;
 }
 
 .kwd-bg-mizu::after {

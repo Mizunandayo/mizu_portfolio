@@ -7,11 +7,16 @@ const SITE = Deno.env.get('SITE_URL') ?? 'https://mizu.dev'
    itself a spam signal. */
 const REPLY_TO = Deno.env.get('REPLY_TO') ?? USER
 
-/* Separate from SITE_URL on purpose: an inbox has to fetch this over
+/* Its own banner and its own override. One shared BANNER_URL would put
+   a single image on both this and the ticket approval, which is exactly
+   what having two files is meant to avoid.
+
+   Separate from SITE_URL on purpose: an inbox has to fetch this over
    HTTPS, so it cannot come from a dev server. Point it at storage and it
    works before the site is deployed and after the domain changes. */
 const BANNER =
-  Deno.env.get('BANNER_URL') ?? `${SITE}/profile/emailbanner/emailbannerimg.png`
+  Deno.env.get('SUBSCRIBE_BANNER_URL') ??
+  `${SITE}/profile/emailbanner/emailverificationsubscriberbanner.png`
 const SB_URL = Deno.env.get('SUPABASE_URL')!
 
 /* The functions host, not the site: the link has to work before the
@@ -21,7 +26,7 @@ const CONFIRM =
 
 /* Printed on every run, so the logs say which build actually answered.
    Bump it when the template changes. */
-const BUILD = 'v1 double opt-in'
+const BUILD = 'v4 transparent wrapper'
 
 const ok = (msg: string) => new Response(msg, { status: 200 })
 
@@ -94,11 +99,18 @@ Deno.serve(async (req) => {
          the card sits on the client's own background; the shadow is
          ignored by Outlook and that is fine. */
       html: `
+<!-- Poppins first, a real fallback after. Gmail and Outlook strip
+     @font-face, so most inboxes will land on the system sans; Apple
+     Mail and iOS honour it. The stack is what makes both acceptable
+     rather than one of them broken. -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+</style>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0">
   <tr>
-    <td align="center" style="padding:32px 12px">
+    <td align="center" style="padding:40px 12px">
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;border-radius:14px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
 
         <tr>
           <td style="padding:0;line-height:0">
@@ -111,27 +123,31 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:32px 36px 0">
-            <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8a93">
+          <td style="padding:40px 44px 0">
+            <p style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#7d7d87">
               瓦版 &nbsp;/&nbsp; Confirm
             </p>
-            <h1 style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:26px;line-height:1.25;font-weight:700;color:#fafafa">
+            <h1 style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:31px;line-height:1.18;font-weight:800;letter-spacing:-0.4px;color:#fafafa">
               Confirm your subscription
             </h1>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.75;color:#c4c4cc">
               Someone asked to follow updates from this portfolio using
-              ${esc(record.email)}. One click and you are on the list.
+              <!-- Wrapped and coloured on purpose: left bare, Gmail
+                   auto-links a plain address and paints it its own blue,
+                   which is the one thing on the card nobody chose. -->
+              <span style="color:#fafafa;font-weight:600">${esc(record.email)}</span>.
+              One click and you are on the list.
             </p>
           </td>
         </tr>
 
         <tr>
-          <td style="padding:24px 36px 30px">
+          <td style="padding:32px 44px 0">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="background:#fafafa">
+                <td style="background:#fafafa;border-radius:8px">
                   <a href="${esc(link)}"
-                     style="display:inline-block;padding:13px 26px;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0b;text-decoration:none">
+                     style="display:inline-block;padding:15px 30px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.2px;color:#0a0a0b;text-decoration:none">
                     Confirm subscription
                   </a>
                 </td>
@@ -141,27 +157,45 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:0 36px 30px">
-            <div style="height:1px;background:#26262a;line-height:1px;font-size:0">&nbsp;</div>
-            <p style="margin:16px 0 6px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#6f6f78">
+          <td style="padding:36px 44px 0">
+            <div style="height:1px;background:#212127;line-height:1px;font-size:0">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 44px 0">
+            <p style="margin:0 0 8px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:2.2px;text-transform:uppercase;color:#63636d">
               一度だけ &nbsp;/&nbsp; One click
             </p>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#a1a1aa">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#9a9aa4">
               Nothing is sent until you confirm. If this was not you,
               ignore this message and the address is never used.
             </p>
           </td>
         </tr>
 
+        <!-- Contained rather than loose: an unwrapped 90-character URL
+             was the single messiest thing on the card. -->
         <tr>
-          <td style="padding:0 36px 34px">
-            <p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#a1a1aa">
-              If the button does nothing, paste this into your browser:<br />
-              <a href="${esc(link)}" style="color:#d4d4d8;text-decoration:underline;word-break:break-all">${esc(link)}</a>
-            </p>
-            <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8a8a93">
-              Francis Daniel Genese<br />
-              <a href="${esc(SITE)}" style="color:#d4d4d8;text-decoration:underline">${esc(SITE)}</a>
+          <td style="padding:24px 44px 0">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#131318;border-radius:8px">
+              <tr>
+                <td style="padding:16px 18px">
+                  <p style="margin:0 0 6px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#8a8a93">
+                    Button not working? Paste this into your browser:
+                  </p>
+                  <a href="${esc(link)}" style="font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;line-height:1.6;color:#a9a9b4;text-decoration:none;word-break:break-all">${esc(link)}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:32px 44px 40px">
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8a8a93">
+              <span style="color:#d4d4d8;font-weight:600">Francis Daniel Genese</span><br />
+              <a href="${esc(SITE)}" style="color:#8a8a93;text-decoration:underline">${esc(SITE.replace(/^https?:\/\//, ''))}</a>
             </p>
           </td>
         </tr>

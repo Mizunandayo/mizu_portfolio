@@ -10,16 +10,14 @@ export const PROFILE = {
   shortName: 'Francis',
   kanji:     '水',
   brand:     'MIZU',
-  role:      'Software Engineer',
+  role:      'Agentic AI Engineer',
   tagline:   'Agentic AI · LLM Applications · Intelligent Systems',
   location:  'Philippines',
 
-  strip: ['Software Engineer', 'Philippines'],
+  strip: ['Agentic AI Engineer', 'Philippines'],
 
   intro:
-    'I build AI-powered applications and scalable software systems turning ideas into ' +
-    'production ready software through modern web technologies, intelligent systems and ' +
-    'thoughtful system design.',
+    'The value of tyAI lies not in its complexi, but in its ability to solve real problems. Meaningful experiences matter more than the technology. ',
 
   /* The About section's claim. Stated as a rule rather than a virtue -
      "discipline is to build it" describes a quality; this makes a
@@ -31,7 +29,7 @@ export const PROFILE = {
 
 
   about: [
-    'Software Engineer building AI-powered applications and scalable software systems. I enjoy ' +
+    'Agentic AI Engineer building AI-powered applications and scalable software systems. I enjoy ' +
     'transforming ideas into production-ready software through modern web technologies, ' +
     'intelligent systems, and thoughtful system design.',
 
@@ -54,7 +52,7 @@ export const PROFILE = {
 
   availability: {
     status:    '',
-    headline:  'Open to software engineering roles.',
+    headline:  'Open to Agentic AI Engineering roles.',
     modes:     ['On-site', 'Hybrid', 'Remote'],
   },
 
@@ -108,8 +106,8 @@ export const CHANNELS = [
 /* Site-level constants. */
 export const SITE = {
   url:   'https://mizu-portfolio.vercel.app',
-  title: 'Francis Daniel Genese - Software Engineer',
+  title: 'Francis Daniel Genese - Agentic AI Engineer',
   description:
-    'Software engineer building AI-powered applications and scalable systems. Nine shipped ' +
+    'Agentic AI Engineer building AI-powered applications and scalable systems. Nine shipped ' +
     'projects across agentic AI, LLM platforms, computer vision and full-stack web.',
 }

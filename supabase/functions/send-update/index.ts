@@ -23,7 +23,7 @@ const SB_KEY =
 const UNSUB =
   Deno.env.get('UNSUB_URL') ?? `${SB_URL}/functions/v1/unsubscribe`
 
-const BUILD = 'v4 logs what it sent'
+const BUILD = 'v5 matched layout, paced'
 
 /* Gmail will not take an unbounded run in one connection, and a runaway
    loop is the expensive kind of mistake. */
@@ -77,7 +77,7 @@ const para = (s: string) =>
     .filter(Boolean)
     .map(
       (p) =>
-        `<p style="margin:0 0 14px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#d4d4d8">${p.replace(/\n/g, '<br />')}</p>`
+        `<p style="margin:0 0 16px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.75;color:#c4c4cc">${p.replace(/\n/g, '<br />')}</p>`
     )
     .join('')
 
@@ -216,11 +216,18 @@ Deno.serve(async (req) => {
             `Unsubscribe: ${off}`,
           ].join('\n'),
           html: `
+<!-- Poppins first, a real fallback after. Gmail and Outlook strip
+     @font-face, so most inboxes land on the system sans; Apple Mail and
+     iOS honour it. The stack is what makes both acceptable rather than
+     one of them broken. -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+</style>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0">
   <tr>
-    <td align="center" style="padding:32px 12px">
+    <td align="center" style="padding:40px 12px">
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#0d0d0f;border-radius:14px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,0.42)">
 
         <tr>
           <td style="padding:0;line-height:0">
@@ -233,11 +240,11 @@ Deno.serve(async (req) => {
         </tr>
 
         <tr>
-          <td style="padding:32px 36px 0">
-            <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a8a93">
+          <td style="padding:40px 44px 0">
+            <p style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#7d7d87">
               瓦版 &nbsp;/&nbsp; Kawaraban
             </p>
-            <h1 style="margin:0 0 16px;font-family:Helvetica,Arial,sans-serif;font-size:26px;line-height:1.25;font-weight:700;color:#fafafa">
+            <h1 style="margin:0 0 20px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:31px;line-height:1.18;font-weight:800;letter-spacing:-0.4px;color:#fafafa">
               ${esc(heading)}
             </h1>
             ${para(message)}
@@ -247,12 +254,12 @@ Deno.serve(async (req) => {
         ${
           ctaLabel
             ? `<tr>
-          <td style="padding:14px 36px 30px">
+          <td style="padding:16px 44px 0">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="background:#fafafa">
+                <td style="background:#fafafa;border-radius:8px">
                   <a href="${esc(link)}"
-                     style="display:inline-block;padding:13px 26px;font-family:Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0b;text-decoration:none">
+                     style="display:inline-block;padding:15px 30px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.2px;color:#0a0a0b;text-decoration:none">
                     ${esc(ctaLabel)}
                   </a>
                 </td>
@@ -260,19 +267,24 @@ Deno.serve(async (req) => {
             </table>
           </td>
         </tr>`
-            : '<tr><td style="padding:0 36px 16px"></td></tr>'
+            : ''
         }
 
         <tr>
-          <td style="padding:0 36px 34px">
-            <div style="height:1px;background:#26262a;line-height:1px;font-size:0">&nbsp;</div>
-            <p style="margin:16px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8a8a93">
-              Francis Daniel Genese<br />
-              <a href="${esc(link)}" style="color:#d4d4d8;text-decoration:underline">${esc(base)}</a>
+          <td style="padding:36px 44px 0">
+            <div style="height:1px;background:#212127;line-height:1px;font-size:0">&nbsp;</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 44px 40px">
+            <p style="margin:0 0 14px;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.7;color:#8a8a93">
+              <span style="color:#d4d4d8;font-weight:600">Francis Daniel Genese</span><br />
+              <a href="${esc(link)}" style="color:#8a8a93;text-decoration:underline">${esc(base.replace(/^https?:\/\//, ''))}</a>
             </p>
-            <p style="margin:14px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#6f6f78">
-              You are getting this because you subscribed to updates from
-              this portfolio.
+            <p style="margin:0;font-family:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:#63636d">
+              You are getting this because you subscribed to updates from this
+              portfolio.
               <a href="${esc(off)}" style="color:#8a8a93;text-decoration:underline">Unsubscribe</a>.
             </p>
           </td>
@@ -289,6 +301,12 @@ Deno.serve(async (req) => {
         console.error('send failed', p.email, String(e))
         failed.push(p.email)
       }
+
+      /* Paced rather than fired in a burst: Gmail throttles a rapid run
+         on one connection, and a throttled message looks identical to a
+         delivered one from this side. At this list size the wait is
+         irrelevant; at 400 it is still under three minutes. */
+      if (people.length > 1) await new Promise((r) => setTimeout(r, 400))
     }
   } finally {
     await client.close()

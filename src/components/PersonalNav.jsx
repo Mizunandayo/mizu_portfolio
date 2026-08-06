@@ -34,7 +34,12 @@ const PULL_TRIP = 26; // how far it has to be pulled to ring
 
 export default function PersonalNav({ onCredits }) {
   const { toggle } = useMode();
-  const [dock, setDock] = useState({ edge: "right", pos: 50 });
+  /* Hung high on the right rather than centred: the hero's own copy
+     runs down the left, so the top right is the one quiet corner, and a
+     dock that hangs reads as suspended from the frame. 18 is the same
+     floor `snap` clamps to, so this is a position the visitor can
+     return to by dragging. */
+  const [dock, setDock] = useState({ edge: "right", pos: 18 });
   const [drag, setDrag] = useState(null);
   const [open, setOpen] = useState(false);
   const [pull, setPull] = useState(0);
