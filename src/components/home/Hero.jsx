@@ -29,11 +29,17 @@ import Presence from "../shared/Presence.jsx";
 
 /* The rotation, in order. Each hands over to the next when it ends,
    which is accurate where a timer would only be a guess at the file's
-   length. Both carry sound, so the volume control is unconditional. */
+   length. Every layer carries sound, so the volume control is
+   unconditional. */
 const LAYERS = [
-  { id: "one", label: "Video 1", src: "/profile/herobg2.mp4" },
-  { id: "two", label: "Video 2", src: "/profile/herobg3.mp4" },
+  { id: "one", label: "Video 1", src: "/profile/herobg2.mp4" }
 ];
+
+/* With nothing to rotate to, the backdrop loops and the switch that
+   would have cycled it is not rendered — a control whose only outcome
+   is the state you are already in. Derived rather than declared, so
+   adding a second entry above brings both back on its own. */
+const SINGLE = LAYERS.length < 2;
 
 /* Where the backdrop's sound sits whenever it is turned on, whether on
    load or from the greeting's no-music path. One constant so the two
@@ -178,11 +184,11 @@ export default function Hero() {
       {/* Personal plate. Decorative, and the generated backdrop below
           is switched off with it so the two never stack.
 
-          All three stay mounted and cross-fade on opacity. Rendering
-          only the active one would unmount the video on every rotation
-          and re-fetch 47 MB when its turn came round, and would leave
-          the outgoing backdrop on screen until the incoming file had
-          decoded — which reads as a stall, not a cut. */}
+          Every layer stays mounted and they cross-fade on opacity.
+          Rendering only the active one would unmount the video on each
+          hand-over and re-fetch it when its turn came round again, and
+          would leave the outgoing backdrop on screen until the incoming
+          file had decoded — which reads as a stall, not a cut. */}
       {LAYERS.map((l, i) => (
         <video
           key={l.id}
@@ -190,15 +196,16 @@ export default function Hero() {
           className={`hero-gif-mizu${i === bg ? " is-on" : ""}`}
           src={l.src}
           muted={muted}
-          loop={still}
+          loop={SINGLE || still}
           playsInline
-          /* Only the one on screen is worth the bandwidth up front. The
-             second is fetched lazily, which matters when the pair is
-             50 MB between them. */
+          /* Only the one on screen is worth the bandwidth up front; any
+             others trickle in behind it, which matters at 40 MB a file. */
           preload={i === bg ? "auto" : "metadata"}
           aria-hidden="true"
           tabIndex={-1}
-          onEnded={still ? undefined : next}
+          /* A looping element never fires this, so the hand-over is
+             wired up only when there is somewhere to hand over to. */
+          onEnded={SINGLE || still ? undefined : next}
           onTimeUpdate={
             i === bg
               ? (e) => {
@@ -227,15 +234,17 @@ export default function Hero() {
 
       {/* ── Backdrop switch ── */}
       <div className="hero-bg-ctl-mizu">
-        <button
-          type="button"
-          className="hero-bg-btn-mizu"
-          onClick={() => setBg((i) => (i + 1) % LAYERS.length)}
-          aria-label={`Background: ${layer.label}. Switch to ${LAYERS[(bg + 1) % LAYERS.length].label}.`}
-        >
-          <LayerIcon />
-          <span>{layer.label}</span>
-        </button>
+        {!SINGLE && (
+          <button
+            type="button"
+            className="hero-bg-btn-mizu"
+            onClick={() => setBg((i) => (i + 1) % LAYERS.length)}
+            aria-label={`Background: ${layer.label}. Switch to ${LAYERS[(bg + 1) % LAYERS.length].label}.`}
+          >
+            <LayerIcon />
+            <span>{layer.label}</span>
+          </button>
+        )}
 
         <div className="hero-vol-mizu">
             <button
@@ -414,15 +423,28 @@ const I = {
 };
 
 /* Sized in em so it tracks the row's own font-size rather than needing
-   a second number to keep in step with it. */
+   a second number to keep in step with it.
+
+   Filled, not stroked, so `fill` carries the colour and there is no
+   stroke to inherit — the source had both set to a hard #ffffff, which
+   would have ignored the row and thickened every edge by half a unit.
+
+   The iris reads as a ring because the first path's second subpath
+   winds against the first and knocks a hole through it. That only
+   works while the two stay in one <path> under the default nonzero
+   fill rule; split them and the eye fills in solid.
+
+   The viewBox is cropped to the artwork. As authored the eye occupies
+   the middle half of a 490-square box and the rest is empty, so the
+   icon was drawing a 7px eye and centring it in dead space — most of
+   why it read as cramped. */
 const EyeIcon = () => (
   <svg
-    width="1.15em" height="1.15em" viewBox="0 0 24 24"
-    fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+    width="1.5em" height="0.75em" viewBox="0 123.7 490 242.6"
+    fill="currentColor" aria-hidden="true"
   >
-    <path d="M1.8 12S5.5 5.4 12 5.4 22.2 12 22.2 12 18.5 18.6 12 18.6 1.8 12 1.8 12Z" />
-    <circle cx="12" cy="12" r="2.9" />
+    <path d="M245,123.7c-91.8,0-178.5,42.8-245,121.3c66.5,78.6,153.2,121.3,245,121.3S423.5,323.2,490,245 C423.5,166.4,336.8,123.7,245,123.7z M245,347.3c-56.4,0-102.3-45.9-102.3-102.3S188.6,142.7,245,142.7S347.3,188.6,347.3,245 S301.4,347.3,245,347.3z" />
+    <path d="M245,162.6c-45.5,0-82.4,36.9-82.4,82.4s36.9,82.4,82.4,82.4s82.4-36.9,82.4-82.4S290.5,162.6,245,162.6z" />
   </svg>
 );
 

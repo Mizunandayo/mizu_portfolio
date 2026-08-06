@@ -21,7 +21,7 @@ export const PROFILE = {
   strip: ['Agentic AI Engineer', 'Philippines'],
 
   intro:
-    'The value of tyAI lies not in its complexi, but in its ability to solve real problems. Meaningful experiences matter more than the technology. ',
+    'Meaningful experiences matter more than the technology. ',
 
   /* The About section's claim. Stated as a rule rather than a virtue -
      "discipline is to build it" describes a quality; this makes a

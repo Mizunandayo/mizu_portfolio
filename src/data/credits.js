@@ -35,8 +35,20 @@ export const TAKEDOWN =
   'remove it, whichever you prefer.'
 
 /* Music reads from the same array the player does, so a track renamed
-   in one place cannot end up miscredited in the other. */
-const MUSIC = TRACKS.map((t) => ({ name: t.title, by: t.artist }))
+   in one place cannot end up miscredited in the other.
+
+   The backdrop's song is appended rather than added to TRACKS: that
+   array is the playlist the greeting offers, and a track nobody can
+   choose does not belong in it. `use` is what keeps it honest — it
+   plays under the hero rather than in the player. */
+const MUSIC = [
+  ...TRACKS.map((t) => ({ name: t.title, by: t.artist })),
+  {
+    name: '真夜中のドア / Stay With Me',
+    by: 'Miki Matsubara · 松原みき',
+    use: 'Hero backdrop',
+  },
+]
 
 /* Everything the site actually licenses. Worth listing on its own — it
    shows the page is a record rather than an apology. */
@@ -68,20 +80,13 @@ const TYPE = [
 
    Credit is not permission and does not licence anything — what it does
    is make a creator who finds it far more likely to send a message than
-   a takedown notice. If Kioy agrees to the use, change `by` to read
-   "used with permission".
+   a takedown notice.
 
-   The TikTok link is the canonical post URL. The share link TikTok
-   hands you carries is_from_webapp, sender_device and web_id — and
-   web_id is the copying browser's own device identifier, which has no
+   If a link ever goes back in here, use the canonical post URL. A share
+   link carries tracking parameters, and some of them — TikTok's web_id
+   among them — identify the browser that did the copying, which has no
    business in a public credits list. */
 const ARTWORK = [
-  {
-    name: 'Hero background clip',
-    by: 'Kioy · @kioyuie3 on TikTok',
-    use: 'Hero backdrop',
-    href: 'https://www.tiktok.com/@kioyuie3/video/7658900062600269076',
-  },
   {
     name: 'Chainsaw Man',
     by: '© Tatsuki Fujimoto / Shueisha',
