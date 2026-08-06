@@ -9,6 +9,7 @@ import {
 import { submit, tidyName, EMAIL_RE, NAME_MAX } from '../../data/tickets.js'
 import { configured } from '../../data/supabase.js'
 import { TICKETS_CHANGED } from '../../events.js'
+import ART from 'virtual:ticket-art'
 import Fubuki from './Fubuki.jsx'
 
 export { ticketStamp } from './ticketPresets.js'
@@ -150,14 +151,17 @@ export default function Ticket({ open, name, art, onClose }) {
      would poison the export instead. */
   const [shot, setShot] = useState(null)
   const [shotErr, setShotErr] = useState('')
+  /* Which default artwork is on the plate. Owned here rather than read
+     off the parent, which is what lets the editor hold still while the
+     greeting behind it goes on cycling. */
+  const [artIdx, setArtIdx] = useState(0)
 
   /* 'edit' | 'review'. `step` is taken by the preset carousel. */
   const [stage, setStage] = useState('edit')
   const [proof, setProof] = useState(null)
   const proofRef = useRef(null)
-  /* The composed canvas, frozen when review opens. `art` comes from the
-     greeting's slideshow and keeps rotating, so re-composing later would
-     download and upload a different picture than the one reviewed. */
+  /* The composed canvas, frozen when review opens — re-composing later
+     would upload something other than what was reviewed. */
   const frozeRef = useRef(null)
   const [sent, setSent] = useState(false)
   const [sendErr, setSendErr] = useState('')
@@ -225,8 +229,26 @@ export default function Ticket({ open, name, art, onClose }) {
   const clean = typed || 'YOUR NAME'
   const serial = useMemo(() => serialOf(clean), [clean])
 
-  /* Their picture if they gave one, the slideshow frame otherwise. */
-  const artSrc = shot || art
+  /* Their picture if they gave one, the chosen default otherwise. */
+  const artSrc = shot || ART[artIdx] || art
+
+  /* Opens on whatever frame was showing behind it and then holds. The
+     `art` prop is deliberately not a dependency: the greeting's own
+     stub keeps its slideshow, and following it would slide the artwork
+     out from under someone part-way through composing a ticket. */
+  useEffect(() => {
+    if (!open) return
+    const i = ART.indexOf(art)
+    setArtIdx(i < 0 ? 0 : i)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  /* The framing was chosen against the previous picture, so it does not
+     carry over to a different one. */
+  const stepArt = useCallback((d) => {
+    setArtIdx((i) => (i + d + ART.length) % ART.length)
+    setPan(null)
+  }, [])
 
   /* Revoked when it is replaced and when the panel unmounts — the
      cleanup closes over the URL it was created with, so each one is
@@ -936,18 +958,50 @@ export default function Ticket({ open, name, art, onClose }) {
           {/* Over the plate rather than in the panel: the control acts on
               what is directly beneath it. */}
           <div className="tk-tools-mizu">
-            <label
-              className="tk-tool-mizu"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <PhotoIcon />
-              {shot ? 'Change photo' : 'Use my photo'}
-              <input
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={onPickPhoto}
-              />
-            </label>
+            <span className="tk-tools-start-mizu">
+              <label
+                className="tk-tool-mizu"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <PhotoIcon />
+                {shot ? 'Change photo' : 'Use my photo'}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={onPickPhoto}
+                />
+              </label>
+
+              {/* Only while the default art is what is showing — once a
+                  photo is on the plate there is nothing to step through,
+                  and the button beside this one swaps it back. */}
+              {!shot && ART.length > 1 && (
+                <span
+                  className="tk-art-mizu"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => stepArt(-1)}
+                    aria-label="Previous artwork"
+                  >
+                    <Chevron dir="left" />
+                  </button>
+
+                  <span className="tk-art-count-mizu">
+                    {artIdx + 1} / {ART.length}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => stepArt(1)}
+                    aria-label="Next artwork"
+                  >
+                    <Chevron dir="right" />
+                  </button>
+                </span>
+              )}
+            </span>
 
             <span className="tk-tools-end-mizu">
               <button
@@ -1436,6 +1490,24 @@ function ExpandIcon() {
       strokeLinejoin="round"
     >
       <path d="M4 10V4h6M20 14v6h-6M20 10V4h-6M4 14v6h6" />
+    </svg>
+  )
+}
+
+function Chevron({ dir }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={dir === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
     </svg>
   )
 }

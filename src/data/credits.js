@@ -105,6 +105,13 @@ const ARTWORK = [
     use: 'Email banner',
     href: 'https://yurucamp.jp/',
   },
+  /* No href: the others here link to a site I have checked, and a
+     guessed official URL is worse than none. */
+  {
+    name: 'Black Clover / ブラッククローバー',
+    by: '© Yūki Tabata / Shueisha',
+    use: 'Closing plate · line spoken by Yami Sukehiro',
+  },
 ]
 
 export const CREDITS = [

@@ -216,10 +216,10 @@ function frame(c, P, w, h) {
   c.strokeRect(0.5, 0.5, w - 1, h - 1)
 }
 
-const rows = (issued, short) => [
+const rows = (issued) => [
   ['発行日 / ISSUED', stamped(issued)],
   ['案内 / GUIDE', `${PROFILE.kanji}  ${PROFILE.name.toUpperCase()}`],
-  ['席 / SEAT', short ? 'GENERAL ADMISSION' : 'GENERAL ADMISSION — ALL NINE PROJECTS'],
+  ['席 / SEAT', 'GENERAL ADMISSION'],
 ]
 
 /* The site, not the GitHub profile. A ticket is a souvenir of this page,
@@ -254,13 +254,13 @@ function message(c, P, { text, x, y, w, room, base = 17 }) {
 }
 
 /* Body block shared by the layouts wide enough for a label column. */
-function detail(c, P, o, { x, y, w, gap = 40, labelW = 190, room, short }) {
+function detail(c, P, o, { x, y, w, gap = 40, labelW = 190, room }) {
   if (o.mode === 'message' && o.message.trim()) {
     label(c, P, '一言 / MESSAGE', x, y)
     message(c, P, { text: o.message.trim(), x, y: y + 34, w, room: room - 34 })
     return
   }
-  rows(o.issued, short).forEach(([k, v], i) => {
+  rows(o.issued).forEach(([k, v], i) => {
     label(c, P, k, x, y + i * gap)
     c.font = `600 15px ${SANS}`
     c.fillStyle = P.body
@@ -276,7 +276,7 @@ function detailStacked(c, P, o, { x, y, w, gap = 46, room, valueSize = 15 }) {
     message(c, P, { text: o.message.trim(), x, y: y + 30, w, room: room - 30, base: 15 })
     return
   }
-  rows(o.issued, true).forEach(([k, v], i) => {
+  rows(o.issued).forEach(([k, v], i) => {
     label(c, P, k, x, y + i * gap, 10)
     const s = fit(c, v, w, valueSize, 600, 11)
     c.font = `600 ${s}px ${SANS}`
@@ -384,7 +384,6 @@ function paintTanzaku(c, o) {
     gap: 42,
     labelW: 168,
     room: 150,
-    short: true,
   })
 
   label(c, P, handle(), PAD, H - 40, 11)
@@ -436,7 +435,7 @@ function paintPass(c, o) {
     label(c, P, '一言 / MESSAGE', x, 248, 11)
     message(c, P, { text: o.message.trim(), x, y: 278, w: bodyW, room: 84, base: 16 })
   } else {
-    const cols = rows(o.issued, true)
+    const cols = rows(o.issued)
     const cw = bodyW / cols.length
     cols.forEach(([k, v], i) => {
       const cx = x + i * cw

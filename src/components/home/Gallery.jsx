@@ -4,6 +4,7 @@ import { listApproved } from '../../data/tickets.js'
 import { PRESETS, paintTicket, serialOf } from '../shared/ticketPresets.js'
 import { TICKETS_CHANGED, OPEN_TICKET } from '../../events.js'
 import Lightbox from '../shared/Lightbox.jsx'
+import ART from 'virtual:ticket-art'
 
 const PER_PAGE = 16
 
@@ -44,9 +45,9 @@ async function build(n) {
   /* Canvas font loading is separate from CSS, so without this the first
      few plates draw in the fallback face. */
   await document.fonts?.ready
-  const arts = await Promise.all(
-    Array.from({ length: 11 }, (_, i) => load(`/profile/tickets/gc${i + 1}.jpg`))
-  )
+  /* Same list the greeting's slideshow uses, so the two cannot end up
+     drawing from different sets of art. */
+  const arts = await Promise.all(ART.map(load))
 
   const issued = new Date()
 

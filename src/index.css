@@ -30,11 +30,16 @@ html {
      position:sticky and hands scrollIntoView a different scrollport to
      aim at. clip refuses the overflow without any of that.
 
-     body already carries overflow-x:hidden, which propagates to the
-     viewport only while the root's own overflow is visible — a
-     condition three different scroll locks here temporarily break by
-     setting overflow on <html>. Declaring it on the root as well means
-     it does not depend on that. */
+     Declared here rather than left to body, whose overflow reaches the
+     viewport only by propagation — and only while the root's own
+     overflow is visible, a condition three different scroll locks here
+     break by setting overflow on <html>.
+
+     body must then be `clip` too, not `hidden`: setting this stops its
+     value propagating, so a `hidden` there would apply to body itself
+     and make it a scroll container. Every position:sticky on the page
+     would start measuring against that instead of the viewport, which
+     is to say it would stop sticking. */
   overflow-x: clip;
 }
 
@@ -42,7 +47,8 @@ body {
   font-family: 'Poppins', system-ui, sans-serif;
   background: #050505;
   color: rgba(255,255,255,0.92);
-  overflow-x: hidden;
+  /* See the root rule above — `clip`, never `hidden`. */
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -9838,7 +9844,53 @@ a.cr-by-mizu:hover {
   align-items: flex-start;
 }
 
-.tk-tools-end-mizu { display: flex; gap: 6px; }
+.tk-tools-start-mizu,
+.tk-tools-end-mizu { display: flex; align-items: center; gap: 6px; }
+
+/* ── Default artwork stepper ───────────────────────
+   One pill with the arrows inside it rather than two
+   more buttons in the row: the pair acts on a single
+   thing, and three separate pills beside the photo
+   button read as four unrelated controls. */
+.tk-art-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  background: rgba(10, 10, 11, 0.72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 250, 250, 0.24);
+  border-radius: 999px;
+}
+
+.tk-art-mizu button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: rgba(250, 250, 250, 0.78);
+  cursor: pointer;
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.tk-art-mizu button:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+
+/* Tabular figures and a floor on the width, so the pill does not
+   twitch as the count crosses from one digit to two. */
+.tk-art-count-mizu {
+  min-width: 3.6em;
+  text-align: center;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(212, 212, 216, 0.92);
+}
 
 .tk-tool-mizu {
   display: inline-flex;
@@ -11902,4 +11954,109 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   font-size: 1rem;
   font-weight: 800;
   color: rgba(244, 244, 245, 0.62);
+}
+
+/* ══════════════════════════════════════════════════
+   Closing — the last plate.
+
+   Ranged right, because the quote's weight is in its
+   endings. The backdrop is a 736x1144 portrait held
+   at cover, so on a wide screen it is cropped hard to
+   the middle band — which is what the scrim below is
+   sized against.
+   ══════════════════════════════════════════════════ */
+
+.cl-mizu {
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  /* Half again the viewport, so the plate is scrolled through rather
+     than taken in at a glance. dvh with a vh fallback: on a phone vh
+     is the height with the browser chrome retracted. */
+  min-height: 150vh;
+  min-height: 150dvh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: clamp(48px, 10vh, 140px) clamp(22px, 6vw, 96px);
+  background: #030303;
+}
+
+.cl-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('/profile/lastbg.jpg') center / cover no-repeat;
+}
+
+/* Weighted to the right, where the type sits. A flat wash heavy enough
+   to carry the text would take the picture down to black everywhere
+   else, which is the whole plate gone to hold four lines. */
+.cl-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to left,
+    rgba(3, 3, 3, 0.84) 0%,
+    rgba(3, 3, 3, 0.6) 48%,
+    rgba(3, 3, 3, 0.3) 100%
+  );
+}
+
+.cl-quote-mizu {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  /* Exactly as wide as its longest line, so the Japanese sets on one
+     line and the English breaks only where the markup says.
+
+     A ch- or em-based cap cannot do this: those resolve against this
+     element's own inherited 16px, not against the 38px display face
+     inside it, so any number that looked right was about a third of
+     what the text needed and everything wrapped. max-content asks the
+     text instead, and keeps asking if the wording changes.
+
+     max-width holds it inside the plate, and flex-shrink still lets it
+     give on a narrow screen, where wrapping is the right answer. */
+  width: max-content;
+  max-width: 100%;
+  text-align: right;
+  font-family: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  color: #fafafa;
+  /* The backdrop is dark but not evenly so — this is what keeps the
+     type off a lighter patch without darkening the whole plate. */
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.92);
+}
+
+.cl-jp-mizu {
+  margin: 0 0 clamp(8px, 1.4vh, 16px);
+  font-size: clamp(1.05rem, 2.5vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.55;
+}
+
+.cl-en-mizu {
+  margin: 0;
+  font-size: clamp(1rem, 2.1vw, 2rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.cl-by-mizu {
+  margin-top: clamp(5px, 0.9vh, 12px);
+  font-size: clamp(0.78rem, 1.15vw, 1.1rem);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  color: rgba(235, 235, 238, 0.84);
+}
+
+.cl-by-mizu cite {
+  font-style: normal;
+  font-variant-caps: small-caps;
+}
+
+@media (max-width: 640px) {
+  .cl-en-mizu br { display: none; }
 }

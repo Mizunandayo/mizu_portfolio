@@ -3,6 +3,7 @@ import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
 import { HERO_SOUND } from '../../events.js'
 import { WELCOME_STORE as STORE } from '../../greeting.js'
+import SLIDES from 'virtual:ticket-art'
 import Ticket, { ticketStamp } from './Ticket.jsx'
 import { OPEN_TICKET } from '../../events.js'
 
@@ -34,15 +35,15 @@ const EXIT = 460
 const PREVIEW_DWELL = 180
 const NUMERAL = ['一', '二', '三', '四', '五']
 
-/* All eleven are 9:16, and the stub is sized to match, so nothing is
-   cropped. Every frame stays mounted — cross-fading needs the outgoing
-   one still in the tree — but only the first is fetched at full
-   priority; the rest trickle in behind it, and at 4.5s a frame each
-   they are there long before their turn. */
-const SLIDES = Array.from(
-  { length: 11 },
-  (_, i) => `/profile/tickets/gc${i + 1}.jpg`
-)
+/* Read off disk at build time — drop a gc<n> into the folder and it is
+   in the rotation, whatever its extension. See the plugin in
+   vite.config.js.
+
+   All are 9:16 and the stub is sized to match, so nothing is cropped.
+   Every frame stays mounted — cross-fading needs the outgoing one
+   still in the tree — but only the first is fetched at full priority;
+   the rest trickle in behind it, and at 4.5s a frame each they are
+   there long before their turn. */
 const SLIDE_MS = 4500
 
 export default function Welcome({ show, onPickTrack }) {
@@ -89,11 +90,12 @@ export default function Welcome({ show, onPickTrack }) {
     setSlide((s) => (s + d + SLIDES.length) % SLIDES.length)
   }, [])
 
-  /* Also while the ticket panel is up. Opened from the gallery the
-     greeting is closed, and gating on `open` alone froze the artwork on
-     whichever frame it happened to be showing. */
+  /* The greeting's stub only, and only while the ticket editor is not
+     up. The editor picks its own artwork and steps through it by hand;
+     a timer still running underneath would either fight that or move
+     the greeting on to a frame nobody asked for. */
   useEffect(() => {
-    if (!open && !ticket) return
+    if (!open || ticket) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = window.setTimeout(() => go(1), SLIDE_MS)
     return () => clearTimeout(t)
