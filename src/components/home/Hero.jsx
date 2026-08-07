@@ -32,7 +32,8 @@ import Presence from "../shared/Presence.jsx";
    length. Every layer carries sound, so the volume control is
    unconditional. */
 const LAYERS = [
-  { id: "one", label: "Video 1", src: "/profile/herobg2.mp4" }
+  { id: "one", label: "Video 1", src: "/profile/herobg2.mp4" },
+  { id: "two", label: "Video 2", src: "/profile/herobg3.mp4" },
 ];
 
 /* With nothing to rotate to, the backdrop loops and the switch that
@@ -59,6 +60,10 @@ export default function Hero() {
   const { isRecruiter } = useMode();
   const views = useViews();
   const [bg, setBg] = useState(0);
+  /* Hold on the clip that is showing instead of handing over when it
+     ends. Off by default, so the backdrop still rotates unless asked
+     not to. */
+  const [hold, setHold] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(VOLUME);
   const [progress, setProgress] = useState(0);
@@ -80,6 +85,11 @@ export default function Hero() {
 
 
   const layer = LAYERS[bg];
+
+  /* Three ways to end up looping: nothing to hand over to, reduced
+     motion, or the visitor asked for it. They behave identically, so
+     the element reads one value rather than three conditions. */
+  const looping = SINGLE || still || hold;
 
   const next = useCallback(() => setBg((i) => (i + 1) % LAYERS.length), []);
 
@@ -196,7 +206,7 @@ export default function Hero() {
           className={`hero-gif-mizu${i === bg ? " is-on" : ""}`}
           src={l.src}
           muted={muted}
-          loop={SINGLE || still}
+          loop={looping}
           playsInline
           /* Only the one on screen is worth the bandwidth up front; any
              others trickle in behind it, which matters at 40 MB a file. */
@@ -204,8 +214,8 @@ export default function Hero() {
           aria-hidden="true"
           tabIndex={-1}
           /* A looping element never fires this, so the hand-over is
-             wired up only when there is somewhere to hand over to. */
-          onEnded={SINGLE || still ? undefined : next}
+             wired up only when the clip is going to end. */
+          onEnded={looping ? undefined : next}
           onTimeUpdate={
             i === bg
               ? (e) => {
@@ -243,6 +253,24 @@ export default function Hero() {
           >
             <LayerIcon />
             <span>{layer.label}</span>
+          </button>
+        )}
+
+        {/* Only worth offering when there is a hand-over to suppress —
+            a single clip already loops, and so does reduced motion. */}
+        {!SINGLE && !still && (
+          <button
+            type="button"
+            className={`hero-bg-btn-mizu hero-loop-mizu${hold ? " is-on" : ""}`}
+            onClick={() => setHold((v) => !v)}
+            aria-pressed={hold}
+            aria-label={
+              hold
+                ? "Looping this backdrop. Let it move on instead."
+                : "Loop this backdrop instead of moving on."
+            }
+          >
+            <LoopIcon />
           </button>
         )}
 
@@ -452,6 +480,15 @@ const LayerIcon = () => (
   <svg {...I}>
     <rect x="2" y="5" width="14" height="14" rx="2" />
     <path d="m22 8-6 4 6 4V8z" />
+  </svg>
+);
+
+const LoopIcon = () => (
+  <svg {...I}>
+    <path d="m17 2 4 4-4 4" />
+    <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+    <path d="m7 22-4-4 4-4" />
+    <path d="M21 13v1a4 4 0 0 1-4 4H3" />
   </svg>
 );
 

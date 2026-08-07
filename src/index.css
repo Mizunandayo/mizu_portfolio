@@ -8756,6 +8756,30 @@ a.cr-by-mizu:hover {
 
 .hero-bg-btn-mizu:active { transform: translateY(0); }
 
+/* Icon only, so a circle rather than a pill with nothing beside the
+   mark. Same 36px the label-less phone variant below uses, and the
+   same height as the volume control it sits next to. */
+.hero-loop-mizu {
+  width: 36px;
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+}
+
+/* Toggled on: filled rather than outlined. A pressed state that only
+   changes border colour is invisible against a moving backdrop. */
+.hero-bg-btn-mizu.is-on {
+  color: #0a0a0b;
+  background: rgba(250, 250, 250, 0.92);
+  border-color: rgba(250, 250, 250, 0.92);
+}
+
+.hero-bg-btn-mizu.is-on:hover {
+  color: #0a0a0b;
+  background: #fff;
+  border-color: #fff;
+}
+
 /* The track is folded away until the pill is hovered. Width, not
    display, so it can actually animate open. */
 .hero-vol-mizu {

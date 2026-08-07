@@ -37,15 +37,31 @@ export const TAKEDOWN =
 /* Music reads from the same array the player does, so a track renamed
    in one place cannot end up miscredited in the other.
 
-   The backdrop's song is appended rather than added to TRACKS: that
+   The backdrop's songs are appended rather than added to TRACKS: that
    array is the playlist the greeting offers, and a track nobody can
-   choose does not belong in it. `use` is what keeps it honest — it
-   plays under the hero rather than in the player. */
+   choose does not belong in it. `use` is what keeps it honest — these
+   play under the hero rather than in the player.
+
+   `use` names the surface rather than which clip: the order lives in
+   LAYERS, a clip can carry more than one track, and a "second clip"
+   label would go quietly wrong the first time either changes. */
 const MUSIC = [
   ...TRACKS.map((t) => ({ name: t.title, by: t.artist })),
   {
     name: '真夜中のドア / Stay With Me',
     by: 'Miki Matsubara · 松原みき',
+    use: 'Hero backdrop',
+  },
+  /* A fan edit: the song is Yeat's, the edit is METY's, and Attack on
+     Titan is already credited under Artwork for the banner. */
+  {
+    name: 'Popular (AOT × Yeat)',
+    by: 'Yeat · edit prod. METY',
+    use: 'Hero backdrop',
+  },
+  {
+    name: 'FIELD TRIP (VULTURES 2)',
+    by: 'Kanye West · Ty Dolla $ign',
     use: 'Hero backdrop',
   },
 ]
