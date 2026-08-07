@@ -387,7 +387,7 @@ export default function Welcome({ show, onPickTrack }) {
             </div>
 
             <h2 id="wc-title" className="wc-title-mizu">
-              Welcome to My Portfolio!
+              Welcome to Mizuki&rsquo;s Garage
             </h2>
 
             <p className="wc-copy-mizu">

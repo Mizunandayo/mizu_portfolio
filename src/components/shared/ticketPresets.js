@@ -330,7 +330,7 @@ function paintStub(c, o) {
 
   detail(c, P, o, { x, y: 278, w: right - x, room: 172 })
 
-  label(c, P, handle(), x, H - 42, 12)
+  label(c, P, handle(), x, H - 42, 13.5)
   frame(c, P, W, H)
   punch(c, [[STUB, 0], [STUB, H]], 15)
 }
@@ -386,7 +386,7 @@ function paintTanzaku(c, o) {
     room: 150,
   })
 
-  label(c, P, handle(), PAD, H - 40, 11)
+  label(c, P, handle(), PAD, H - 40, 12.4)
   frame(c, P, W, H)
   punch(c, [[0, ART], [W, ART]], 15)
 }
@@ -447,7 +447,7 @@ function paintPass(c, o) {
     })
   }
 
-  label(c, P, handle(), x, H - 38, 10)
+  label(c, P, handle(), x, H - 38, 11.3)
 
   /* The stub carries only what a torn-off half needs to stay useful:
      who, which ticket, when. */
@@ -546,7 +546,7 @@ function paintOfuda(c, o) {
   tategaki(c, 'ようこそ', 14, AY + 20, 20, 28, P.faint)
 
   label(c, P, ticketStamp(o.issued), W / 2, H - 76, 10, 'center')
-  label(c, P, handle(), W / 2, H - 44, 10, 'center')
+  label(c, P, handle(), W / 2, H - 44, 11.3, 'center')
 
   /* Paired hairlines just inside the cut, tracing the point. */
   c.strokeStyle = P.edge
@@ -608,13 +608,16 @@ function paintPrint(c, o) {
       text: o.message.trim(),
       x: PAD,
       y: capY + 124,
+      /* Shortened from 78 to leave the footer its own band. A message
+         that filled the old room ended level with the site line. */
+      room: 62,
       w: AW,
-      room: 78,
       base: 15,
     })
+    label(c, P, handle(), PAD, H - 32, 12.4)
   } else {
     label(c, P, `${stamped(o.issued)}   ·   ${PROFILE.kanji} ${PROFILE.name.toUpperCase()}`, PAD, capY + 122, 12)
-    label(c, P, handle(), PAD, capY + 152, 11)
+    label(c, P, handle(), PAD, capY + 152, 12.4)
   }
 
   frame(c, P, W, H)

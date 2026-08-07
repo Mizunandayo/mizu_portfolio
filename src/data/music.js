@@ -9,12 +9,14 @@
 
 export const TRACKS = [
   {
-    id: 'trackmaker',
-    kanji: '幻',
-    title: 'Illusionary Daytime',
-    artist: 'Trackmaker',
-    src: '/profile/trackmaker.mp3',
-    cover: '/profile/trackmakercover.png',
+    id: 'sdpinterlude',
+    /* 間 — the interval between two things. The other two are 走 for
+       the drift and 律 for the rhythm; this one names the pause. */
+    kanji: '間',
+    title: 'SDP Interlude',
+    artist: 'Travis Scott',
+    src: '/profile/sdpinterlude.mp3',
+    cover: '/profile/sdpinterludecover.png',
   },
   {
     id: 'tokyodrift',
