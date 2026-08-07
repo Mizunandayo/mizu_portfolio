@@ -9,6 +9,7 @@ import Certifications from '../components/home/Certifications.jsx'
 import Contact from '../components/home/Contact.jsx'
 import Gallery from '../components/home/Gallery.jsx'
 import Subscribe from '../components/home/Subscribe.jsx'
+import Games from '../components/home/Games.jsx'
 import Closing from '../components/home/Closing.jsx'
 import SectionBreak from '../components/shared/SectionBreak.jsx'
 import { metaFor } from '../seo.js'
@@ -44,7 +45,9 @@ export default function Home() {
 
         <Gallery />
 
+        <Games />
         <Subscribe />
+
 
 
         <Closing />

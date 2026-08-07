@@ -28,7 +28,7 @@ export const TRACK = [
     note:   null,
     org:    'Bataan Peninsula State University',
     title:  'Network and Web Application',
-    period: 'Dec 2022 - Jul 2026',
+    period: 'Aug 2022 - Jul 2026',
     place:  'Bataan, Philippines',
     logo:   'bpsu.png',
     body:   null,

@@ -89,7 +89,13 @@ export async function destroySent(row, all) {
 }
 
 /* Where a broadcast can point. Hashes match the section ids on the home
-   page, so a link lands on the thing the email is about. */
+   page, so a link lands on the thing the email is about.
+
+   The fourth field marks a section that only exists in personal mode.
+   Recruiter mode strips the ticket gallery outright
+   (`.mode-recruiter .tg-mizu { display: none }`), so a recruiter-mode
+   link to #gallery opens a page with no such anchor and just sits at
+   the top — a dead link that looks like a working one. */
 export const TARGETS = [
   ['#work', 'Projects', 'See the project'],
   ['#hackathons', 'Hackathons', 'See the hackathon'],
@@ -97,7 +103,13 @@ export const TARGETS = [
   ['#experience', 'Experience', 'See what changed'],
   ['#stack', 'Stack', 'See the stack'],
   ['#about', 'About', 'Read more'],
-  ['#gallery', 'Ticket gallery', 'See the gallery'],
+  ['#gallery', 'Ticket gallery', 'See the gallery', true],
   ['#contact', 'Contact', 'Get in touch'],
   ['', 'Home page', 'Visit the portfolio'],
 ]
+
+export const targetsFor = (mode) =>
+  TARGETS.filter(([, , , personalOnly]) => !personalOnly || mode === 'personal')
+
+/* Named for the note the panel shows when a mode has fewer choices. */
+export const PERSONAL_ONLY = TARGETS.filter(([, , , p]) => p).map(([, label]) => label)

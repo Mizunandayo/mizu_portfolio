@@ -16,6 +16,13 @@ html {
   --kw-plate: url('/profile/sada.jpg');
 }
 
+/* The arcade backdrop is NOT set here. It is whichever bg.* file is
+   sitting in public/profile/games/, found at build time — see the
+   plugin in vite.config.js. There is deliberately no second way to set
+   it: there used to be a --gm-plate variable here as well, and having
+   both meant the file on disk quietly won while the variable sat in
+   the stylesheet looking authoritative. */
+
 /* ── Reset / Base ──────────────────────────────── */
 html {
   scroll-behavior: smooth;
@@ -12094,4 +12101,358 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 
 @media (max-width: 640px) {
   .cl-en-mizu br { display: none; }
+}
+
+/* ── Ticket likes ──────────────────────────────────
+   Same read-only tally the project cards carry, and
+   for the same reason: the card is itself a button, so
+   the control lives in the viewer it opens. */
+.tg-likes-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  /* Pulled back against the card's own 12px gap, so it reads as
+     attached to the name above it rather than as a third row. */
+  margin-top: -5px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+/* Neutral unless it is yours — colouring every tally coral reads as
+   "you liked all of these", which the number cannot support. */
+.tg-likes-mizu.is-mine { color: #ff6b6b; }
+
+/* Bottom centre: the close button owns the top right and the step
+   arrows own the sides, so this is the one edge left free. Lifted clear
+   of .plb-count-mizu, which sits at 22px and was underneath it. */
+.plb-action-mizu {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 54px;
+  transform: translateX(-50%);
+}
+
+/* ══════════════════════════════════════════════════
+   遊戯 — the games shelf.
+
+   Cover plates on a shelf, the way a store lays them
+   out: full colour, with the name on a frosted strip
+   over the art rather than as a caption under it.
+   ══════════════════════════════════════════════════ */
+
+.gm-mizu {
+  position: relative;
+  z-index: 10;
+  /* Half again the row's own height, so the shelf is a stop on the way
+     down rather than a band you pass through. */
+  min-height: 150vh;
+  min-height: 150dvh;
+  display: flex;
+  align-items: center;
+  padding: clamp(72px, 11vh, 132px) 0;
+  background: #050505;
+  border-top: 1px solid rgba(161, 161, 170, 0.16);
+}
+
+/* Dropped with the rest of the personal layer, alongside the ticket
+   wall and the closing quote. A page and a half of games played is not
+   part of that pitch. */
+.mode-recruiter .gm-mizu { display: none; }
+
+.gm-bg-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  /* No background-image here on purpose — the component sets it from
+     the scanned file. Longhands rather than the shorthand, which would
+     reset the image to none and rely on the inline style to win it
+     back. */
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Held back so the plates and the word stay legible over whatever the
+   picture happens to be, and faded at both ends so the section joins
+   its neighbours rather than butting against them.
+
+   ▶ --gm-veil is the one number to turn. 0 shows the picture as it is;
+   1 hides it completely.
+
+   0.95 is not arbitrary: the gallery's backdrop and the subscribe
+   plate both come out at 4/255 on screen once their own scrims are
+   applied, and this puts the arcade at the same brightness rather than
+   at the same alpha — the three source images differ, so matching the
+   number would not have matched the look. Backdrops here are texture,
+   not pictures. Drop this to ~0.4 if you would rather see it. */
+.gm-mizu { --gm-veil: 0.95; }
+
+.gm-bg-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      #050505 0%,
+      rgba(5, 5, 5, var(--gm-veil)) 12%,
+      rgba(5, 5, 5, var(--gm-veil)) 88%,
+      #050505 100%),
+    linear-gradient(90deg,
+      rgba(5, 5, 5, 0.34) 0%,
+      transparent 26%,
+      transparent 74%,
+      rgba(5, 5, 5, 0.34) 100%);
+}
+
+.gm-inner-mizu {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 4vw, 56px);
+  text-align: center;
+  /* So the word below sizes against this column rather than the
+     viewport — without a container declared, cqi silently falls back
+     to the viewport and the word overruns the plates on a wide screen. */
+  container-type: inline-size;
+}
+
+/* Rule, kicker, title, note, rule — one row that collapses to a stack
+   when there is no longer width for five things side by side. */
+.gm-head-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 26px);
+  margin-bottom: clamp(26px, 4vh, 44px);
+}
+
+.gm-rule-mizu {
+  flex: 1 1 0;
+  height: 1px;
+  min-width: 20px;
+  background: rgba(250, 250, 250, 0.55);
+}
+
+.gm-kicker-mizu,
+.gm-note-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.68rem, 0.9vw, 0.82rem);
+  font-weight: 500;
+  color: rgba(212, 212, 216, 0.82);
+  white-space: nowrap;
+}
+
+.gm-centre-mizu {
+  margin: 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: #fafafa;
+  white-space: nowrap;
+}
+
+/* Four across, and the count is the authored number — the plates are
+   portrait, so three would leave a gap the row cannot fill. */
+.gm-row-mizu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 28px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 5:8 upright — a fifth taller than the 3:4 it started at. Fixed here
+   so a mixed set of sources still lines up.
+
+   No border: the plate is lifted off the page by shadow alone, which
+   is what reads as a card sitting on a surface rather than a framed
+   picture printed on it. */
+.gm-card-mizu {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 5 / 8;
+  background: #0b0b0c;
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.85),
+              0 28px 46px -26px rgba(0, 0, 0, 0.75);
+  text-decoration: none;
+  transition: transform 420ms cubic-bezier(0.16,1,0.3,1),
+              border-color 420ms cubic-bezier(0.16,1,0.3,1),
+              box-shadow 420ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.gm-card-mizu img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.01);
+  transition: transform 620ms cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Only the ones that go somewhere lift. */
+.gm-card-mizu.is-link { cursor: pointer; }
+
+.gm-card-mizu.is-link:hover,
+.gm-card-mizu.is-link:focus-visible {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 30px -14px rgba(0, 0, 0, 0.9),
+              0 44px 64px -30px rgba(0, 0, 0, 0.85);
+}
+
+.gm-card-mizu.is-link:hover img,
+.gm-card-mizu.is-link:focus-visible img { transform: scale(1.06); }
+
+.gm-card-mizu:focus-visible {
+  outline: 2px solid rgba(250, 250, 250, 0.75);
+  outline-offset: 3px;
+}
+
+/* A pane of glass catching the light, not a frost. The gradient runs
+   from the top-right corner down to the middle and stops — a sweep
+   that crossed the whole plate would read as a wash over the art
+   rather than a highlight on something in front of it.
+
+   Oversized and parked off the corner at rest, so the hover slides it
+   in across the art instead of fading a static band into view. */
+.gm-veil-mizu {
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 150%;
+  height: 150%;
+  background: linear-gradient(
+    205deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.14) 26%,
+    rgba(255, 255, 255, 0.03) 46%,
+    transparent 62%
+  );
+  opacity: 0;
+  transform: translate(14%, -14%);
+  transition: opacity 340ms cubic-bezier(0.16,1,0.3,1),
+              transform 620ms cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+}
+
+
+/* Keyboard reaches it the same way the pointer does. */
+.gm-card-mizu:hover .gm-veil-mizu,
+.gm-card-mizu:focus-visible .gm-veil-mizu {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* The word. Sized against the container rather than the viewport so it
+   spans the row instead of the screen. */
+.gm-word-mizu {
+  margin: clamp(18px, 3vh, 34px) 0 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(3rem, 13cqi, 11rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 0.92;
+  color: #fafafa;
+}
+
+.gm-caption-mizu {
+  max-width: 62ch;
+  margin: clamp(10px, 1.6vh, 18px) auto 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.8rem, 1vw, 0.92rem);
+  line-height: 1.7;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+@media (max-width: 860px) {
+  /* Five things across stop fitting well before the plates do. */
+  .gm-head-mizu { flex-wrap: wrap; }
+  .gm-rule-mizu { display: none; }
+}
+
+@media (max-width: 620px) {
+  /* A 120vh band of two-across plates is mostly empty on a phone. */
+  .gm-mizu { min-height: 0; }
+  .gm-row-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── Where to find him ─────────────────────────────
+   Two links under the caption. The handle sits beside
+   the service so the tag is readable whether or not
+   the link resolves — which matters for Xbox, whose
+   profile URL for a #suffixed gamertag is a guess. */
+.gm-profiles-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 16px);
+  margin-top: clamp(20px, 3vh, 34px);
+}
+
+.gm-profile-mizu {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 20px 11px 16px;
+  color: #fafafa;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(250, 250, 250, 0.18);
+  transition: background 260ms cubic-bezier(0.16,1,0.3,1),
+              border-color 260ms cubic-bezier(0.16,1,0.3,1),
+              transform 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.gm-profile-mizu:hover,
+.gm-profile-mizu:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(250, 250, 250, 0.42);
+  transform: translateY(-2px);
+}
+
+/* The mark carries the brand colour; the label stays white so the two
+   buttons still read as a pair rather than as two loose logos. */
+.gm-profile-mizu.is-steam svg { color: #66c0f4; }
+.gm-profile-mizu.is-xbox svg { color: #107c10; }
+
+.gm-profile-mizu.is-steam:hover {
+  border-color: rgba(102, 192, 244, 0.75);
+  background: rgba(102, 192, 244, 0.12);
+}
+
+.gm-profile-mizu.is-xbox:hover {
+  border-color: rgba(16, 124, 16, 0.9);
+  background: rgba(16, 124, 16, 0.16);
+}
+
+.gm-profile-text-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  line-height: 1.2;
+}
+
+.gm-profile-label-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+.gm-profile-handle-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
 }

@@ -25,6 +25,9 @@ export default function Lightbox({
   slug,
   onIndex,
   onClose,
+  /* Rendered over the image, bottom centre. A slot rather than a prop
+     per control: the viewer should not have to know what a like is. */
+  action,
   /* Skips the placeholder's border and hatch. For artwork that is
      already a finished object rather than a screenshot needing a frame. */
   bare = false,
@@ -150,6 +153,19 @@ export default function Lightbox({
           )}
         </div>
       </div>
+
+      {/* Stops the click the way the frame and the arrows do. The
+          dialog closes on any click outside the picture, and this sits
+          outside it — so without this, pressing the control dismissed
+          the viewer instead of working. */}
+      {action && (
+        <div
+          className="plb-action-mizu"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {action}
+        </div>
+      )}
 
       <button
         type="button"

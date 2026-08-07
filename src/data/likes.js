@@ -20,6 +20,14 @@ import { LIKES_CHANGED } from '../events.js'
 const KEY = 'mizu:like-key'
 const MINE = 'mizu:liked'
 
+/* Tickets share the projects' table rather than getting one of their
+   own. toggle_like takes any slug up to 60 characters, so a namespaced
+   id fits, and one per-IP throttle across both is the behaviour we
+   want anyway — forty likes an hour is forty likes an hour, whatever
+   they were spent on. The prefix is what stops a ticket id ever
+   colliding with a project slug. */
+export const ticketSlug = (id) => `ticket:${id}`
+
 export function visitorKey() {
   try {
     let k = localStorage.getItem(KEY)

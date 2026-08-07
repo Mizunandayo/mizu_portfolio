@@ -25,7 +25,7 @@ function Heart({ full }) {
   )
 }
 
-export default function LikeButton({ slug }) {
+export default function LikeButton({ slug, what = 'project' }) {
   const [n, setN] = useState(null)
   const [mine, setMine] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -82,7 +82,7 @@ export default function LikeButton({ slug }) {
         onClick={click}
         disabled={busy}
         aria-pressed={mine}
-        aria-label={mine ? 'Remove your like' : 'Like this project'}
+        aria-label={mine ? 'Remove your like' : `Like this ${what}`}
       >
         <span key={bump} className="lk-heart-mizu">
           <Heart full={mine} />

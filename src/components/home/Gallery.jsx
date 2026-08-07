@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { configured } from '../../data/supabase.js'
 import { listApproved } from '../../data/tickets.js'
 import { PRESETS, paintTicket, serialOf } from '../shared/ticketPresets.js'
-import { TICKETS_CHANGED, OPEN_TICKET } from '../../events.js'
+import { TICKETS_CHANGED, OPEN_TICKET, LIKES_CHANGED } from '../../events.js'
+import { listCounts, readMine, ticketSlug } from '../../data/likes.js'
 import Lightbox from '../shared/Lightbox.jsx'
+import LikeButton from '../deck/LikeButton.jsx'
 import ART from 'virtual:ticket-art'
 
 const PER_PAGE = 16
@@ -117,6 +119,8 @@ export default function Gallery() {
   const [query, setQuery] = useState('')
   const [design, setDesign] = useState('all')
   const [page, setPage] = useState(1)
+  const [likes, setLikes] = useState({})
+  const [mine, setMine] = useState(() => new Set())
 
   const load = useCallback(async () => {
     try {
@@ -174,6 +178,32 @@ export default function Gallery() {
   useEffect(() => {
     if (shot >= 0) setPage(Math.floor(shot / PER_PAGE) + 1)
   }, [shot])
+
+  /* One query for the whole grid, then patched in place from the event
+     the button fires. Re-querying after every like would spend a round
+     trip re-fetching numbers that did not change. */
+  useEffect(() => {
+    let dead = false
+    setMine(readMine())
+    listCounts().then((all) => { if (!dead) setLikes(all) }).catch(() => {})
+
+    const patch = (e) => {
+      const { slug, likes: n, liked } = e.detail ?? {}
+      if (!slug) return
+      setLikes((prev) => ({ ...prev, [slug]: n }))
+      setMine((prev) => {
+        const next = new Set(prev)
+        liked ? next.add(slug) : next.delete(slug)
+        return next
+      })
+    }
+
+    window.addEventListener(LIKES_CHANGED, patch)
+    return () => {
+      dead = true
+      window.removeEventListener(LIKES_CHANGED, patch)
+    }
+  }, [])
 
   const viewable = useMemo(
     () =>
@@ -286,6 +316,23 @@ export default function Gallery() {
                     />
                   </span>
                   <span className="tg-name-mizu">{t.name}</span>
+
+                  {/* A tally, not a control — this whole card is
+                      already a button, so liking lives in the viewer
+                      it opens. Hidden at zero, which is noise. */}
+                  {likes[ticketSlug(t.id)] > 0 && (
+                    <span
+                      className={`tg-likes-mizu${mine.has(ticketSlug(t.id)) ? ' is-mine' : ''}`}
+                    >
+                      <svg
+                        width="14" height="14" viewBox="0 0 24 24"
+                        fill="currentColor" aria-hidden="true"
+                      >
+                        <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 0 1 19.4 13Z" />
+                      </svg>
+                      {likes[ticketSlug(t.id)]}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
@@ -341,6 +388,18 @@ export default function Gallery() {
         index={shot}
         onIndex={setShot}
         onClose={() => setShot(-1)}
+        /* Keyed on the ticket showing, so stepping through the viewer
+           moves the button to the next one rather than leaving it on
+           whichever was opened first. */
+        action={
+          viewable[shot] && (
+            <LikeButton
+              key={viewable[shot].key}
+              slug={ticketSlug(viewable[shot].key)}
+              what="ticket"
+            />
+          )
+        }
       />
     </section>
   )

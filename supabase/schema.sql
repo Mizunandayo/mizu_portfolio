@@ -509,55 +509,8 @@ create trigger project_likes_tally_trg
   after insert or delete on public.project_likes
   for each row execute function public.project_likes_tally();
 
--- The only way in. Anon has no table grant, so a like cannot be written
--- except through this, which means the throttle cannot be skipped.
-create or replace function public.toggle_like(p_slug text, p_key uuid)
-returns table (slug text, likes int, liked boolean)
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_ip   text := public.client_ip();
-  recent int;
-  had    boolean;
-begin
-  if p_slug is null or btrim(p_slug) = '' or char_length(p_slug) > 60 then
-    raise exception 'Unknown project.';
-  end if;
-
-  select exists (
-    select 1 from public.project_likes
-    where project_likes.slug = p_slug and visitor_key = p_key
-  ) into had;
-
-  if had then
-    delete from public.project_likes
-    where project_likes.slug = p_slug and visitor_key = p_key;
-  else
-    -- Counted on the way in only. Undoing a like is not abuse and
-    -- should never be what uses up the allowance.
-    if v_ip <> '' then
-      select count(*) into recent
-      from public.project_likes
-      where project_likes.ip = v_ip and created_at > now() - interval '1 hour';
-
-      if recent >= 40 then
-        raise exception 'That is a lot of likes from here. Try again later.';
-      end if;
-    end if;
-
-    insert into public.project_likes (slug, visitor_key, ip)
-    values (p_slug, p_key, nullif(v_ip, ''))
-    on conflict do nothing;
-  end if;
-
-  return query
-    select p_slug,
-           coalesce((select ps.likes from public.project_stats ps where ps.slug = p_slug), 0),
-           not had;
-end;
-$$;
+-- toggle_like itself is defined in the hardening section below, so
+-- that its allowlist check and this table stay in one place.
 
 revoke all on function public.toggle_like(text, uuid) from public;
 grant execute on function public.toggle_like(text, uuid) to anon, authenticated;
@@ -633,11 +586,28 @@ security definer
 set search_path = public
 as $$
 declare
-  v_ip   text := public.client_ip();
-  recent int;
-  had    boolean;
+  v_ip     text := public.client_ip();
+  v_ticket uuid;
+  recent   int;
+  had      boolean;
 begin
-  if not exists (select 1 from public.project_stats ps where ps.slug = p_slug) then
+  -- Two allowlists, one rule: a like is refused unless the thing being
+  -- liked already exists. project_stats covers the projects; an
+  -- approved ticket covers the gallery. Neither lets a caller invent a
+  -- slug and write rows against it forever.
+  if p_slug like 'ticket:%' then
+    begin
+      v_ticket := substring(p_slug from 8)::uuid;
+    exception when others then
+      raise exception 'Unknown ticket.';
+    end;
+
+    if not exists (
+      select 1 from public.tickets t where t.id = v_ticket and t.approved
+    ) then
+      raise exception 'Unknown ticket.';
+    end if;
+  elsif not exists (select 1 from public.project_stats ps where ps.slug = p_slug) then
     raise exception 'Unknown project.';
   end if;
 

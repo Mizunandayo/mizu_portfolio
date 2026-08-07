@@ -8,6 +8,8 @@ import {
   uploadBanner,
   sendUpdate,
   TARGETS,
+  targetsFor,
+  PERSONAL_ONLY,
 } from '../../data/subscribers.js'
 import {
   EyeIcon, TrashIcon, MailIcon, SearchIcon, CopyIcon, SendIcon,
@@ -301,6 +303,20 @@ export default function Subscribers() {
     if (found) setCtaLabel(found[2])
   }
 
+  const options = useMemo(() => targetsFor(mode), [mode])
+
+  /* Switching to recruiter can take the chosen section off the list.
+     Left alone the <select> would show a value it no longer offers —
+     browsers fall back to displaying the first option while the state
+     still holds the old path, so the panel would read "Projects" and
+     send a link to #gallery. */
+  useEffect(() => {
+    if (options.some(([p]) => p === target)) return
+    const [path, , cta] = options[0]
+    setTarget(path)
+    setCtaLabel(cta)
+  }, [options, target])
+
   const send = async (test) => {
     setSending(test ? 'test' : 'real')
     setResult(null)
@@ -416,18 +432,9 @@ export default function Subscribers() {
           <aside className="ad-side-mizu">
             <p className="ad-sec-mizu">設定 / Settings</p>
 
-            <label className="ad-field-mizu">
-              <span>Button goes to</span>
-              <select
-                className="ad-select-mizu" value={target}
-                onChange={(e) => onTarget(e.target.value)}
-              >
-                {TARGETS.map(([path, label]) => (
-                  <option key={path || 'home'} value={path}>{label}</option>
-                ))}
-              </select>
-            </label>
-
+            {/* Mode first: it decides which destinations exist, so
+                choosing it second meant picking a section and then
+                having it taken away. */}
             <div className="ad-field-mizu">
               <span>Land them in</span>
               <div className="ad-seg-mizu" role="group" aria-label="Site mode">
@@ -441,6 +448,29 @@ export default function Subscribers() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <label className="ad-field-mizu">
+              <span>Button goes to</span>
+              <select
+                className="ad-select-mizu" value={target}
+                onChange={(e) => onTarget(e.target.value)}
+              >
+                {options.map(([path, label]) => (
+                  <option key={path || 'home'} value={path}>{label}</option>
+                ))}
+              </select>
+              {mode === 'recruiter' && (
+                <small>
+                  {PERSONAL_ONLY.join(', ')}{' '}
+                  {PERSONAL_ONLY.length === 1 ? 'is' : 'are'} personal mode only.
+                </small>
+              )}
+            </label>
+
+            {/* The two together, which is the thing that actually gets
+                pasted into the mail. */}
+            <div className="ad-field-mizu">
               <small>Link: <code>/?mode={mode}{target}</code></small>
             </div>
 
