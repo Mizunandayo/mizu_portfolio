@@ -166,6 +166,37 @@ export default function Hero() {
     active()?.play().catch(() => {});
   }, [isRecruiter]);
 
+  /* A hidden tab has no business downloading video.
+
+     Browsers throttle timers in a background tab but keep media
+     playing, so a page nobody is looking at goes on rotating between
+     the clips and re-fetching them — a 21 MB pull every 54 seconds,
+     for hours, from a tab someone forgot to close. That is where a
+     month of bandwidth went in a single day.
+
+     Resumes only if it was actually playing: the visitor may have
+     paused it with the spacebar before switching away. */
+  useEffect(() => {
+    if (isRecruiter) return
+
+    const wasPlaying = { current: false }
+
+    const onVisibility = () => {
+      const v = active();
+      if (!v) return;
+
+      if (document.hidden) {
+        wasPlaying.current = !v.paused;
+        v.pause();
+        return;
+      }
+      if (wasPlaying.current) v.play().catch(() => {});
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [isRecruiter, bg]);
+
   /* The greeting fires this when the visitor declines the playlist.
      It arrives inside that click's call stack, so the user activation
      the first autoplay attempt lacked is present now and this play()
