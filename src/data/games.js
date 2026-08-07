@@ -48,11 +48,12 @@ export const GAMES = {
 export const SHELF = {
   kicker: 'Mizu',
   centre: 'GAMES',
-  note: 'Played and enjoyed.',
+  note: 'My top four, as of now.',
   word: 'ARCADE',
   caption:
-    'Games I have played and enjoyed along the way. If I am not building ' +
-    'something, this is usually where I am — come and find me.',
+    'The four I am playing most at the moment, not a lifetime list. If I ' +
+    'am not building something, this is usually where I am, so come and ' +
+    'find me.',
 }
 
 /* Where to actually find him. `handle` is shown on the button, so the

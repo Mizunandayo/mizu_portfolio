@@ -5,20 +5,26 @@ import { useEffect, useState } from 'react'
    mark off the screen, and taking the overlay out.
 
    Sequence:
-     0.25s  beam enters, scan begins
-     2.15s  scan completes, the resolved mark blooms
-     2.55s  mark fades
-     2.75s  backdrop starts lifting while the mark is still going
-     2.85s  mark gone, page ~15% through
-     3.37s  backdrop gone
-     3.45s  overlay removed, scroll unlocked
+     0.18s  beam enters, scan begins
+     1.56s  scan completes, the resolved mark blooms
+     1.85s  mark fades
+     2.00s  backdrop starts lifting while the mark is still going
+     2.07s  mark gone, page ~15% through
+     2.45s  backdrop gone
+     2.50s  overlay removed, scroll unlocked
 
    The two fades overlap on purpose. Back to back they left a beat of
    empty black between the mark leaving and the page arriving, which
-   read as a second, blank hero. The mark still finishes well ahead of
-   the backdrop, so it never floats over a visible page. */
-const MARK_OUT = 2850
-const FULL = 3450
+   read as a second, blank hero. The mark still finishes ahead of the
+   backdrop, so it never floats over a visible page.
+
+   Every number here has a twin in index.css — the visuals are CSS
+   animations so the prerendered HTML can paint before any JS runs, and
+   these two timers only take things off screen. Change one and the
+   other has to move with it, or the overlay is pulled while the mark
+   is still fading. */
+const MARK_OUT = 2070
+const FULL = 2500
 const REDUCED = 260
 
 export default function Boot({ onDone }) {
