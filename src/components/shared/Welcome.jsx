@@ -401,7 +401,7 @@ export default function Welcome({ show, onPickTrack }) {
 
             <div className="wc-music-mizu">
               <p className="wc-music-label-mizu" id="wc-music">
-                Click any music while you browse then enter
+                Select any music
                 <span className="wc-music-opt-mizu">(hover to preview)</span>
               </p>
 
@@ -469,7 +469,7 @@ export default function Welcome({ show, onPickTrack }) {
                 value={name}
                 maxLength={28}
                 autoComplete="name"
-                placeholder="print your name"
+                placeholder="Enter your name"
                 onChange={(e) => setName(e.target.value)}
                 /* Enter issues rather than dismissing the dialog —
                    a bare <input> inside <dialog> would otherwise let
@@ -490,7 +490,7 @@ export default function Welcome({ show, onPickTrack }) {
                 <span className="wc-issue-kanji-mizu" aria-hidden="true">
                   発券
                 </span>
-                Issue ticket
+                Get your ticket
               </button>
             </div>
 

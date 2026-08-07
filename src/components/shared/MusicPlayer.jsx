@@ -60,20 +60,29 @@ export default function MusicPlayer({ startId, onClose }) {
   const track = TRACKS[index]
 
   /* The playlist is offered by the greeting, which recruiter mode never
-     shows. Switching into it takes the sound with it — a track playing
-     under a presentation that never offered one, from a player that is
-     part of the layer being stripped, is the worst of both.
+     shows — so switching into it takes the sound with it. Silenced and
+     hidden rather than closed: the player keeps its track, its position
+     and where it was dragged to, so coming back lands exactly where the
+     visitor left off.
 
-     Through a ref because App passes a fresh arrow every render, and in
-     the dependency array that would close the player on any re-render
-     rather than on the mode changing. */
-  const closeRef = useRef(onClose)
-  closeRef.current = onClose
+     Closing it was throwing all of that away. The greeting is the only
+     way to choose a track and it runs once a session, so a player
+     unmounted here could not be got back at all. */
+  const resume = useRef(false)
 
   useEffect(() => {
-    if (!isRecruiter) return
-    audioRef.current?.pause()
-    closeRef.current?.()
+    const a = audioRef.current
+    if (!a) return
+
+    if (isRecruiter) {
+      resume.current = !a.paused
+      a.pause()
+      return
+    }
+
+    /* The mode toggle is a real click, so this play() carries the user
+       activation the autoplay policy asks for. */
+    if (resume.current) a.play().catch(() => {})
   }, [isRecruiter])
 
 

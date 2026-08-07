@@ -51,7 +51,10 @@ export default function Nav({ onCredits }) {
   const navigate = useNavigate()
   const [active, setActive] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const isHome = pathname === '/'
+  /* Tolerant of the shapes a host can hand back — a trailing slash, or
+     an empty pathname — so the nav does not change what it offers based
+     on a formatting difference in the URL. */
+  const isHome = pathname === '/' || pathname === '' || pathname === '/index.html'
 
   useEffect(() => {
     if (!isHome) return
@@ -121,13 +124,19 @@ export default function Nav({ onCredits }) {
                 <span className="notch-brand-word-mizu">{PROFILE.brand}</span>
               </Link>
 
-              {/* Links — centre */}
+              {/* Links — centre.
+
+                  The sections show on every route, not only the home
+                  page. Off it they navigate to /#section, which `go`
+                  already handles, and "All work" joins them rather than
+                  replacing them: the old branch left a project page
+                  with exactly one destination in its nav, and any route
+                  where `isHome` came out false lost the lot. */}
               <nav className="notch-nav-mizu" aria-label="Primary">
-                {isHome
-                  ? ALL.map((i) => (
-                      <NavLink key={i.label} {...i} active={active === i.href.slice(1)} onClick={go} />
-                    ))
-                  : <BackLink />}
+                {!isHome && <BackLink />}
+                {ALL.map((i) => (
+                  <NavLink key={i.label} {...i} active={active === i.href.slice(1)} onClick={go} />
+                ))}
               </nav>
 
               {/* Right cluster */}

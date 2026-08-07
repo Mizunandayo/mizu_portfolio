@@ -8288,6 +8288,12 @@ a.cr-by-mizu:hover {
   transition: width 620ms cubic-bezier(0.16,1,0.3,1);
 }
 
+/* Out of sight in recruiter mode, but still mounted — the component
+   pauses itself and holds its track, position and drag offset so
+   switching back resumes rather than starting over. Hidden here rather
+   than unmounted in React for exactly that reason. */
+.mode-recruiter .mp-mizu { display: none; }
+
 .mp-mizu.is-dragging { cursor: grabbing; transition: none; }
 
 /* Belt to the draggable="false" braces on the elements themselves.
@@ -11981,6 +11987,11 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   padding: clamp(48px, 10vh, 140px) clamp(22px, 6vw, 96px);
   background: #030303;
 }
+
+/* Dropped with the rest of the personal layer. A page and a half of
+   backdrop carrying a quote from a manga is the ornament that mode
+   exists to strip. */
+.mode-recruiter .cl-mizu { display: none; }
 
 .cl-bg-mizu {
   position: absolute;

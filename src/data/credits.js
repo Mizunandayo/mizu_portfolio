@@ -87,6 +87,51 @@ const TYPE = [
    among them — identify the browser that did the copying, which has no
    business in a public credits list. */
 const ARTWORK = [
+  /* First, because it is the first thing on the page. The song playing
+     over it is credited under Music rather than here — it is a
+     separate rights holder from the film's. */
+  {
+    name: 'The Fast and the Furious: Tokyo Drift',
+    by: '© Universal Pictures',
+    use: 'Hero backdrop',
+  },
+
+  /* The bands between sections. `use` stays general rather than naming
+     which band each one is: the mapping is not recorded anywhere, and
+     a guessed "between Work and Experience" would be a detail invented
+     to look precise. Naming the work and its rights holder is the part
+     that has to be right. */
+  {
+    name: 'Mirai Nikki / 未来日記',
+    by: '© Sakae Esuno / Kadokawa',
+    use: 'Section banner',
+  },
+  {
+    name: 'Seraph of the End / 終わりのセラフ',
+    by: '© Takaya Kagami · Yamato Yamamoto / Shueisha',
+    use: 'Section banner',
+  },
+  {
+    name: 'Tokyo Ghoul / 東京喰種',
+    by: '© Sui Ishida / Shueisha',
+    use: 'Section banner',
+  },
+  {
+    name: 'Jujutsu Kaisen / 呪術廻戦',
+    by: '© Gege Akutami / Shueisha',
+    use: 'Section banner',
+  },
+  {
+    name: 'Attack on Titan / 進撃の巨人',
+    by: '© Hajime Isayama / Kodansha',
+    use: 'Section banner',
+  },
+  {
+    name: 'My Dress-Up Darling / その着せ替え人形は恋をする',
+    by: '© Shinichi Fukuda / Square Enix',
+    use: 'Section banner',
+  },
+
   {
     name: 'Chainsaw Man',
     by: '© Tatsuki Fujimoto / Shueisha',
