@@ -302,12 +302,40 @@ export default function Hero() {
         </div>
       </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
       {/* Outline mark. Sits after the scrim so it paints over it, and
           the kanji is already in the nav and title, so it is purely a
-          device here. */}
+          device here. 
       <span className="hero-mark-mizu" aria-hidden="true">
         {PROFILE.kanji}
-      </span>
+      </span>*/}
+
+
+
+
+
+
+
+
+
+
+
+
+      
 
       <span className="hero-fx-mizu" aria-hidden="true">
         <StarField />

@@ -21,7 +21,7 @@ export const PROFILE = {
   strip: ['Agentic AI Engineer', 'Philippines'],
 
   intro:
-    'Meaningful solutions matter more than complex technology. Meaningful experiences matter more than the technology. ',
+    'Agentic systems designed to solve real problems through meaningful solutions and thoughtful technology.',
 
   /* The About section's claim. Stated as a rule rather than a virtue -
      "discipline is to build it" describes a quality; this makes a
