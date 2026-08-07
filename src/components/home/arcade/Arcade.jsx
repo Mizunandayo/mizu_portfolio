@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { configured } from '../../../data/supabase.js'
 import {
-  CABINETS, cabinet, board, submit, rename, fmtScore, isBetter, readName, writeName,
+  CABINETS, cabinet, board, beginRun, submit, forget, fmtScore, fmtParts, isBetter, readName, writeName,
 } from '../../../data/arcade.js'
 import Boken from './Boken.jsx'
 import Hebi from './Hebi.jsx'
 import Touge from './Touge.jsx'
 import Shooter from './Shooter.jsx'
+import Trophy from './Trophy.jsx'
 
 /* ══════════════════════════════════════════════════
    遊技場 — the cabinet.
@@ -19,6 +20,8 @@ import Shooter from './Shooter.jsx'
    ══════════════════════════════════════════════════ */
 
 const STAGE = { boken: Boken, hebi: Hebi, touge: Touge, shooter: Shooter }
+
+const TOP = 10 // rows shown; the player's own row comes back regardless
 
 export default function Arcade() {
   const [id, setId] = useState(CABINETS[0].id)
@@ -33,6 +36,10 @@ export default function Arcade() {
   const [phase, setPhase] = useState('ready')
   const playing = phase === 'run'
   const live = useRef(true)
+  /* The open run, held as a promise rather than a value: a short game
+     can finish before the server has answered, and awaiting it at submit
+     time is what stops that losing the score. */
+  const run = useRef(null)
 
   const c = cabinet(id)
   const Game = STAGE[id]
@@ -70,6 +77,15 @@ export default function Arcade() {
      again on every cabinet for a name it already had. */
   const named = name.trim().length > 0
 
+  /* A run is opened the moment a game starts, so the server has its own
+     clock on it. Without that the score is checked against nothing and
+     any number submitted instantly would stand. */
+  const onState = useCallback((p) => {
+    setPhase(p)
+    if (p !== 'run') return
+    run.current = configured ? beginRun(id).catch(() => null) : null
+  }, [id])
+
   const onScore = useCallback(
     async (score) => {
       setLast(score)
@@ -78,7 +94,9 @@ export default function Arcade() {
       setBusy(true)
       setErr('')
       try {
-        const r = await submit(id, name.trim(), score)
+        const token = await run.current
+        run.current = null
+        const r = await submit(id, name.trim(), score, token)
         if (live.current) setRows(r)
       } catch (e) {
         if (live.current) setErr(e.message || 'That run did not register.')
@@ -89,10 +107,9 @@ export default function Arcade() {
     [id, name]
   )
 
-  /* Naming and renaming are the same form. A rename also has to reach
-     the boards: arcade_submit only writes the name when you beat your
-     own score, so without this the player keeps their old name on every
-     game they do not go back and beat, and shows up as two people. */
+  /* Naming and renaming are the same form. Naming is free; renaming
+     clears every score this browser holds, which is why the panel says
+     so plainly before the button is reachable. */
   const saveName = async (e) => {
     e.preventDefault()
     const v = draft.trim()
@@ -104,13 +121,16 @@ export default function Arcade() {
     setRenaming(false)
     if (first || !configured) return
 
+    /* A new name starts from nothing. The panel says so before you get
+       here, so this is the confirmed action rather than a surprise. */
     setBusy(true)
     setErr('')
+    setBest(null)
     try {
-      await rename(v)
+      await forget()
       if (live.current) await load(id)
     } catch (e2) {
-      if (live.current) setErr(e2.message || 'The name did not update on the boards.')
+      if (live.current) setErr(e2.message || 'Those scores could not be cleared.')
     } finally {
       if (live.current) setBusy(false)
     }
@@ -158,16 +178,22 @@ export default function Arcade() {
             <div className="ar-hood-mizu">
               <span className="ar-tube-mizu" aria-hidden="true" />
 
+              {/* A marquee names the game, so the name is on it. The
+                  kanji and the title share a line at display size and
+                  the strapline sits under them, quiet. */}
               <div className="ar-marquee-mizu">
-                <span className="ar-marquee-jp-mizu" aria-hidden="true">{c.jp}</span>
-                <span className="ar-marquee-en-mizu">{c.tag}</span>
+                <p className="ar-marquee-row-mizu">
+                  <span className="ar-marquee-jp-mizu" aria-hidden="true">{c.jp}</span>
+                  <span className="ar-marquee-en-mizu">{c.name}</span>
+                </p>
+                <p className="ar-marquee-tag-mizu">{c.tag}</p>
               </div>
             </div>
 
             <div className="ar-bezel-mizu">
               <span className="ar-glare-mizu" aria-hidden="true" />
               <div className="ar-screen-mizu">
-                <Game onScore={onScore} onState={setPhase} />
+                <Game onScore={onScore} onState={onState} />
 
                 {/* Every overlay here is inert, so the click that lands
                     on it still reaches the stage below — which is what
@@ -210,7 +236,7 @@ export default function Arcade() {
                     </p>
                     <p className="ar-gate-sub-mizu">
                       {renaming
-                        ? 'Your scores are kept. Every board you are on will be updated to the new name.'
+                        ? 'This clears your scores on every board. The new name starts from nothing.'
                         : "Used for every cabinet's board."}
                     </p>
                     <form className="ar-gate-form-mizu" onSubmit={saveName}>
@@ -284,9 +310,17 @@ export default function Arcade() {
 
         {/* ── Board ── */}
         <aside className="ar-board-mizu">
-          <p className="ar-board-head-mizu">
-            <span aria-hidden="true">順位</span> Leaderboard
-          </p>
+          <header className="ar-board-head-mizu">
+            <span className="ar-board-jp-mizu" aria-hidden="true">順位</span>
+            <h4 className="ar-board-title-mizu">Leaderboard</h4>
+            {/* Which cabinet, and how deep the board goes. A count of
+                the rows in hand would just read "10" forever now that
+                only the top ten are fetched. */}
+            <p className="ar-board-sub-mizu">
+              {c.name}
+              <b>Top {TOP}</b>
+            </p>
+          </header>
 
           {!configured ? (
             <p className="ar-board-empty-mizu">The board is offline.</p>
@@ -296,15 +330,64 @@ export default function Arcade() {
             </p>
           ) : (
             <ol className="ar-board-list-mizu">
-              {rows.map((r) => (
-                <li key={`${r.rank}-${r.name}`}>
-                  <span className="ar-rank-mizu">{String(r.rank).padStart(2, '0')}</span>
-                  <span className="ar-who-mizu">{r.name}</span>
-                  <span className="ar-score-mizu">{fmtScore(id, r.score)}</span>
-                </li>
-              ))}
+              {rows.filter((r) => r.rank <= TOP).map((r) => {
+                const { value, unit } = fmtParts(id, r.score)
+
+                /* The top three stack onto two lines. The panel is 260px
+                   wide with 24px of padding, so a first-place name at
+                   1.24rem and its score cannot share 212px beside a cup.
+                   Fourth down keeps the compact row, which is also what
+                   makes the break read as a podium rather than a glitch. */
+                if (r.rank <= 3) {
+                  return (
+                    <li
+                      key={`${r.rank}-${r.name}`}
+                      className={`ar-pod-mizu is-${r.rank}${r.mine ? ' is-me' : ''}`}
+                    >
+                      <Trophy place={r.rank} />
+                      <span className="ar-who-mizu">{r.name}</span>
+                      <span className="ar-score-mizu">
+                        {value}{unit && <i>{unit}</i>}
+                      </span>
+                    </li>
+                  )
+                }
+
+                return (
+                  <li
+                    key={`${r.rank}-${r.name}`}
+                    className={`ar-board-row-mizu${r.mine ? ' is-me' : ''}`}
+                  >
+                    <span className="ar-rank-mizu">{String(r.rank).padStart(2, '0')}</span>
+                    <span className="ar-who-mizu">{r.name}</span>
+                    <span className="ar-score-mizu">
+                      {value}{unit && <i>{unit}</i>}
+                    </span>
+                  </li>
+                )
+              })}
             </ol>
           )}
+
+          {/* Outside the list on purpose: the list scrolls and this must
+              not scroll away. Only appears when the player did not make
+              the ten, so it is never a duplicate of a row above. */}
+          {rows.some((r) => r.rank > TOP) && (() => {
+            const r = rows.find((x) => x.rank > TOP)
+            const { value, unit } = fmtParts(id, r.score)
+            return (
+              <div className="ar-board-pin-mizu">
+                <span className="ar-board-pin-cap-mizu">Your place</span>
+                <p className="ar-board-row-mizu is-me">
+                  <span className="ar-rank-mizu">{r.rank}</span>
+                  <span className="ar-who-mizu">{r.name}</span>
+                  <span className="ar-score-mizu">
+                    {value}{unit && <i>{unit}</i>}
+                  </span>
+                </p>
+              </div>
+            )
+          })()}
         </aside>
       </div>
     </div>

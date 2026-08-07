@@ -14,10 +14,13 @@ import { visitorKey } from './likes.js'
    is the authority — this copy only decides how the
    number is drawn before it has been submitted.
 
-   `lo`/`hi` mirror the bounds in arcade.sql. Repeated
-   on purpose: the client uses them to refuse to submit
-   a nonsense run, the server uses them to refuse to
-   believe one.
+   `lo`/`hi` mirror arcade_limits() in arcade.sql, and
+   both are read off what the games can actually emit
+   rather than picked. Repeated on purpose: the client
+   uses them to refuse to send a nonsense run, the server
+   uses them to refuse to believe one. The server is the
+   authority — editing this file only changes the error
+   message a cheat gets.
    ══════════════════════════════════════════════════ */
 
 export const CABINETS = [
@@ -30,7 +33,7 @@ export const CABINETS = [
     keys: ['space', '↓', 'shift'],
     dir: 'desc',
     lo: 0,
-    hi: 100000,
+    hi: 20000, // twenty minutes unbroken at 16.3 m/s
     unit: 'm',
   },
   {
@@ -42,7 +45,7 @@ export const CABINETS = [
     keys: ['←', '↑', '↓', '→'],
     dir: 'desc',
     lo: 0,
-    hi: 999999,
+    hi: 7300, // a perfect 308-cell board is 7,220
     unit: 'pts',
   },
   {
@@ -54,7 +57,7 @@ export const CABINETS = [
     keys: ['←', '→', '←← / →→', 'Shift'],
     dir: 'desc',
     lo: 0,
-    hi: 100000,
+    hi: 200000, // 620 m/s is the top speed with nitro
     unit: 'm',
   },
   {
@@ -66,7 +69,7 @@ export const CABINETS = [
     keys: ['↑', '↓', '↑↑ / ↓↓', 'Space'],
     dir: 'desc',
     lo: 0,
-    hi: 999999,
+    hi: 200000, // 200 pts/s is one perfect kill per spawn
     unit: 'pts',
   },
 ]
@@ -81,6 +84,15 @@ export function fmtScore(id, n) {
   if (n == null) return '—'
   const { unit } = cabinet(id)
   return unit === 'pts' ? n.toLocaleString() : `${n.toLocaleString()} ${unit}`
+}
+
+/* The same number, split, for places that want the unit set quieter than
+   the digits. One source for both so a board row and a game-over card
+   can never disagree about what a score reads as. */
+export function fmtParts(id, n) {
+  if (n == null) return { value: '—', unit: '' }
+  const { unit } = cabinet(id)
+  return { value: n.toLocaleString(), unit: unit === 'pts' ? '' : unit }
 }
 
 export const isBetter = (id, a, b) =>
@@ -107,22 +119,37 @@ export const writeName = (v) => {
   }
 }
 
-/* Renames every row this browser owns, across all four games. Called on
-   a name change so a player is one name everywhere rather than the old
-   one on boards they have not been back to beat. */
-export async function rename(name) {
+/* Wipes every score this browser owns, across all four games. Called on
+   a name change: a name on the board is meant to be the name that
+   earned the run, so a new name starts from nothing. The client warns
+   before this is reached. */
+export async function forget() {
   if (!configured) return 0
-  const n = await db.rpc('arcade_rename', { p_name: name, p_key: visitorKey() })
+  const n = await db.rpc('arcade_forget', { p_key: visitorKey() })
   return typeof n === 'number' ? n : 0
 }
 
-export async function board(game, limit = 50) {
+/* Ten rows, plus this visitor's own row whether or not it made the cut.
+   The key goes up so the server can flag which row is theirs; it never
+   comes back down, for anyone. */
+export async function board(game, limit = 10) {
   if (!configured) return []
-  const rows = await db.rpc('arcade_board', { p_game: game, p_limit: limit })
+  const rows = await db.rpc('arcade_board', {
+    p_game: game, p_limit: limit, p_key: visitorKey(),
+  })
   return Array.isArray(rows) ? rows : []
 }
 
-export async function submit(game, name, score) {
+/* Opened when a game actually starts. The token it returns is what the
+   server demands at submit time, and it is what makes the clock the
+   score is checked against the server's rather than the browser's. */
+export async function beginRun(game) {
+  if (!configured) return null
+  const id = await db.rpc('arcade_begin', { p_game: game, p_key: visitorKey() })
+  return typeof id === 'string' ? id : null
+}
+
+export async function submit(game, name, score, run) {
   const c = cabinet(game)
   /* Refused here as well as on the server. Not for safety — the server
      is what makes it safe — but so an obviously broken run reports a
@@ -130,12 +157,14 @@ export async function submit(game, name, score) {
   if (!Number.isFinite(score) || score < c.lo || score > c.hi) {
     throw new Error('That run did not register.')
   }
+  if (!run) throw new Error('That run was not started properly.')
 
   const rows = await db.rpc('arcade_submit', {
     p_game: game,
     p_name: name,
     p_score: Math.round(score),
     p_key: visitorKey(),
+    p_run: run,
   })
   return Array.isArray(rows) ? rows : []
 }

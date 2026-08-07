@@ -12594,7 +12594,10 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
    columns of this width. */
 .ar-body-mizu {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  /* 300px, not 260. A first-place name at 1.15rem with its score on
+     the same line needs 252px of content; at 260px the name ran out
+     of room at eleven characters and ellipsised. */
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: clamp(14px, 2vw, 26px);
   align-items: start;
 }
@@ -12702,19 +12705,66 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 }
 
 /* ── The board ───────────────────────────────────── */
+/* ── Heading ───────────────────────────────────────
+   Poppins for the word, mincho for the kanji above it, and a rule that
+   fades out to the right so the panel does not read as two stacked
+   boxes. The kanji is an eyebrow rather than a prefix on the same line:
+   at 0.62rem inline it was competing with the word instead of
+   introducing it. */
 .ar-board-head-mizu {
-  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, rgba(250,250,250,0.22), rgba(250,250,250,0.02)) 1;
+}
+
+.ar-board-jp-mizu {
+  grid-column: 1 / -1;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: rgba(161, 161, 170, 0.7);
+}
+
+.ar-board-title-mizu {
+  margin: 5px 0 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  color: #fafafa;
+}
+
+.ar-board-sub-mizu {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 5px 0 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+/* The count, set as a chip so it reads as a quantity rather than as more
+   of the sentence next to it. */
+.ar-board-sub-mizu b {
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(212, 212, 216, 0.9);
-}
-.ar-board-head-mizu span {
-  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
-  margin-right: 8px;
-  color: rgba(161, 161, 170, 0.8);
+  color: rgba(228, 228, 232, 0.9);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  border-radius: 999px;
+  padding: 1px 7px;
 }
 
 .ar-board-empty-mizu {
@@ -12725,42 +12775,32 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   color: rgba(161, 161, 170, 0.8);
 }
 
-/* Ten rows, then it scrolls. The board pulls up to fifty and a fifty-row
-   list would stretch the aside well past the cabinet beside it and drag
-   the whole section long.
-   A row is 30px (7px padding twice plus the line box at 0.72rem), so ten
-   is 301px. The cap is set a little above that on purpose: the eleventh
-   row shows as a sliver, and a half-visible row is what tells you the
-   list keeps going. The mask fades exactly that sliver so it ends on a
-   soft edge rather than a cut. */
+/* No cap and no scrolling. The board fetches ten and ten always fit, so
+   a max-height here would only ever be a scrollbar that never appears —
+   and the pinned row below sits outside this list anyway. If TOP ever
+   goes past about twelve, this is where the height belongs. */
 .ar-board-list-mizu {
   margin: 0;
   padding: 0;
   list-style: none;
-  max-height: 20.5rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(250, 250, 250, 0.26) transparent;
-  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 20px), transparent 100%);
 }
-
-.ar-board-list-mizu::-webkit-scrollbar { width: 5px; }
-.ar-board-list-mizu::-webkit-scrollbar-track { background: transparent; }
-.ar-board-list-mizu::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  background: rgba(250, 250, 250, 0.24);
-}
-.ar-board-list-mizu::-webkit-scrollbar-thumb:hover { background: rgba(250, 250, 250, 0.4); }
+/* Only the hairline is shared. Padding belongs to whichever row type it
+   is: `.ar-board-list-mizu li` is (0,1,1) and would out-specify the
+   plain `.ar-pod-mizu` class, so leaving padding here would silently
+   hold the podium at the compact row's spacing. */
 .ar-board-list-mizu li {
+  border-bottom: 1px solid rgba(250, 250, 250, 0.07);
+}
+.ar-board-list-mizu li:last-child { border-bottom: none; }
+
+/* Fourth place down: the plain three-column row. */
+.ar-board-row-mizu {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: baseline;
   padding: 7px 0;
-  border-bottom: 1px solid rgba(250, 250, 250, 0.07);
 }
-.ar-board-list-mizu li:last-child { border-bottom: none; }
 
 .ar-rank-mizu,
 .ar-score-mizu {
@@ -12768,6 +12808,93 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   font-variant-numeric: tabular-nums;
   font-size: 0.72rem;
 }
+
+/* The unit set quieter than the digits, so the number carries. */
+.ar-score-mizu i {
+  font-style: normal;
+  font-size: 0.7em;
+  opacity: 0.6;
+  margin-left: 3px;
+}
+
+/* ── Podium ───────────────────────────────────────
+   Cup, name, score on one line, which is what the widened panel buys.
+   At 300px there are 252px of content: the cup and its gaps take 46px
+   and a first-place score about 55px, leaving 151px for the name, which
+   is roughly fifteen characters before it ellipsises. */
+.ar-pod-mizu {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 0;
+}
+
+.ar-cup-mizu {
+  display: block;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--glow) 40%, transparent));
+}
+
+.ar-pod-mizu .ar-who-mizu {
+  font-weight: 600;
+  color: #fafafa;
+  line-height: 1.2;
+}
+
+.ar-pod-mizu .ar-score-mizu {
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* Each placing takes its own metal, so the rank still reads when the cup
+   is only in the corner of your eye. */
+/* ── Your own row ──
+   A plain white wash, no edge and no colour. The board is a list of
+   names and the thing being scanned for is a name, so lifting the whole
+   band is enough — an accent stripe added a second thing to read. Pulled
+   out past the panel padding so it reads as a highlighted band rather
+   than a rectangle floating inside one. */
+.ar-board-row-mizu.is-me,
+.ar-pod-mizu.is-me {
+  margin-inline: -10px;
+  padding-inline: 10px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ar-board-row-mizu.is-me .ar-who-mizu,
+.ar-pod-mizu.is-me .ar-who-mizu { color: #fafafa; }
+.ar-board-row-mizu.is-me .ar-rank-mizu { color: rgba(228, 228, 232, 0.8); }
+
+/* ── Pinned below the ten ──
+   Divided from the list by a rule with air either side, so it reads as
+   a separate statement about you rather than as an eleventh place. */
+.ar-board-pin-mizu {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(250, 250, 250, 0.16);
+}
+
+.ar-board-pin-cap-mizu {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+/* It is a <p>, so its block margins have to go or it floats away
+   from the rule above it. */
+.ar-board-pin-mizu .ar-board-row-mizu { margin-block: 0; }
+
+.ar-pod-mizu.is-1 .ar-who-mizu { font-size: 1.15rem; }
+.ar-pod-mizu.is-1 .ar-score-mizu { font-size: 0.95rem; color: #ffd76a; }
+.ar-pod-mizu.is-2 .ar-who-mizu { font-size: 1rem; }
+.ar-pod-mizu.is-2 .ar-score-mizu { font-size: 0.85rem; color: #dfe5ee; }
+.ar-pod-mizu.is-3 .ar-who-mizu { font-size: 0.92rem; }
+.ar-pod-mizu.is-3 .ar-score-mizu { font-size: 0.78rem; color: #eda86a; }
 .ar-rank-mizu { color: rgba(161, 161, 170, 0.7); }
 .ar-score-mizu { color: #fafafa; font-weight: 700; }
 
@@ -12946,42 +13073,72 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 
 /* The sign itself: a warm panel, brightest at its centre, held in a thin
    frame the way a real marquee is clamped top and bottom. */
+/* The sign itself: a warm panel, brightest at its centre, held in a thin
+   frame the way a real marquee is clamped top and bottom. */
 .ar-marquee-mizu {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(9px, 1.6vw, 16px);
-  padding: clamp(8px, 1.4vw, 13px) clamp(14px, 2.4vw, 26px);
+  padding: clamp(10px, 1.8vw, 17px) clamp(14px, 2.4vw, 26px) clamp(8px, 1.4vw, 13px);
   border-radius: 4px;
+  text-align: center;
   background:
-    radial-gradient(120% 180% at 50% 50%, rgba(255, 246, 238, 0.16) 0%, rgba(255, 240, 230, 0.05) 55%, rgba(0, 0, 0, 0.28) 100%),
+    radial-gradient(120% 180% at 50% 45%, rgba(255, 246, 238, 0.2) 0%, rgba(255, 240, 230, 0.06) 55%, rgba(0, 0, 0, 0.3) 100%),
     linear-gradient(180deg, #23232b 0%, #1a1a21 100%);
-  border: none;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 236, 220, 0.14),
-    inset 0 2px 12px rgba(255, 226, 200, 0.1),
-    0 0 34px -6px rgba(255, 214, 180, 0.22);
+    inset 0 0 0 1px rgba(255, 236, 220, 0.16),
+    inset 0 2px 14px rgba(255, 226, 200, 0.12),
+    0 0 40px -6px rgba(255, 214, 180, 0.26);
 }
 
+.ar-marquee-row-mizu {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: clamp(10px, 1.8vw, 18px);
+  margin: 0;
+}
+
+/* Both faces glow, but only just. A marquee is lit from behind the
+   perspex, so the letters bloom a little into the panel rather than
+   throwing light across the cabinet. */
 .ar-marquee-jp-mizu {
   font-family: 'Shippori Mincho', 'Yu Mincho', serif;
-  font-size: clamp(1rem, 2.4cqi, 1.3rem);
+  font-size: clamp(1.5rem, 3.6cqi, 2.3rem);
   font-weight: 800;
-  letter-spacing: 0.2em;
-  text-indent: 0.2em;
-  color: #fdf6ef;
-  text-shadow: 0 0 20px rgba(255, 226, 198, 0.45);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  color: #fffaf3;
+  text-shadow:
+    0 0 12px rgba(255, 236, 210, 0.55),
+    0 0 34px rgba(255, 198, 150, 0.32);
 }
 
+/* Chakra Petch: squared terminals and a slight mechanical slant, which
+   is the arcade cabinet register without tipping into a novelty pixel
+   face that would fight the mincho beside it. */
 .ar-marquee-en-mizu {
-  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
-  font-size: clamp(0.5rem, 1.3cqi, 0.6rem);
+  font-family: 'Chakra Petch', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(1rem, 2.5cqi, 1.55rem);
   font-weight: 700;
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
   text-transform: uppercase;
-  color: rgba(214, 200, 186, 0.85);
+  color: #fdf4e8;
+  text-shadow:
+    0 0 10px rgba(255, 232, 205, 0.5),
+    0 0 30px rgba(255, 190, 140, 0.28);
+}
+
+.ar-marquee-tag-mizu {
+  margin: clamp(5px, 0.9vw, 8px) 0 0;
+  font-family: 'Chakra Petch', 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.5rem, 1.2cqi, 0.6rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  color: rgba(206, 190, 174, 0.72);
 }
 
 /* ── Bezel ── */

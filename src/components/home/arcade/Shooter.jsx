@@ -67,10 +67,21 @@ const KINDS = {
   hull: { hp: 4, lo: 48, hi: 74, r: 17, fire: 0.0045, pts: 60, dmg: 3, col: '#8b6cf6', dark: '#432d8f' },
 }
 
+/* `for` is how long the power lasts. The repair pod has no duration —
+   it spends itself and is gone.
+   `w` is how often it is the one that shows up. Repair refills the whole
+   bar, so it is the rarest by a distance: at the old one-in-four it
+   would have arrived about every fifty seconds, which is faster than
+   five hearts can realistically be lost and would have made the early
+   waves unlosable. At one in eight it is a lifeline after a bad wave
+   rather than a tap you keep topping up from. */
 const PODS = {
-  big: { col: '#ffd76b', for: 7000 },
-  rapid: { col: '#7fe0c0', for: 7000 },
+  big: { col: '#ffd76b', for: 7000, w: 44 },
+  rapid: { col: '#7fe0c0', for: 7000, w: 44 },
+  repair: { col: '#ff5f7e', for: 0, w: 12 },
 }
+
+const POD_PICK = Object.entries(PODS).flatMap(([k, v]) => Array(v.w).fill(k))
 
 export default function Shooter({ onScore, onState }) {
   const ref = useRef(null)
@@ -146,7 +157,11 @@ export default function Shooter({ onScore, onState }) {
 
     if (now > s.nextPod) {
       s.nextPod = now + POD_EVERY[0] + Math.random() * (POD_EVERY[1] - POD_EVERY[0])
-      const type = Math.random() < 0.5 ? 'big' : 'rapid'
+      /* Weighted, and a repair is only offered when it would do
+         something. On full health it rolls a weapon instead, so the
+         rarest pod is never wasted on a player who does not need it. */
+      let type = POD_PICK[Math.floor(Math.random() * POD_PICK.length)]
+      if (type === 'repair' && s.hp >= HP_MAX) type = Math.random() < 0.5 ? 'big' : 'rapid'
       s.pods.push({ type, x: W + 20, y: 40 + Math.random() * (H - 80), seed: Math.random() * 6.28 })
     }
 
@@ -190,8 +205,13 @@ export default function Shooter({ onScore, onState }) {
         if (Math.hypot(b.x - p.x, b.y - py) < 14) {
           p.gone = true
           b.gone = true
-          s.power[p.type] = now + PODS[p.type].for
-          burst(s, p.x, py, p.type === 'big' ? '255,215,107' : '127,224,192')
+          if (p.type === 'repair') {
+            s.hp = HP_MAX // the whole bar, not a heart
+            burst(s, p.x, py, '255,95,126')
+          } else {
+            s.power[p.type] = now + PODS[p.type].for
+            burst(s, p.x, py, p.type === 'big' ? '255,215,107' : '127,224,192')
+          }
           break
         }
       }
@@ -575,9 +595,14 @@ function drawPod(g, x, y, type, now) {
   g.fillStyle = col
   if (type === 'big') {
     g.fillRect(x - 6, y - 3, 12, 6)
-  } else {
+  } else if (type === 'rapid') {
     g.fillRect(x - 7, y - 1.5, 6, 3)
     g.fillRect(x + 1, y - 1.5, 6, 3)
+  } else {
+    /* A cross reads as repair at eleven pixels where a heart just reads
+       as a blob. */
+    g.fillRect(x - 5.5, y - 1.8, 11, 3.6)
+    g.fillRect(x - 1.8, y - 5.5, 3.6, 11)
   }
 }
 
