@@ -116,10 +116,12 @@ const ARTWORK = [
     by: '© Sui Ishida / Shueisha',
     use: 'Section banner',
   },
+  /* One entry, two surfaces — a second row naming the same rights
+     holder would read as two separate uses to whoever is checking. */
   {
     name: 'Jujutsu Kaisen / 呪術廻戦',
     by: '© Gege Akutami / Shueisha',
-    use: 'Section banner',
+    use: 'Section banner · ticket art',
   },
   {
     name: 'Attack on Titan / 進撃の巨人',
@@ -130,6 +132,50 @@ const ARTWORK = [
     name: 'My Dress-Up Darling / その着せ替え人形は恋をする',
     by: '© Shinichi Fukuda / Square Enix',
     use: 'Section banner',
+  },
+
+  /* The greeting's stub and the ticket the visitor issues. Same
+     caveat as the banners: which artwork is which frame is not
+     recorded, so `use` names the surface and stops there. */
+  {
+    name: 'Initial D / 頭文字D',
+    by: '© Shuichi Shigeno / Kodansha',
+    use: 'Ticket art',
+  },
+  {
+    name: 'Spy × Family / SPY×FAMILY',
+    by: '© Tatsuya Endo / Shueisha',
+    use: 'Ticket art',
+  },
+  {
+    name: 'Re:Zero / Re:ゼロから始める異世界生活',
+    by: '© Tappei Nagatsuki / Kadokawa',
+    use: 'Ticket art',
+  },
+  {
+    name: 'One Piece / ワンピース',
+    by: '© Eiichiro Oda / Shueisha',
+    use: 'Ticket art',
+  },
+  {
+    name: 'Naruto / ナルト',
+    by: '© Masashi Kishimoto / Shueisha',
+    use: 'Ticket art',
+  },
+  {
+    name: 'Bocchi the Rock! / ぼっち・ざ・ろっく!',
+    by: '© Aki Hamaji / Houbunsha',
+    use: 'Ticket art',
+  },
+  {
+    name: 'The Amazing World of Gumball',
+    by: '© Cartoon Network',
+    use: 'Ticket art',
+  },
+  {
+    name: 'SpongeBob SquarePants',
+    by: '© Nickelodeon',
+    use: 'Ticket art',
   },
 
   {
