@@ -26,6 +26,7 @@ const ITEMS = [
   { href: "#certifications", kanji: "証", label: "Certs" },
   { href: "#contact", kanji: "縁", label: "Contact" },
   { href: "#gallery", kanji: "券", label: "Tickets" },
+  { href: "#games", kanji: "遊", label: "Arcade" },
   { href: "#subscribe", kanji: "報", label: "Subscribe" },
 ];
 

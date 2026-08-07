@@ -12261,10 +12261,25 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 
 /* Four across, and the count is the authored number — the plates are
    portrait, so three would leave a gap the row cannot fill. */
+/* Five across, and the row breaks out of the text column to do it.
+   Five cards at the size four used to be is 1667px of row against a
+   1328px column, so keeping the card and keeping it inside the column
+   were never both possible. The row widens instead of the cards
+   shrinking: at 1780px of viewport and up the card is exactly the 311px
+   it has always been, and below that it gives up width gradually rather
+   than pushing the page sideways.
+   The viewport figure is short by 48px because 100vw counts the
+   scrollbar, and a row that is one scrollbar too wide is how horizontal
+   scrolling gets back into a page. */
 .gm-row-mizu {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 320px));
+  justify-content: center;
   gap: clamp(14px, 2vw, 28px);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1712px, calc(100vw - 48px));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -12364,6 +12379,52 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   color: #fafafa;
 }
 
+/* ── Mizuki's Playground ──────────────────────
+   A hairline and a lot of air above it, because this is the seam
+   between games played and games built and the two were reading as one
+   list. The rule is the cheapest way to say "different thing now". */
+.gm-play-mizu {
+  margin-top: clamp(84px, 15vh, 168px);
+  padding-top: clamp(56px, 8vh, 96px);
+  border-top: 1px solid rgba(250, 250, 250, 0.1);
+}
+
+.gm-play-head-mizu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: clamp(24px, 4vh, 42px);
+}
+
+.gm-play-jp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: rgba(161, 161, 170, 0.7);
+}
+
+.gm-play-title-mizu {
+  margin: clamp(8px, 1.2vh, 14px) 0 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.7rem, 4.4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: #fafafa;
+}
+
+.gm-play-note-mizu {
+  max-width: 54ch;
+  margin: clamp(10px, 1.6vh, 16px) auto 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: clamp(0.78rem, 1vw, 0.9rem);
+  line-height: 1.7;
+  color: rgba(161, 161, 170, 0.9);
+}
+
 .gm-caption-mizu {
   max-width: 62ch;
   margin: clamp(10px, 1.6vh, 18px) auto 0;
@@ -12379,10 +12440,25 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   .gm-rule-mizu { display: none; }
 }
 
+/* Below this the cards are too narrow for their own cover art to read,
+   so the row drops straight to three instead of squeezing. Three rather
+   than four because five items over three columns is 3 + 2, which reads
+   as deliberate, where 4 + 1 leaves one card stranded on its own row. Widths go back to the
+   text column at the same time, since there is no longer anything to
+   break out for. */
+@media (max-width: 1340px) {
+  .gm-row-mizu {
+    grid-template-columns: repeat(3, minmax(0, 320px));
+    left: auto;
+    transform: none;
+    width: 100%;
+  }
+}
+
 @media (max-width: 620px) {
   /* A 120vh band of two-across plates is mostly empty on a phone. */
   .gm-mizu { min-height: 0; }
-  .gm-row-mizu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gm-row-mizu { grid-template-columns: repeat(2, minmax(0, 320px)); }
 }
 
 /* ── Where to find him ─────────────────────────────
@@ -12395,7 +12471,7 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   flex-wrap: wrap;
   justify-content: center;
   gap: clamp(10px, 1.4vw, 16px);
-  margin-top: clamp(20px, 3vh, 34px);
+  margin: clamp(18px, 2.6vh, 28px) 0 clamp(26px, 4vh, 44px);
 }
 
 .gm-profile-mizu {
@@ -12455,4 +12531,840 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   font-family: 'Poppins', system-ui, sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════
+   遊技場 — the arcade cabinet.
+
+   A frame, a stage, and the board beside it.
+   Deliberately plain against the poster above: the
+   games are the moving part, so the furniture around
+   them holds still.
+   ══════════════════════════════════════════════════ */
+
+.ar-mizu {
+  margin-top: clamp(28px, 4vh, 48px);
+  text-align: left;
+}
+
+.ar-tabs-mizu {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ar-tab-mizu {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 9px 18px;
+  cursor: pointer;
+  color: rgba(212, 212, 216, 0.86);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+  transition: background 200ms cubic-bezier(0.16,1,0.3,1),
+              border-color 200ms cubic-bezier(0.16,1,0.3,1),
+              color 200ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ar-tab-mizu:hover { color: #fff; border-color: rgba(250, 250, 250, 0.4); }
+
+.ar-tab-mizu.is-on {
+  color: #0a0a0b;
+  background: #fafafa;
+  border-color: #fafafa;
+}
+
+.ar-tab-jp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ar-tab-name-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Stage and board side by side, stacking when there is no room for two
+   columns of this width. */
+.ar-body-mizu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: clamp(14px, 2vw, 26px);
+  align-items: start;
+}
+
+/* Only the board carries a panel. The cabinet brings its own, and two
+   frames nested inside each other read as a mistake. */
+.ar-board-mizu {
+  padding: clamp(16px, 2vw, 24px);
+  background: rgba(10, 10, 12, 0.66);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(250, 250, 250, 0.14);
+}
+
+.ar-how-mizu {
+  margin: 0 0 14px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: rgba(161, 161, 170, 0.9);
+}
+
+
+/* Every stage is focusable, so the outline is what says the keyboard
+   will reach it. */
+.ar-boken-mizu,
+.ar-hebi-mizu,
+.ar-touge-mizu,
+.ar-shooter-mizu {
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ar-boken-mizu:focus-visible,
+.ar-hebi-mizu:focus-visible,
+.ar-touge-mizu:focus-visible,
+.ar-shooter-mizu:focus-visible {
+  outline: 2px solid rgba(250, 250, 250, 0.7);
+  outline-offset: 6px;
+}
+
+/* ── 蛇 ──────────────────────────────── */
+.ar-boken-mizu,
+.ar-hebi-mizu,
+.ar-shooter-mizu { position: relative; }
+
+/* ── 峠 ──────────────────────────────────────────── */
+.ar-touge-mizu { position: relative; }
+
+.ar-canvas-mizu {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #08080a;
+  border: 1px solid rgba(250, 250, 250, 0.16);
+  touch-action: none;
+}
+
+.ar-touge-dist-mizu {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fafafa;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Submitting ──────────────────────────────────── */
+.ar-name-mizu {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 10px 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.86rem;
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(250, 250, 250, 0.2);
+}
+.ar-name-mizu::placeholder { color: rgba(161, 161, 170, 0.6); }
+.ar-name-mizu:focus { outline: none; border-color: rgba(250, 250, 250, 0.6); }
+
+.ar-send-mizu {
+  padding: 10px 18px;
+  cursor: pointer;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0a0a0b;
+  background: #fafafa;
+  border: 1px solid #fafafa;
+}
+.ar-send-mizu:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.ar-err-mizu { margin: 10px 0 0; font-size: 0.78rem; color: #ff6b6b; }
+
+.ar-best-mizu {
+  margin: 10px 0 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+/* ── The board ───────────────────────────────────── */
+.ar-board-head-mizu {
+  margin: 0 0 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(212, 212, 216, 0.9);
+}
+.ar-board-head-mizu span {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  margin-right: 8px;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+.ar-board-empty-mizu {
+  margin: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: rgba(161, 161, 170, 0.8);
+}
+
+/* Ten rows, then it scrolls. The board pulls up to fifty and a fifty-row
+   list would stretch the aside well past the cabinet beside it and drag
+   the whole section long.
+   A row is 30px (7px padding twice plus the line box at 0.72rem), so ten
+   is 301px. The cap is set a little above that on purpose: the eleventh
+   row shows as a sliver, and a half-visible row is what tells you the
+   list keeps going. The mask fades exactly that sliver so it ends on a
+   soft edge rather than a cut. */
+.ar-board-list-mizu {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 20.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(250, 250, 250, 0.26) transparent;
+  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 20px), transparent 100%);
+}
+
+.ar-board-list-mizu::-webkit-scrollbar { width: 5px; }
+.ar-board-list-mizu::-webkit-scrollbar-track { background: transparent; }
+.ar-board-list-mizu::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgba(250, 250, 250, 0.24);
+}
+.ar-board-list-mizu::-webkit-scrollbar-thumb:hover { background: rgba(250, 250, 250, 0.4); }
+.ar-board-list-mizu li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.07);
+}
+.ar-board-list-mizu li:last-child { border-bottom: none; }
+
+.ar-rank-mizu,
+.ar-score-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+}
+.ar-rank-mizu { color: rgba(161, 161, 170, 0.7); }
+.ar-score-mizu { color: #fafafa; font-weight: 700; }
+
+.ar-who-mizu {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: rgba(228, 228, 232, 0.94);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .ar-body-mizu { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ══════════════════════════════════════════════════
+   The cabinet.
+
+   A marquee, a screen sunk into a bezel, and a control
+   deck under it. The screen is a fixed 3:2 box for
+   every game so switching cabinets does not make the
+   page jump — the tallest game would otherwise set the
+   height and leave the others floating.
+   ══════════════════════════════════════════════════ */
+
+/* ── Screen ── */
+.ar-screen-mizu {
+  position: relative;
+  aspect-ratio: 460 / 300;
+  margin: clamp(14px, 2vw, 22px);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #08080a;
+  /* Sunk rather than raised: the inner shadow is what makes it read as
+     glass set into a case instead of a panel stuck on top. */
+  box-shadow: inset 0 0 0 1px rgba(250, 250, 250, 0.16),
+              inset 0 14px 34px -14px rgba(0, 0, 0, 0.95);
+}
+
+/* Scanlines and a corner vignette. Both are decoration and both are
+   inert, so nothing here can eat a click meant for the game. */
+.ar-screen-mizu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.16) 0px,
+      rgba(0, 0, 0, 0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(120% 90% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+  opacity: 0.7;
+}
+
+/* Each game fills the screen. The three used to size themselves, which
+   is why the cabinet changed height when you switched. */
+.ar-screen-mizu > * {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(12px, 2.4vw, 22px);
+}
+
+.ar-canvas-mizu {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ar-canvas-mizu {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+
+/* ── Readouts ── */
+/* Top-right, opposite the nitro gauge that the game paints bottom-left,
+   so the two never crowd each other. */
+.ar-touge-dist-mizu {
+  top: clamp(12px, 2.4vw, 22px);
+  right: clamp(12px, 2.4vw, 22px);
+}
+
+/* The speed reads under the distance, quieter than it, and picks up the
+   nitro colour so a boost is legible without looking away from the road. */
+.ar-touge-dist-mizu i {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(161, 161, 170, 0.9);
+  transition: color 140ms linear;
+}
+
+.ar-touge-dist-mizu i.is-on { color: #9ecbff; }
+
+/* ══════════════════════════════════════════════════
+   The cabinet.
+
+   Drawn as a real one is built, top to bottom: a hood
+   with a backlit marquee under it, a screen sunk deep
+   behind glass, a control panel that catches the light
+   from above, and a coin door in the plinth.
+
+   Two things do most of the work. The hood overhangs
+   and drops a shadow onto the marquee, which is what
+   makes the marquee read as lit from behind rather than
+   as a bright rectangle. And the side rails are lighter
+   at the top and darker at the bottom, so the whole box
+   reads as a solid object standing in a room with the
+   marquee as its light source.
+
+   All CSS. A photograph of a cabinet would be a
+   megabyte and could not hold a live canvas.
+   ══════════════════════════════════════════════════ */
+
+.ar-cab-mizu {
+  position: relative;
+  padding: 0 0 clamp(10px, 1.6vw, 16px);
+  border-radius: 18px 18px 6px 6px;
+  overflow: visible;
+  background:
+    /* side rails, lit from the marquee down */
+    linear-gradient(90deg, #2a2a33 0px, #15151b 14px, transparent 14px),
+    linear-gradient(270deg, #2a2a33 0px, #15151b 14px, transparent 14px),
+    linear-gradient(180deg, #1c1c23 0%, #121217 30%, #0b0b0f 72%, #060608 100%);
+  border: 1px solid rgba(250, 250, 250, 0.1);
+  box-shadow:
+    0 46px 100px -44px rgba(0, 0, 0, 0.96),
+    -26px 0 70px -34px rgba(255, 84, 132, 0.42),
+    26px 0 70px -34px rgba(84, 168, 255, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Hood and marquee ── */
+/* The hood is a lip that sticks out over the sign. Its underside is the
+   darkest thing on the cabinet, which is what gives the marquee below it
+   somewhere to glow into. */
+.ar-hood-mizu {
+  position: relative;
+  padding: clamp(9px, 1.4vw, 13px) clamp(14px, 2.2vw, 24px) clamp(13px, 2vw, 18px);
+  border-radius: 17px 17px 0 0;
+  background: linear-gradient(180deg, #26262f 0%, #1a1a21 55%, #0e0e12 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -14px 20px -12px rgba(0, 0, 0, 0.95);
+}
+
+/* The tube under the hood lip. Warm in the middle, picking up the two
+   side colours at its ends so it reads as a room with lights in it
+   rather than as one flat wash. */
+.ar-tube-mizu {
+  position: absolute;
+  top: clamp(5px, 0.8vw, 8px);
+  left: clamp(22px, 4vw, 44px);
+  right: clamp(22px, 4vw, 44px);
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ff6f9c 0%, #fff6f8 26%, #fff 50%, #eaf4ff 74%, #6fb6ff 100%);
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.85),
+    0 0 26px rgba(255, 120, 160, 0.55),
+    0 0 26px rgba(110, 180, 255, 0.55),
+    0 12px 44px -6px rgba(255, 255, 255, 0.34);
+  pointer-events: none;
+}
+
+/* The sign itself: a warm panel, brightest at its centre, held in a thin
+   frame the way a real marquee is clamped top and bottom. */
+.ar-marquee-mizu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(9px, 1.6vw, 16px);
+  padding: clamp(8px, 1.4vw, 13px) clamp(14px, 2.4vw, 26px);
+  border-radius: 4px;
+  background:
+    radial-gradient(120% 180% at 50% 50%, rgba(255, 246, 238, 0.16) 0%, rgba(255, 240, 230, 0.05) 55%, rgba(0, 0, 0, 0.28) 100%),
+    linear-gradient(180deg, #23232b 0%, #1a1a21 100%);
+  border: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 220, 0.14),
+    inset 0 2px 12px rgba(255, 226, 200, 0.1),
+    0 0 34px -6px rgba(255, 214, 180, 0.22);
+}
+
+.ar-marquee-jp-mizu {
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(1rem, 2.4cqi, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: #fdf6ef;
+  text-shadow: 0 0 20px rgba(255, 226, 198, 0.45);
+}
+
+.ar-marquee-en-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.5rem, 1.3cqi, 0.6rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: rgba(214, 200, 186, 0.85);
+}
+
+/* ── Bezel ── */
+/* Thick moulded plastic. The inner rim highlight is the light off the
+   top of the aperture; the outer shadow is the recess it sits in. */
+.ar-bezel-mizu {
+  position: relative;
+  margin: clamp(12px, 2vw, 20px) clamp(16px, 2.6vw, 28px) 0;
+  padding: clamp(11px, 1.8vw, 19px);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #24242b 0%, #141419 46%, #0d0d11 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8),
+    0 14px 30px -16px rgba(0, 0, 0, 0.95);
+}
+
+.ar-screen-mizu {
+  margin: 0;
+  border-radius: 8px;
+}
+
+/* Glass. One soft diagonal wipe from the top-left, low enough to read as
+   a reflection rather than as a white shape sitting on the picture.
+   Inert, so it cannot eat a click meant for the game. */
+.ar-glare-mizu {
+  position: absolute;
+  inset: clamp(11px, 1.8vw, 19px);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(
+    122deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.035) 26%,
+    transparent 46%
+  );
+}
+
+/* ── Control panel ── */
+/* Sits proud of the cabinet and slightly wider than the bezel, the way a
+   real panel juts out over the coin door. The top edge catches the
+   marquee light, the bottom falls into shadow. */
+.ar-deck-mizu {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(10px, 2vw, 22px);
+  margin: clamp(13px, 2vw, 19px) clamp(10px, 1.8vw, 20px) 0;
+  padding: clamp(12px, 1.8vw, 18px) clamp(14px, 2.4vw, 24px);
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(180deg, #33333d 0%, #262630 34%, #191920 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.55),
+    0 10px 22px -12px rgba(0, 0, 0, 0.92);
+}
+
+/* Joystick: base, shaft, ball. Three boxes rather than an image, so it
+   stays sharp at any size and costs nothing. */
+.ar-stick-mizu {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 46px;
+}
+
+.ar-stick-mizu::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 34px;
+  height: 11px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(60% 100% at 50% 30%, #43434f, #16161c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+.ar-stick-mizu::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 6px;
+  height: 20px;
+  transform: translateX(-50%);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4a4a55, #8b8b9a 40%, #35353e);
+}
+
+.ar-stick-mizu i {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(38% 34% at 34% 28%, #ff9db4 0%, #f4436a 46%, #96122f 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7), 0 0 14px rgba(244, 67, 106, 0.35);
+}
+
+/* Buttons. Concave tops, which is the one detail that stops them reading
+   as flat circles. */
+.ar-pads-mizu {
+  display: inline-flex;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+
+.ar-pads-mizu i {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: radial-gradient(40% 36% at 36% 30%, #ff9db4 0%, #e83a60 52%, #8d1330 100%);
+  box-shadow:
+    inset 0 -2px 3px rgba(0, 0, 0, 0.45),
+    inset 0 2px 2px rgba(255, 255, 255, 0.2),
+    0 2px 5px rgba(0, 0, 0, 0.65);
+}
+
+.ar-pads-mizu i:nth-child(2) { background: radial-gradient(40% 36% at 36% 30%, #cfe6ff 0%, #4a9bf0 52%, #14477e 100%); }
+.ar-pads-mizu i:nth-child(3) { background: radial-gradient(40% 36% at 36% 30%, #e6e6ee 0%, #8e8e9c 52%, #3a3a44 100%); }
+
+/* The instruction card sits between the two hands, which is where a
+   cabinet puts it. */
+.ar-keys-mizu {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-right: 0;
+  text-align: center;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.52rem, 1.3cqi, 0.6rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(178, 178, 190, 0.85);
+}
+
+.ar-keys-mizu kbd {
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  color: rgba(238, 238, 242, 0.96);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(250, 250, 250, 0.24);
+  border-bottom-width: 2px;
+}
+
+/* ── Coin door ── */
+/* Brushed metal in the plinth, two slots and a return. Pure decoration,
+   and the detail that most says "arcade" rather than "monitor". */
+.ar-coin-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vw, 18px);
+  margin: clamp(10px, 1.6vw, 15px) clamp(28px, 6vw, 68px) 0;
+  padding: clamp(7px, 1.1vw, 10px) clamp(12px, 2vw, 20px);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #35353d 0%, #232329 40%, #16161b 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+    0 6px 14px -8px rgba(0, 0, 0, 0.9);
+}
+
+.ar-slot-mizu {
+  width: 26px;
+  height: 5px;
+  border-radius: 2px;
+  background: #08080a;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.ar-coin-word-mizu {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.44rem, 1.1cqi, 0.52rem);
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: rgba(150, 150, 162, 0.75);
+}
+
+@media (max-width: 620px) {
+  /* Sticks, buttons and the coin door are furniture. On a phone the
+     width is better spent on the instruction than on the joinery. */
+  .ar-stick-mizu,
+  .ar-pads-mizu,
+  .ar-coin-mizu { display: none; }
+  .ar-tube-mizu { left: 16px; right: 16px; }
+  .ar-deck-mizu { margin-inline: clamp(8px, 2vw, 14px); }
+}
+
+/* ══════════════════════════════════════════════════
+   Game over.
+
+   Laid over the last frame rather than replacing it, so
+   you can see what finished you. Inert throughout: the
+   space that restarts has to reach the stage beneath.
+   ══════════════════════════════════════════════════ */
+/* ── Start and gate ───────────────────────────────
+   Both sit on the screen the way the game-over card does. The start
+   card is inert so the click that dismisses it falls through and both
+   focuses the canvas and begins the run; the gate is not, because it
+   contains a field that has to be typed into. */
+.ar-start-mizu,
+.ar-gate-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: clamp(12px, 3cqi, 24px);
+  background: radial-gradient(70% 60% at 50% 50%, rgba(6,6,10,0.72), rgba(6,6,10,0.9));
+  animation: ar-over-in 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+.ar-start-mizu { pointer-events: none; }
+
+.ar-start-play-mizu {
+  font-size: clamp(1.5rem, 5cqi, 2.2rem);
+  line-height: 1;
+  color: #fafafa;
+  text-shadow: 0 0 26px rgba(255, 255, 255, 0.4);
+}
+
+.ar-start-en-mizu {
+  margin: 10px 0 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.6rem, 2cqi, 0.74rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: rgba(228, 228, 232, 0.92);
+}
+
+.ar-start-sub-mizu,
+.ar-gate-sub-mizu {
+  margin: 4px 0 0;
+  font-size: clamp(0.62rem, 2cqi, 0.72rem);
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.ar-gate-jp-mizu {
+  margin: 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(1.4rem, 4.6cqi, 2rem);
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: rgba(250, 250, 250, 0.94);
+}
+
+.ar-gate-en-mizu {
+  margin: 8px 0 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.6rem, 2cqi, 0.74rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: rgba(228, 228, 232, 0.92);
+}
+
+.ar-gate-form-mizu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ar-cancel-mizu {
+  padding: 9px 14px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(178, 178, 190, 0.9);
+  background: none;
+  border: 1px solid rgba(250, 250, 250, 0.2);
+  cursor: pointer;
+}
+
+.ar-cancel-mizu:hover { color: #fafafa; border-color: rgba(250, 250, 250, 0.45); }
+
+.ar-gate-err-mizu {
+  margin: 12px 0 0;
+  font-size: 0.7rem;
+  color: #ff6b6b;
+}
+
+.ar-over-sub-mizu {
+  margin: 10px 0 0;
+  font-size: clamp(0.62rem, 2cqi, 0.72rem);
+  color: rgba(161, 161, 170, 0.9);
+}
+
+/* ── Who is playing ── */
+.ar-who-line-mizu {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.ar-who-line-mizu b { color: #fafafa; font-weight: 600; }
+
+.ar-rename-mizu {
+  margin-left: 8px;
+  padding: 0;
+  font: inherit;
+  color: rgba(161, 161, 170, 0.85);
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(250, 250, 250, 0.28);
+  cursor: pointer;
+}
+
+.ar-rename-mizu:hover { color: #fafafa; }
+
+.ar-over-mizu {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  pointer-events: none;
+  background: radial-gradient(70% 60% at 50% 50%, rgba(6,6,10,0.82), rgba(6,6,10,0.94));
+  animation: ar-over-in 260ms cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes ar-over-in {
+  from { opacity: 0; }
+}
+
+.ar-over-jp-mizu {
+  margin: 0;
+  font-family: 'Shippori Mincho', 'Yu Mincho', serif;
+  font-size: clamp(1.6rem, 5cqi, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: rgba(255, 107, 107, 0.92);
+  text-shadow: 0 0 26px rgba(255, 80, 80, 0.5);
+}
+
+.ar-over-en-mizu {
+  margin: 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(0.6rem, 2cqi, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  text-transform: uppercase;
+  color: rgba(228, 228, 232, 0.9);
+}
+
+.ar-over-score-mizu {
+  margin: 10px 0 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: clamp(1.1rem, 4cqi, 1.7rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fafafa;
 }

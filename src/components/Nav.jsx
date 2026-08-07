@@ -42,6 +42,9 @@ const MORE = [
      (.mode-recruiter .tg-mizu { display: none }), so this link would
      scroll to a section that is not on the page. */
   { label: 'Tickets',   href: '#gallery',   Icon: IconTicket, personal: true },
+  /* Same reason as tickets: recruiter mode hides the whole games
+     section, so this would scroll to nothing. */
+  { label: 'Arcade',    href: '#games',     Icon: IconArcade, personal: true },
   { label: 'Subscribe', href: '#subscribe', Icon: IconBell },
 ]
 
@@ -377,4 +380,16 @@ function IconClose() {
 
 function IconArrowLeft() {
   return <svg {...s}><path d="M19 12H5M11 5l-7 7 7 7" /></svg>
+}
+
+function IconArcade(p) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+         strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <rect x="3" y="4" width="18" height="13" rx="2" />
+      <path d="M8 21h8M12 17v4M8 9v3M6.5 10.5h3" />
+      <circle cx="16" cy="10" r="1" />
+      <circle cx="16" cy="13" r="1" />
+    </svg>
+  )
 }

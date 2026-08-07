@@ -2,6 +2,7 @@ import ART from 'virtual:game-art'
 import BG from 'virtual:game-bg'
 import { GAMES, SHELF, PROFILES } from '../../data/games.js'
 import { SteamIcon, XboxIcon } from './gameIcons.jsx'
+import Arcade from './arcade/Arcade.jsx'
 
 /* ══════════════════════════════════════════════════
    遊戯 — the arcade.
@@ -30,6 +31,31 @@ function entry(n) {
 export default function Games() {
   /* Nothing on the shelf yet is not an empty poster, it is no poster. */
   if (!ART.length) return null
+
+  /* Directly under the blurb that says come and find me, which is the
+     sentence they answer. */
+  const profiles = (
+    <div className="gm-profiles-mizu">
+      {PROFILES.map(({ id, label, handle, url }) => {
+        const Icon = MARK[id]
+        return (
+          <a
+            key={id}
+            className={`gm-profile-mizu is-${id}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {Icon && <Icon />}
+            <span className="gm-profile-text-mizu">
+              <span className="gm-profile-label-mizu">{label}</span>
+              <span className="gm-profile-handle-mizu">{handle}</span>
+            </span>
+          </a>
+        )
+      })}
+    </div>
+  )
 
   return (
     <section id="games" className="gm-mizu">
@@ -82,25 +108,21 @@ export default function Games() {
         <p className="gm-word-mizu" aria-hidden="true">{SHELF.word}</p>
         <p className="gm-caption-mizu">{SHELF.caption}</p>
 
-        <div className="gm-profiles-mizu">
-          {PROFILES.map(({ id, label, handle, url }) => {
-            const Icon = MARK[id]
-            return (
-              <a
-                key={id}
-                className={`gm-profile-mizu is-${id}`}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {Icon && <Icon />}
-                <span className="gm-profile-text-mizu">
-                  <span className="gm-profile-label-mizu">{label}</span>
-                  <span className="gm-profile-handle-mizu">{handle}</span>
-                </span>
-              </a>
-            )
-          })}
+        {profiles}
+
+        {/* Games played above, games built below. They were running into
+            each other as one undifferentiated block, which buried the
+            fact that the cabinets are mine. */}
+        <div className="gm-play-mizu">
+          <header className="gm-play-head-mizu">
+            <span className="gm-play-jp-mizu" aria-hidden="true">遊技場</span>
+            <h3 className="gm-play-title-mizu">Mizuki&rsquo;s Playground</h3>
+            <p className="gm-play-note-mizu">
+              Play 4 retro games for a little entertainment
+            </p>
+          </header>
+
+          <Arcade />
         </div>
       </div>
     </section>

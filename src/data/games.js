@@ -38,6 +38,10 @@ export const GAMES = {
     url: 'https://store.steampowered.com/app/4193270/2_Japan_Stigmatized_Property/',
   },
   4: {
+    name: 'Assasins Creed Shadows',
+    url: 'https://store.steampowered.com/app/3159330/Assassins_Creed_Shadows/',
+  },
+   5: {
     name: 'Battlefield 6',
     url: 'https://store.steampowered.com/app/2807960/Battlefield_6/',
   },
@@ -48,10 +52,10 @@ export const GAMES = {
 export const SHELF = {
   kicker: 'Mizu',
   centre: 'GAMES',
-  note: 'My top four, as of now.',
+  note: 'My top five, as of now.',
   word: 'ARCADE',
   caption:
-    'The four I am playing most at the moment, not a lifetime list. If I ' +
+    'The five I am playing most at the moment, not a lifetime list. If I ' +
     'am not building something, this is usually where I am, so come and ' +
     'find me.',
 }
