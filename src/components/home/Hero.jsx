@@ -47,6 +47,11 @@ const SINGLE = LAYERS.length < 2;
    cannot drift apart. */
 const VOLUME = 0.35;
 
+/* Seconds an arrow key moves the backdrop. Five is what a video player
+   conventionally steps by, and it is small enough that holding the key
+   scrubs smoothly rather than jumping. */
+const SEEK = 5;
+
 /* Role and location come from the strip that was already declared;
    availability is appended rather than hardcoded, so the hero and the
    contact card cannot end up disagreeing about it. */
@@ -181,6 +186,72 @@ export default function Hero() {
     window.addEventListener(HERO_SOUND, on);
     return () => window.removeEventListener(HERO_SOUND, on);
   }, []);
+
+  /* Space pauses and resumes the backdrop; the arrows scrub it.
+
+     Heavily guarded, because none of these are free keys: space scrolls
+     the page and activates whatever button or link has focus, the
+     arrows scroll it too, move the caret in a field, and step the
+     volume slider when that has focus. So they are only claimed when
+     nothing else has a claim on them — no field or control focused, no
+     dialog holding the keyboard, the hero actually on screen, and
+     personal mode, where the backdrop exists at all. preventDefault
+     runs only after all of that passes, so a press this ignores still
+     does whatever it normally would. */
+  useEffect(() => {
+    if (isRecruiter) return;
+
+    const onKey = (e) => {
+      const seek =
+        e.code === "ArrowLeft" ? -SEEK : e.code === "ArrowRight" ? SEEK : 0;
+      const toggle = e.code === "Space";
+      if (!toggle && !seek) return;
+      /* Holding an arrow to scrub is the point; holding space would
+         just flap the video between paused and playing. */
+      if (toggle && e.repeat) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+
+      const t = e.target;
+      if (
+        t instanceof HTMLElement &&
+        (t.isContentEditable ||
+          t.closest('input, textarea, select, button, a[href], [role="button"]'))
+      ) {
+        return;
+      }
+
+      /* The greeting, the ticket editor and the lightbox are all
+         dialogs; whichever is up owns the keyboard. */
+      if (document.querySelector("dialog[open]")) return;
+
+      /* Off screen, the only thing this key would do is swallow a
+         scroll to stop a video nobody is looking at. */
+      const r = document.getElementById("hero")?.getBoundingClientRect();
+      if (!r || r.bottom <= 0 || r.top >= window.innerHeight) return;
+
+      const v = active();
+      if (!v) return;
+
+      e.preventDefault();
+
+      if (toggle) {
+        if (v.paused) v.play().catch(() => {});
+        else v.pause();
+        return;
+      }
+
+      /* duration is NaN until metadata lands, so the ceiling is only
+         applied once there is one to apply. */
+      const at = v.currentTime + seek;
+      v.currentTime = Math.max(
+        0,
+        Number.isFinite(v.duration) ? Math.min(at, v.duration) : at
+      );
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isRecruiter, bg]);
 
   const scrollTo = (sel) => (e) => {
     e.preventDefault();
