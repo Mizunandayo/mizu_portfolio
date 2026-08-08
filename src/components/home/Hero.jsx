@@ -42,6 +42,11 @@ const LAYERS = [
    adding a second entry above brings both back on its own. */
 const SINGLE = LAYERS.length < 2;
 
+/* How long a hidden tab may keep playing before the backdrop is stopped.
+   Long enough that flicking to another tab and back never interrupts it,
+   short enough that a tab nobody returns to stops costing bandwidth. */
+const IDLE_STOP = 5 * 60_000;
+
 /* Where the backdrop's sound sits whenever it is turned on, whether on
    load or from the greeting's no-music path. One constant so the two
    cannot drift apart. */
@@ -166,35 +171,48 @@ export default function Hero() {
     active()?.play().catch(() => {});
   }, [isRecruiter]);
 
-  /* A hidden tab has no business downloading video.
+  /* A hidden tab keeps playing, which is what a backdrop with sound
+     should do when you flick away for a moment and come back.
 
-     Browsers throttle timers in a background tab but keep media
-     playing, so a page nobody is looking at goes on rotating between
-     the clips and re-fetching them — a 21 MB pull every 54 seconds,
-     for hours, from a tab someone forgot to close. That is where a
-     month of bandwidth went in a single day.
+     The cap is for the tab nobody returns to. Browsers keep media running
+     in the background, so a forgotten page goes on rotating between the
+     clips for hours, and at 36 MB of video that was a month of bandwidth
+     in a single day. The clips are cached now, so a rotation costs
+     nothing after the first fetch, and this stops them anyway once the
+     tab has been out of sight for IDLE_STOP.
 
-     Resumes only if it was actually playing: the visitor may have
-     paused it with the spacebar before switching away. */
+     Resumes only if it was actually playing: the visitor may have paused
+     it with the spacebar before switching away. */
   useEffect(() => {
     if (isRecruiter) return
 
-    const wasPlaying = { current: false }
+    let timer = 0;
+    let resume = false;
 
     const onVisibility = () => {
       const v = active();
       if (!v) return;
 
       if (document.hidden) {
-        wasPlaying.current = !v.paused;
-        v.pause();
+        timer = window.setTimeout(() => {
+          resume = !v.paused;
+          v.pause();
+        }, IDLE_STOP);
         return;
       }
-      if (wasPlaying.current) v.play().catch(() => {});
+
+      window.clearTimeout(timer);
+      if (resume) {
+        resume = false;
+        v.play().catch(() => {});
+      }
     };
 
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [isRecruiter, bg]);
 
   /* The greeting fires this when the visitor declines the playlist.
@@ -203,11 +221,24 @@ export default function Hero() {
      is allowed to be audible.
 
      State is set as well as the element, so the setting survives a
-     switch to the other backdrop. */
+     switch to the other backdrop.
+
+     `bg` has to be in the deps because `active` closes over it. With an
+     empty array the listener kept the first render's copy forever and
+     always handed the sound to layer 0. Decline the playlist after the
+     clips had swapped and it unmuted the one on screen, then called
+     play() on the one before it, which the swap had already rewound to
+     zero: two soundtracks, one of them starting over. */
   useEffect(() => {
     const on = () => {
       setVolume(VOLUME);
       setMuted(false);
+
+      vids.current.forEach((v, i) => {
+        if (!v || i === bg) return;
+        v.pause();
+      });
+
       const v = active();
       if (!v) return;
       v.volume = VOLUME;
@@ -216,7 +247,7 @@ export default function Hero() {
     };
     window.addEventListener(HERO_SOUND, on);
     return () => window.removeEventListener(HERO_SOUND, on);
-  }, []);
+  }, [bg]);
 
   /* Space pauses and resumes the backdrop; the arrows scrub it.
 
@@ -307,7 +338,11 @@ export default function Hero() {
           ref={(el) => { vids.current[i] = el; }}
           className={`hero-gif-mizu${i === bg ? " is-on" : ""}`}
           src={l.src}
-          muted={muted}
+          /* Only the layer on screen may ever be audible. `muted` is one
+             piece of state across every element, so lifting it unmuted
+             all of them at once and left the others one stray play()
+             away from being heard. */
+          muted={i === bg ? muted : true}
           loop={looping}
           playsInline
           /* Only the one on screen is worth the bandwidth up front; any

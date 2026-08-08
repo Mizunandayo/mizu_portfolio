@@ -6864,7 +6864,7 @@ html.tk-open-mizu {
 
 .wc-title-mizu {
   font-family: 'Poppins', system-ui, sans-serif;
-  font-size: clamp(1.55rem, 3.1vw, 2.35rem);
+  font-size: clamp(1.4rem, 2.8vw, 2.1rem);
   font-weight: 800;
   letter-spacing: -0.022em;
   line-height: 1.16;
@@ -6883,7 +6883,12 @@ html.tk-open-mizu {
   max-width: 58ch;
 }
 
-.wc-title-mizu { max-width: 22ch; }
+/* The measure, not the font size, is what decides whether the title
+   wraps. 22ch was cut for a short English headline; a title carrying
+   kana as well needs the room, since every kana counts as a full em
+   against a ch measured on Latin. Raise this before reaching for the
+   font size above. */
+.wc-title-mizu { max-width: 30ch; }
 
 /* Signed off, not another paragraph — trailed by a rule that runs to
    the edge, the way a name is stamped on a ticket. No italic: only the
