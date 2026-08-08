@@ -1,43 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/* ══════════════════════════════════════════════════
-   冒険 — the island run.
+/* 冒険 — an island run in the 8-bit mould. Original code and art, no ROM.
 
-   A jungle platformer in the 8-bit mould, written from
-   scratch rather than emulated: original code, original
-   art, no ROM.
-
-   The engine of it is the vitality meter. It drains the
-   whole time you are alive, so standing still is death
-   and the only refill is fruit, which sits exactly where
-   the obstacles are. Every piece of fruit is a question
-   about whether you can afford to go and get it, and a
-   run ends because you got greedy or because you got
-   timid, never because nothing happened.
-
-   Three things layer on top of that:
-
-   The egg is a gamble. It can hand you an axe, a board,
-   a fairy or a bottle of milk — or a cursed eggplant
-   that doubles the drain for eight seconds. You cannot
-   tell from outside, so every egg is a decision made
-   against your current vitality rather than a free
-   pickup. That single coin-flip is what stops the run
-   settling into a rhythm.
-
-   The axe is one throw. It is the only thing that turns
-   a hazard into a reward, since a kill pays vitality
-   back, but you carry at most one and it is spent the
-   moment it leaves your hand — so the question is never
-   whether to throw, it is which of the next three things
-   is worth spending it on. It is lost on a hit too,
-   which stops you walking into something to save it.
-
-   Crows fly at exactly the height a jump puts your head,
-   so they are the one obstacle you clear by *not*
-   jumping. Against a game whose only verb is jump, that
-   is the counter-pressure that keeps the button honest.
-   ══════════════════════════════════════════════════ */
+   Vitality drains the whole time, so the only refill is fruit and fruit
+   sits where the obstacles are. Eggs are a gamble, the axe is one throw,
+   and crows fly at the height a jump puts your head. */
 
 const W = 460
 const H = 300
@@ -77,11 +44,6 @@ const AXE_LEAD = 170 // how much faster than the runner it flies
 const AXE_VY = -400
 const AXE_GRAV = 1150
 
-/* The axe locks on. A ballistic arc thrown from a moving runner at a
-   target that is also moving is a guess, and missing costs the throw
-   without teaching you anything — so it leaves the hand on an arc and
-   then steers. Fast enough to converge, soft enough that it still reads
-   as a thrown axe rather than a missile. */
 const AXE_SPEED = 430
 const AXE_HOME = 8 // how hard it steers, per second
 const AXE_LIFE = 1600
@@ -90,9 +52,7 @@ const AXE_BITE = 15 // half-width of the strike once it is on target
 const LEDGE_Y = GROUND - 70
 const DROP_FOR = 320 // ms of falling through a ledge you stepped off
 
-/* Coconuts hang in a tree at the front of the scene and let go as you
-   approach. The lead comes out of the fall itself rather than a tuned
-   constant, so it is still in the air when you reach it at any speed. */
+/* Coconuts hang in a tree at the front of the scene and let go as you approach. */
 const COCO_Y = GROUND - 112
 const COCO_GRAV = 900
 const COCO_FALL = Math.sqrt((2 * (GROUND - 8 - COCO_Y)) / COCO_GRAV)
@@ -101,9 +61,6 @@ const PW = 15
 const PH = 24
 const MERCY = 700
 
-/* The egg table. Weighted so the good outcomes are worth chasing and the
-   curse is common enough to make you hesitate over the last egg before a
-   tight stretch — which is the whole point of it. */
 const LOOT = [
   ['axe', 30],
   ['board', 22],
@@ -149,11 +106,6 @@ export default function Boken({ onScore, onState }) {
     const speed = (SLOW + (FAST - SLOW) * ramp) * (boarding ? BOARD_BOOST : 1) * s.nudge
     s.speed = speed
 
-    /* ── World ahead ──
-       Two streams. Fruit on the obstacle cadence starves you early, when
-       the run is deliberately slow and the gaps are wide, so it gets its
-       own spacing in distance: the refill rate rises with speed while
-       the obstacles close in. */
     const gap = GAP_FROM + (GAP_TO - GAP_FROM) * ramp
     while (s.nextX < s.x + W + 220) {
       spawn(s, s.nextX, ramp)
@@ -164,7 +116,6 @@ export default function Boken({ onScore, onState }) {
       s.nextF += FRUIT_GAP * (0.75 + Math.random() * 0.5)
     }
 
-    /* ── Player ── */
     s.x += speed * dt
 
     if (!s.doomed && s.buffer > now - BUFFER && (s.onGround || s.left > now - COYOTE) && s.vy >= 0) {
@@ -179,10 +130,7 @@ export default function Boken({ onScore, onState }) {
     s.vy += GRAV * dt
     s.y += s.vy * dt
 
-    /* Ledges are one-way: only ever caught on the way down, so a jump
-       from underneath passes straight through instead of clipping you
-       onto a shelf you were trying to get past. Holding down drops you
-       off one on purpose. */
+    /* One-way: only caught on the way down, so a jump passes through. */
     const dropping = now < s.dropUntil
     const surf = !s.doomed && s.vy >= 0 ? surfaceAt(s, s.x, prevY, s.y, dropping) : null
     if (surf != null) {
@@ -210,7 +158,6 @@ export default function Boken({ onScore, onState }) {
     s.vit -= VIT_DRAIN * (cursed ? CURSE_DRAIN : 1) * dt
     if (s.doomed && s.y > H + 60) s.vit = 0
 
-    /* ── Things ── */
     for (const o of s.things) {
       if (o.dead) continue
 
@@ -239,20 +186,16 @@ export default function Boken({ onScore, onState }) {
       } else if (o.kind === 'coconut' && !o.armed) {
         continue // still in the tree, not a hazard yet
       } else if (fairy) {
-        /* The fairy does not just absorb the hit, it clears the thing —
-           six seconds of walking through the level is the reward. */
+        /* The fairy clears what it touches rather than absorbing the hit. */
         o.dead = true
         s.pop.push({ x: o.x, y: o.y - 16, t: 0, txt: '✦' })
       } else if (now > s.hurt) {
         s.hurt = now + MERCY
         if (boarding) {
-          /* The board is a shield that costs you the board, which is the
-             only reason taking it into a tight stretch is a real gamble. */
+
           s.boardUntil = 0
           s.pop.push({ x: s.x, y: s.y - 40, t: 0, txt: 'BOARD LOST' })
         } else if (s.axe > 0) {
-          /* And the axe goes the same way. Losing it on contact is what
-             stops you walking into things to save a throw. */
           s.axe = 0
           s.pop.push({ x: s.x, y: s.y - 40, t: 0, txt: 'AXE LOST' })
         } else {
@@ -263,10 +206,8 @@ export default function Boken({ onScore, onState }) {
       }
     }
 
-    /* ── Axes in flight ── */
     for (const a of s.axes) {
-      /* A target that died or ran off the back is no longer a target;
-         the axe finishes the throw on its own arc. */
+      /* A dead target frees the axe to re-acquire the next one. */
       if (a.lock && (a.lock.dead || a.lock.x < s.x - RUN_X)) a.lock = null
       if (!a.lock) a.lock = lockOn(s, a.x)
 
@@ -364,8 +305,6 @@ export default function Boken({ onScore, onState }) {
     raf.current = requestAnimationFrame(loop)
   }, [fresh, loop, stop])
 
-  /* One static frame on mount. An unstarted cabinet showing black reads
-     as broken rather than as waiting. */
   useEffect(() => {
     const s = fresh()
     sim.current = s
@@ -391,8 +330,7 @@ export default function Boken({ onScore, onState }) {
     if (now - s.lastThrow < AXE_COOL || s.axes.length >= AXE_MAX) return
     s.lastThrow = now
     s.axe -= 1 // one egg, one throw
-    /* Given the runner's own speed, not a fixed value, or at top speed
-       the axe would trail behind the man who threw it. */
+    /* Derived from current speed, or at top speed the axe trails the thrower. */
     s.axes.push({
       x: s.x + 10, y: s.y - 20,
       vx: s.speed + AXE_LEAD, vy: AXE_VY,
@@ -400,8 +338,6 @@ export default function Boken({ onScore, onState }) {
     })
   }
 
-  /* Only off a ledge. On the ground there is nothing below to drop to,
-     and letting it fire there would read as an input that does nothing. */
   const dropOff = () => {
     const s = sim.current
     if (!s || phaseRef.current !== 'run') return
@@ -441,8 +377,6 @@ export default function Boken({ onScore, onState }) {
       onKeyUp={release}
       onTouchStart={(e) => {
         e.preventDefault()
-        /* Two fingers throws. A drawn button would cover the ground you
-           need to be reading. */
         if (e.touches.length >= 2) throwAxe()
         else jump()
       }}
@@ -458,9 +392,7 @@ export default function Boken({ onScore, onState }) {
   )
 }
 
-/* ── Eggs ─────────────────────────────────────────
-   Rolled on contact, not at spawn, so nothing about the egg on screen
-   can betray what is inside it. */
+/* Rolled on contact, so nothing on screen betrays what is inside. */
 function crack(s, o, now) {
   let roll = Math.random() * LOOT.reduce((t, [, w]) => t + w, 0)
   let pick = 'axe'
@@ -485,8 +417,7 @@ function spawn(s, x, ramp) {
   if (r < 0.16) {
     const w = 55 + Math.random() * (40 + ramp * 30)
     s.pits.push({ x0: x, x1: x + w })
-    /* Fruit over a pit: the reward for jumping the long way across
-       rather than the safe way. */
+    /* Fruit over a pit: the reward for jumping the long way across rather than the safe way. */
     if (Math.random() < 0.5) s.things.push(thing('fruit', x + w / 2, GROUND - 76))
     return
   }
@@ -502,21 +433,16 @@ function spawn(s, x, ramp) {
   if (r < 0.4) return s.things.push(thing('egg', x, GROUND - 14))
   if (r < 0.55) return s.things.push(thing('rock', x, GROUND - 12))
   if (r < 0.7) return s.things.push(thing('turtle', x, GROUND - 9))
-  /* Head height for a jumping man and clear over a standing one, so the
-     answer is to keep your feet down and run under it. */
+  /* Head height for a jumping man, clear over a standing one. */
   if (r < 0.85) return s.things.push(thing('crow', x, GROUND - 52))
   if (r < 0.93) {
-    /* A palm at the front of the scene, not in the parallax layer, so
-       the coconut has something to hang from and to fall out of. */
+    /* Foreground palm, so the coconut has something to fall out of. */
     s.props.push({ kind: 'palm', x, h: 124 })
     return s.things.push(thing('coconut', x, COCO_Y))
   }
   return s.things.push(thing('fire', x, GROUND - 14))
 }
 
-/* Height is the price. Low fruit is free as you run past, the rest costs
-   a hop or a full jump, which is what puts collecting it in competition
-   with clearing whatever is next. */
 function dropFruit(s, x) {
   const r = Math.random()
   const y = r < 0.35 ? GROUND - 16 : r < 0.8 ? GROUND - 50 : GROUND - 96
@@ -538,9 +464,7 @@ function thing(kind, x, y) {
   return { kind, x, y, w, h, dead: false, vy: 0, armed: false, seed: Math.random() * 6.28 }
 }
 
-/* Nearest killable thing ahead of the axe and still on screen. Picked
-   fresh each frame so an axe whose target dies mid-flight swings onto
-   the next one instead of sailing off. */
+/* Nearest killable thing ahead of the axe and still on screen. */
 function lockOn(s, ax) {
   let best = null
   const edge = s.x + (W - RUN_X)
@@ -558,9 +482,7 @@ function inPit(s, x) {
   return false
 }
 
-/* What the feet land on this frame, or null for nothing at all. Tested
-   across the whole step rather than at the new position, so a fast fall
-   cannot tunnel through a shelf. */
+/* What the feet land on this frame, or null for nothing at all. */
 function surfaceAt(s, x, prevFeet, feet, dropping) {
   if (!dropping) for (const p of s.ledges) {
     if (x < p.x0 || x > p.x1) continue
@@ -577,13 +499,10 @@ function overlap(s, o) {
   )
 }
 
-/* ── Painting ───────────────────────────────────── */
 function draw(g, s, now, st) {
   const cam = s.x - RUN_X
 
-  /* The whole canvas, not just down to GROUND. A pit paints no ground,
-     so anything left unpainted below the horizon keeps last frame's
-     pixels and a hole fills up with smeared trail. */
+  /* The whole canvas, not just down to GROUND. */
   const sky = g.createLinearGradient(0, 0, 0, H)
   sky.addColorStop(0, '#3aa8e0')
   sky.addColorStop(0.72, '#9fd9f0')
@@ -596,9 +515,7 @@ function draw(g, s, now, st) {
   g.arc(W - 62, 46, 22, 0, Math.PI * 2)
   g.fill()
 
-  /* Recycled on where the palm is drawn, not on where it nominally sits.
-     Testing against the camera instead of the parallaxed position sends
-     trees round again while they are still on screen. */
+  /* Recycled on where the palm is drawn, not on where it nominally sits. */
   for (const t of s.trees) {
     while (t.x - cam * 0.45 < -90) t.x += 190 * 9
     const px = t.x - cam * 0.45
@@ -617,8 +534,7 @@ function draw(g, s, now, st) {
     g.fillRect(x, GROUND, w, 10)
     g.fillStyle = '#8a5a2b'
     g.fillRect(x, GROUND + 10, w, H - GROUND - 10)
-    /* Shaded walls at the cut ends, so the edge of a hole is legible
-       from across the screen rather than at the moment you reach it. */
+    /* Shaded walls, so a hole is legible before you reach it. */
     g.fillStyle = '#5c3b1c'
     g.fillRect(x, GROUND + 10, 4, H - GROUND - 10)
     g.fillRect(x + w - 4, GROUND + 10, 4, H - GROUND - 10)
@@ -665,8 +581,7 @@ function draw(g, s, now, st) {
   const blink = now < s.hurt && Math.floor(now / 70) % 2 === 0
   if (!blink) runner(g, RUN_X, s.y, s.onGround, now, st)
 
-  /* The curse rides along above your shoulder, so the reason the bar is
-     emptying is on screen next to the man it is happening to. */
+  /* Rides on your shoulder, so the reason the bar drains is visible. */
   if (st.cursed) {
     const b = Math.sin(now / 180) * 3
     eggplant(g, RUN_X - 20, s.y - 46 + b)
@@ -686,8 +601,7 @@ function draw(g, s, now, st) {
   hudBar(g, s, st)
 }
 
-/* Vitality, then a row of what you are carrying. Both top-left, in the
-   place a cabinet puts its score. */
+/* Vitality, then a row of what you are carrying. */
 function hudBar(g, s, st) {
   const k = Math.max(0, s.vit) / VIT_MAX
   g.fillStyle = 'rgba(0,0,0,0.45)'
@@ -715,12 +629,7 @@ function hudBar(g, s, st) {
   if (st.cursed) pip('CURSED', '#c86bff')
 }
 
-/* ── Sprites ──────────────────────────────────────
-   Drawn as pixel grids rather than stacked rectangles and arcs. A person
-   assembled from three boxes reads as three boxes at any size; the same
-   silhouette drawn on a grid with an outline, a face and a run cycle
-   reads as a person immediately. Two screen pixels per sprite pixel,
-   snapped to integers so no seams open up between cells. */
+/* Pixel grids, 2px per sprite pixel, snapped so no seams open. */
 const PIX = 2
 
 const PAL = {
@@ -840,8 +749,7 @@ function axe(g, x, y, spin) {
 
 function coconut(g, x, y, armed) {
   if (armed) {
-    /* A shadow that tightens as it drops. Without it the first coconut
-       of a run is an ambush rather than an obstacle. */
+    /* A shadow that tightens as it drops. */
     const k = Math.min(1, Math.max(0, (y - (GROUND - 150)) / 142))
     g.save()
     g.globalAlpha = 0.15 + k * 0.35
@@ -945,8 +853,7 @@ function runner(g, x, y, grounded, now, st) {
   const frame = !grounded || st.boarding ? AIR : Math.floor(now / 110) % 2 ? RUN_B : RUN_A
   stamp(g, frame, x, base)
 
-  /* Carried in the near hand, so you can tell at a glance whether the
-     last hit cost you the weapon. */
+  /* Carried in the near hand, so you can tell at a glance whether the last hit cost you the weapon. */
   if (st.axe) {
     g.fillStyle = '#6b4423'
     g.fillRect(Math.round(x) + 8, Math.round(base) - 22, 2, 11)

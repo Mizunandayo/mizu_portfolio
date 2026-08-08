@@ -1,27 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/* ══════════════════════════════════════════════════
-   迎撃 — hold the line.
-
-   Side-on shooter. The ship holds the left edge, the
-   wave comes from the right, and everything travels
-   along one axis.
-
-   Three things that shape how it plays:
-
-   Anything that reaches the left edge costs a life
-   rather than a few points, so the wave has to be
-   fought rather than dodged.
-
-   The wave is three craft, not one repainted: a scout
-   that runs, a gunner that fires far more often than
-   it moves, and a hull that takes four rounds. Speed
-   alone would only ever be one kind of pressure.
-
-   Pods are collected by shooting them, which means a
-   power-up is a decision — you spend a moment of fire
-   on it while the wave keeps coming.
-   ══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════ 迎撃 — hold the line. */
 
 const W = 460
 const H = 300
@@ -30,15 +9,11 @@ const SHIP_X = 54 // the line being held
 const SHIP_R = 11
 const SHIP_SPEED = 320
 
-/* Health is counted in halves so a scout can cost less than a hull.
-   Ten units, drawn as five hearts. */
+/* Health is counted in halves so a scout can cost less than a hull. */
 const HEARTS = 5
 const HP_MAX = HEARTS * 2
 const MERCY = 900 // ms of grace after a hit
 
-/* Double-tap a direction to glide. Short and quick rather than a long
-   slide: it is for getting out of the way of something already on
-   screen, not for crossing the field. */
 const TAP_WINDOW = 400 // ms between the two taps
 const DASH_FOR = 110 // ms of travel
 const DASH_SPEED = 800
@@ -55,26 +30,14 @@ const SPAWN_TO = 300
 const FOE_SHOT = 250
 const POD_EVERY = [9000, 15000] // ms between pods
 
-/* The wave. `fire` is the per-frame chance of a round, which is what
-   separates the gunner from the rest far more than its speed does. */
-/* `dmg` is in half-hearts, for a collision or for getting past the
-   line. Rounds are a flat half-heart whoever fired them — a gunner
-   already presses by firing five times as often, and a full heart per
-   round on top of that is not pressure, it is a wall. */
+/* `dmg` is in half-hearts, for a collision or for getting past the line. */
 const KINDS = {
   scout: { hp: 1, lo: 120, hi: 210, r: 11, fire: 0.0030, pts: 10, dmg: 1, col: '#c8323c', dark: '#7d1620' },
   gunner: { hp: 2, lo: 70, hi: 105, r: 12, fire: 0.0150, pts: 25, dmg: 2, col: '#e0822c', dark: '#8a4712' },
   hull: { hp: 4, lo: 48, hi: 74, r: 17, fire: 0.0045, pts: 60, dmg: 3, col: '#8b6cf6', dark: '#432d8f' },
 }
 
-/* `for` is how long the power lasts. The repair pod has no duration —
-   it spends itself and is gone.
-   `w` is how often it is the one that shows up. Repair refills the whole
-   bar, so it is the rarest by a distance: at the old one-in-four it
-   would have arrived about every fifty seconds, which is faster than
-   five hearts can realistically be lost and would have made the early
-   waves unlosable. At one in eight it is a lifeline after a bad wave
-   rather than a tap you keep topping up from. */
+/* `for` is how long the power lasts. */
 const PODS = {
   big: { col: '#ffd76b', for: 7000, w: 44 },
   rapid: { col: '#7fe0c0', for: 7000, w: 44 },
@@ -91,8 +54,7 @@ export default function Shooter({ onScore, onState }) {
   const [hud, setHud] = useState({ score: 0, wave: 1 })
   const phaseRef = useRef('ready')
 
-  /* The shell owns the phase now; this component only needs to know it
-     for its own guards. */
+  /* The shell owns the phase now; this component only needs to know it for its own guards. */
   const setPhaseBoth = (p) => {
     phaseRef.current = p
     onState?.(p)
@@ -117,7 +79,6 @@ export default function Shooter({ onScore, onState }) {
     const big = now < s.power.big
     const rapid = now < s.power.rapid
 
-    /* ── Ship ── */
     if (keys.current.up) s.y -= SHIP_SPEED * dt
     if (keys.current.down) s.y += SHIP_SPEED * dt
     if (now < s.dashUntil) {
@@ -133,12 +94,10 @@ export default function Shooter({ onScore, onState }) {
       s.flash = now
     }
 
-    /* ── Arrivals ── */
     const gap = SPAWN_FROM + (SPAWN_TO - SPAWN_FROM) * ramp
     if (now - s.lastSpawn > gap) {
       s.lastSpawn = now
-      /* Hulls and gunners get commoner as it goes on; early waves are
-         mostly scouts so the first thirty seconds teach the game. */
+      /* Hulls and gunners get commoner as the run goes on. */
       const roll = Math.random()
       const kind = roll < 0.18 + ramp * 0.2 ? 'gunner'
         : roll < 0.26 + ramp * 0.3 ? 'hull'
@@ -157,15 +116,12 @@ export default function Shooter({ onScore, onState }) {
 
     if (now > s.nextPod) {
       s.nextPod = now + POD_EVERY[0] + Math.random() * (POD_EVERY[1] - POD_EVERY[0])
-      /* Weighted, and a repair is only offered when it would do
-         something. On full health it rolls a weapon instead, so the
-         rarest pod is never wasted on a player who does not need it. */
+      /* Weighted, and a repair is only offered when it would do something. */
       let type = POD_PICK[Math.floor(Math.random() * POD_PICK.length)]
       if (type === 'repair' && s.hp >= HP_MAX) type = Math.random() < 0.5 ? 'big' : 'rapid'
       s.pods.push({ type, x: W + 20, y: 40 + Math.random() * (H - 80), seed: Math.random() * 6.28 })
     }
 
-    /* ── Step ── */
     for (const f of s.foes) {
       f.x -= f.v * dt
       f.seed += dt * 3
@@ -185,7 +141,6 @@ export default function Shooter({ onScore, onState }) {
       p.y += p.vy * dt
     }
 
-    /* ── Hits ── */
     const hurt = (n) => {
       if (now < s.mercy) return
       s.hp -= n
@@ -256,7 +211,6 @@ export default function Shooter({ onScore, onState }) {
     s.shots = s.shots.filter((b) => !b.gone && b.x > -20 && b.x < W + 20)
     s.puffs = s.puffs.filter((p) => p.t < 0.4)
 
-    /* ── Draw ── */
     const g = c.getContext('2d')
     g.fillStyle = '#05050a'
     g.fillRect(0, 0, W, H)
@@ -305,8 +259,7 @@ export default function Shooter({ onScore, onState }) {
     }
 
     const dead = s.hp <= 0
-    /* Blinking through the mercy window, which is the only way to tell
-       that a second hit will not land yet. */
+    /* Blinks through the mercy window. */
     if (!dead && (now > s.mercy || Math.floor(now / 90) % 2 === 0)) {
       drawShip(g, SHIP_X, s.y, now - s.flash < 60, big, rapid)
     }
@@ -362,9 +315,7 @@ export default function Shooter({ onScore, onState }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fresh, loop, stop])
 
-  /* One frame with the clock stopped, so an unstarted cabinet shows the
-     game rather than a black rectangle. dt is zero on the first pass, so
-     nothing moves; the scheduled frame is cancelled straight after. */
+  /* One frame with the clock stopped: dt is zero, nothing moves. */
   useEffect(() => {
     sim.current = fresh()
     loop()
@@ -373,8 +324,7 @@ export default function Shooter({ onScore, onState }) {
 
   useEffect(() => () => stop(), [stop])
 
-  /* Held keys fire keydown over and over, and every repeat would read
-     as a second tap. Only a genuine press counts. */
+  /* Held keys fire keydown over and over, and every repeat would read as a second tap. */
   const tapped = (dir) => {
     const s = sim.current
     if (!s) return
@@ -451,12 +401,9 @@ function burst(s, x, y, colour = '255,150,60', n = 9) {
   }
 }
 
-/* Health as pips rather than a bar: five is few enough to count at a
-   glance, and a bar would read as a meter that refills. */
+/* Pips rather than a bar: five is few enough to count at a glance. */
 function drawHud(g, hp, power, now) {
-  /* Each heart is two units. A half is drawn by clipping the same
-     diamond down its middle, so the two states cannot drift apart the
-     way two separate shapes would. */
+  /* Each heart is two units. */
   for (let i = 0; i < HEARTS; i++) {
     const left = Math.max(0, Math.min(2, hp - i * 2))
     const x = 12 + i * 13
@@ -563,8 +510,7 @@ function drawFoe(g, x, y, k, hp) {
   g.arc(x - 2 * s, y, 2.6 * s, 0, Math.PI * 2)
   g.fill()
 
-  /* A hull that has been hit shows it, so four rounds does not feel
-     like the shots are missing. */
+  /* A hull that has been hit shows it, so four rounds does not feel like the shots are missing. */
   if (k.hp > 1) {
     g.fillStyle = 'rgba(0,0,0,0.45)'
     g.fillRect(x - 12 * s, y - 15 * s, 24 * s, 3)
@@ -599,8 +545,7 @@ function drawPod(g, x, y, type, now) {
     g.fillRect(x - 7, y - 1.5, 6, 3)
     g.fillRect(x + 1, y - 1.5, 6, 3)
   } else {
-    /* A cross reads as repair at eleven pixels where a heart just reads
-       as a blob. */
+    /* A cross reads as repair at eleven pixels where a heart just reads as a blob. */
     g.fillRect(x - 5.5, y - 1.8, 11, 3.6)
     g.fillRect(x - 1.8, y - 5.5, 3.6, 11)
   }

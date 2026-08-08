@@ -579,6 +579,33 @@ insert into public.project_stats (slug, likes) values
   ('bacsal', 0), ('galactic-conquest', 0), ('hirna', 0), ('eye2wear', 0)
 on conflict (slug) do nothing;
 
+-- ── Hackathon allowlist ───────────────────────────
+-- Hackathons live in src/data/hackathons.js and have no table of their
+-- own, but toggle_like refuses to write a like against a thing that
+-- does not exist — otherwise a caller could invent slugs and grow the
+-- likes table without limit. So the ids are mirrored here, and this is
+-- the one place to add a row when a hackathon is added to the JS.
+create table if not exists public.hackathons (
+  id text primary key
+);
+
+insert into public.hackathons (id) values
+  ('openai-build-week'),
+  ('google-cloud-rapid-agent'),
+  ('byteforward-2025'),
+  ('raite-2025'),
+  ('transforming-enterprise-ai'),
+  ('web-data-unlocked'),
+  ('amd-developer'),
+  ('hackada-2025'),
+  ('byteforward-final-pitch')
+on conflict (id) do nothing;
+
+alter table public.hackathons enable row level security;
+grant all on public.hackathons to service_role;
+-- No anon grant: only toggle_like reads it, and that is a definer.
+
+
 create or replace function public.toggle_like(p_slug text, p_key uuid)
 returns table (slug text, likes int, liked boolean)
 language plpgsql
@@ -591,10 +618,11 @@ declare
   recent   int;
   had      boolean;
 begin
-  -- Two allowlists, one rule: a like is refused unless the thing being
-  -- liked already exists. project_stats covers the projects; an
-  -- approved ticket covers the gallery. Neither lets a caller invent a
-  -- slug and write rows against it forever.
+  -- Three allowlists, one rule: a like is refused unless the thing being
+  -- liked already exists. project_stats covers the projects, an approved
+  -- ticket covers the gallery, and public.hackathons covers the entries.
+  -- None of them lets a caller invent a slug and write rows against it
+  -- forever.
   if p_slug like 'ticket:%' then
     begin
       v_ticket := substring(p_slug from 8)::uuid;
@@ -606,6 +634,12 @@ begin
       select 1 from public.tickets t where t.id = v_ticket and t.approved
     ) then
       raise exception 'Unknown ticket.';
+    end if;
+  elsif p_slug like 'hack:%' then
+    if not exists (
+      select 1 from public.hackathons hk where hk.id = substring(p_slug from 6)
+    ) then
+      raise exception 'Unknown hackathon.';
     end if;
   elsif not exists (select 1 from public.project_stats ps where ps.slug = p_slug) then
     raise exception 'Unknown project.';

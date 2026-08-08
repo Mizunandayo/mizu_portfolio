@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { hackSlug, listCounts, readMine } from '../../data/likes.js';
+import { LIKES_CHANGED } from '../../events.js';
 import {
   HACKATHON_YEARS,
   HACKATHON_RECORD,
@@ -89,8 +91,28 @@ function columns() {
 
 export default function Hackathons() {
   const [open, setOpen] = useState(null);
+  /* Stable, so opening the dialog does not hand it a new prop on every
+     re-render of this section. */
+  const closeDialog = useCallback(() => setOpen(null), []);
   const [left, right] = columns();
   const { dir, moving } = useScrollPierce();
+
+  /* One request for the whole section rather than one per card. The
+     cards only tally; liking happens in the dialog they open. */
+  const [likes, setLikes] = useState({});
+  const [mine, setMine] = useState(() => readMine());
+
+  useEffect(() => {
+    let dead = false;
+    setMine(readMine());
+    listCounts().then((all) => { if (!dead) setLikes(all); }).catch(() => {});
+    const again = () => {
+      setMine(readMine());
+      listCounts().then((all) => { if (!dead) setLikes(all); }).catch(() => {});
+    };
+    window.addEventListener(LIKES_CHANGED, again);
+    return () => { dead = true; window.removeEventListener(LIKES_CHANGED, again); };
+  }, []);
 
   const column = (bands, side) => (
     <div className={`hack-col-mizu hack-col-${side}-mizu`}>
@@ -108,7 +130,12 @@ export default function Hackathons() {
 
           {band.items.map((h) => (
             <Reveal key={h.id}>
-              <Entry hackathon={h} onOpen={() => setOpen(h)} />
+              <Entry
+                hackathon={h}
+                likes={likes[hackSlug(h.id)] ?? 0}
+                mine={mine.has(hackSlug(h.id))}
+                onOpen={() => setOpen(h)}
+              />
             </Reveal>
           ))}
         </section>
@@ -175,13 +202,13 @@ export default function Hackathons() {
       </div>
 
       {open && (
-        <HackathonDialog hackathon={open} onClose={() => setOpen(null)} />
+        <HackathonDialog hackathon={open} onClose={closeDialog} />
       )}
     </section>
   );
 }
 
-function Entry({ hackathon: h, onOpen }) {
+function Entry({ hackathon: h, likes = 0, mine = false, onOpen }) {
   const featured = Boolean(h.placement);
   const media = mediaFor(h.id, h.captions);
   const lead = media[0];
@@ -240,7 +267,19 @@ function Entry({ hackathon: h, onOpen }) {
           <span>{h.issuer}</span>
         </div>
 
-        <h3 className="hack-headline-mizu">{h.title}</h3>
+        {/* A tally, not a control. The whole card opens a dialog, and
+            liking lives in there beside the project it belongs to. */}
+        <div className="hack-headrow-mizu">
+          <h3 className="hack-headline-mizu">{h.title}</h3>
+          {likes > 0 && (
+            <span className={`hack-tally-mizu${mine ? ' is-mine' : ''}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 0 1 19.4 13Z" />
+              </svg>
+              {likes}
+            </span>
+          )}
+        </div>
 
         {h.placement && <div className="hack-place-mizu">{h.placement}</div>}
 

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { bySlug, liveUrl } from '../../data/projects.js'
+import { hackSlug } from '../../data/likes.js'
+import LikeButton from '../deck/LikeButton.jsx'
 import { monthOf } from '../../data/hackathons.js'
 import { mediaFor } from '../../data/hackathonMedia.js'
 import { Pill, GitHubIcon, PlayIcon, ExternalIcon, ArrowIcon } from '../shared/primitives.jsx'
@@ -43,21 +45,19 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
     [media.length]
   )
 
+  /* Opening and locking the page is a mount concern, so it gets its own
+     effect with no dependencies.
+     It used to share one effect with the listeners below, whose deps
+     include `close` — and `close` is rebuilt whenever the `onClose` prop
+     changes identity, which an inline arrow in the parent does on every
+     parent render. So any re-render of the section tore this down and
+     called showModal() again. Liking from inside the dialog re-rendered
+     the section (the cards read the same counts), and the dialog visibly
+     slammed shut and reopened. */
   useEffect(() => {
     const el = ref.current
     if (!el) return
     if (!el.open) el.showModal()
-
-    const onCancel = (e) => { e.preventDefault(); close() }
-    el.addEventListener('cancel', onCancel)
-
-    /* Arrow keys step the gallery, as in any lightbox. */
-    const onKey = (e) => {
-      if (media.length < 2) return
-      if (e.key === 'ArrowRight') { e.preventDefault(); step(1) }
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); step(-1) }
-    }
-    el.addEventListener('keydown', onKey)
 
     const prevOverflow = document.body.style.overflow
     const prevPad = document.body.style.paddingRight
@@ -68,11 +68,31 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
     if (gap > 0) document.body.style.paddingRight = `${gap}px`
 
     return () => {
-      el.removeEventListener('cancel', onCancel)
-      el.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
       document.body.style.paddingRight = prevPad
       if (el.open) el.close()
+    }
+  }, [])
+
+  /* Listeners only. Rebinding these on a re-render is free. */
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const onCancel = (e) => { e.preventDefault(); close() }
+
+    /* Arrow keys step the gallery, as in any lightbox. */
+    const onKey = (e) => {
+      if (media.length < 2) return
+      if (e.key === 'ArrowRight') { e.preventDefault(); step(1) }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); step(-1) }
+    }
+
+    el.addEventListener('cancel', onCancel)
+    el.addEventListener('keydown', onKey)
+    return () => {
+      el.removeEventListener('cancel', onCancel)
+      el.removeEventListener('keydown', onKey)
     }
   }, [close, step, media.length])
 
@@ -187,7 +207,12 @@ export default function HackathonDialog({ hackathon: h, onClose }) {
 
           <div className="hkd-project-mizu">
             <span className="hkd-project-label-mizu">Project</span>
-            <span className="hkd-project-name-mizu">{h.project}</span>
+            {/* The name and the heart share a row: the like belongs to
+                the thing named beside it, not to the dialog. */}
+            <div className="hkd-project-row-mizu">
+              <span className="hkd-project-name-mizu">{h.project}</span>
+              <LikeButton slug={hackSlug(h.id)} what="hackathon" />
+            </div>
           </div>
 
           {project?.links?.length > 0 ? (

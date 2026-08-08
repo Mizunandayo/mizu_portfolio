@@ -1,38 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/* ══════════════════════════════════════════════════
-   峠 — the downhill run, from behind the car.
-
-   Pseudo-3D, the way an arcade racer did it before
-   hardware could do the real thing: the road is a
-   stack of segments at increasing depth, each one
-   projected to the screen and painted far to near.
-   Nothing is actually 3D — there is no camera matrix,
-   only a divide by distance — which is why it runs at
-   sixty frames in a 2D context.
-
-     scale = depth / dz
-     x     = W/2 + scale * (worldX - camX) * W/2
-     y     = H/2 - scale * camHeight       * H/2
-     width = scale * roadWidth * W/2
-
-   Curves come from giving each segment a sideways
-   nudge and accumulating it up the draw loop, so the
-   road bends without anything ever being rotated.
-
-   On difficulty: the road may never move sideways
-   faster than the car can steer. In this projection
-   that is the centrifugal push versus STEER, and the
-   push is capped for the same reason it was in the
-   flat version — a corner no input can hold is not
-   difficulty, it is the game refusing to listen.
-   ══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════ 峠 — the downhill run, from behind the car. */
 
 const W = 460
 const H = 300
 
-/* World units. A segment is 200 long; the display divides by 40 so the
-   distance reads like metres rather than like an internal counter. */
+/* World units. */
 const SEG = 200
 const TO_M = 40
 const DRAW = 110 // segments drawn ahead
@@ -54,13 +27,7 @@ const STEER = 2400 // world units per second, sideways
 const CENTRIF = 0.00028 // how hard a corner throws the car out
 const CENTRIF_CAP = STEER * 0.62
 
-/* Double-tap a direction to flick across. Sized against the road, not
-   the screen: a dart worth about two fifths of the half-width, which
-   clears a cone with room to spare and still will not cross the whole
-   carriageway on the tight sections.
-   The window used to be 280ms, which is inside the range a lot of people
-   double-tap at, so the second press kept registering as a fresh first
-   one and the dash simply never came out. */
+/* Double-tap a direction to flick across. */
 const TAP_WINDOW = 400
 const DASH_FOR = 150
 const DASH_SPEED = 6240
@@ -73,21 +40,17 @@ const BURN = 0.55
 const REFILL = 0.16
 const MIN_TO_START = 0.2
 
-/* One long road, generated once and driven round. Random per run, so it
-   cannot be learned, but stable within a run so the segment under the
-   car is the segment that was drawn there. */
+/* One long road, generated once and driven round. */
 function makeTrack() {
   const segs = []
   let curve = 0
   for (let i = 0; i < TRACK; i++) {
-    /* Curvature wanders rather than jumping, which is what makes a
-       corner feel like it has an entry and an exit. */
+    /* Curvature wanders, so a corner has an entry and an exit. */
     if (i % 40 === 0) curve = (Math.random() - 0.5) * 5.2
     const c = curve * (0.5 + 0.5 * Math.sin((i % 40) / 40 * Math.PI))
     segs.push({
       curve: c,
-      /* A cone every so often, never dead centre and never against the
-         barrier: one you cannot pass on either side is a wall. */
+      /* Never dead centre and never against the barrier. */
       cone: i > 40 && i % CONE_EVERY === 0
         ? (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.42)
         : null,
@@ -104,8 +67,7 @@ export default function Touge({ onScore, onState }) {
   const [hud, setHud] = useState({ dist: 0, fuel: 1, boosting: false, kph: 90 })
   const phaseRef = useRef('ready')
 
-  /* The shell owns the phase now; this component only needs to know it
-     for its own guards. */
+  /* The shell owns the phase now; this component only needs to know it for its own guards. */
   const setPhaseBoth = (p) => {
     phaseRef.current = p
     onState?.(p)
@@ -125,7 +87,6 @@ export default function Touge({ onScore, onState }) {
     const dt = Math.min((now - s.last) / 1000, 0.05)
     s.last = now
 
-    /* ── Nitro ── */
     const wants = keys.current.boost && s.fuel > 0
     if (wants && (s.boosting || s.fuel > MIN_TO_START)) {
       s.boosting = true
@@ -136,7 +97,6 @@ export default function Touge({ onScore, onState }) {
       s.fuel = Math.min(1, s.fuel + REFILL * dt)
     }
 
-    /* ── Speed ── */
     const ramp = Math.min(1, s.pos / RAMP)
     const base = SPEED + (TOP - SPEED) * ramp
     const speed = base + (s.boosting ? NITRO_ADD : 0)
@@ -147,7 +107,6 @@ export default function Touge({ onScore, onState }) {
       ROAD_W - (s.pos / NARROW_OVER) * (ROAD_W - ROAD_TIGHT)
     )
 
-    /* ── Steering ── */
     const baseIdx = Math.floor(s.pos / SEG) % TRACK
     const here = s.track[baseIdx]
 
@@ -155,8 +114,7 @@ export default function Touge({ onScore, onState }) {
     if (keys.current.right) s.x += STEER * dt
     if (now < s.dashUntil) s.x += s.dashDir * DASH_SPEED * dt
 
-    /* Thrown outward through a corner, harder the faster you are going.
-       Capped so it can never exceed what steering can answer. */
+    /* Thrown outward through a corner, harder the faster you are going. */
     const push = Math.min(
       Math.abs(here.curve) * speed * CENTRIF,
       CENTRIF_CAP
@@ -165,7 +123,6 @@ export default function Touge({ onScore, onState }) {
 
     s.x = Math.max(-roadW * 2.2, Math.min(roadW * 2.2, s.x))
 
-    /* ── Crash ── */
     const offRoad = Math.abs(s.x) > roadW
     let hitCone = false
     for (let n = 0; n < 3; n++) {
@@ -177,11 +134,9 @@ export default function Touge({ onScore, onState }) {
     }
     const crashed = offRoad || hitCone
 
-    /* ── Draw ── */
     const g = c.getContext('2d')
 
-    /* Sky, then the hills, then the road. The horizon sits above centre
-       so most of the screen is the road you are about to be on. */
+    /* Sky, then the hills, then the road. */
     const horizon = H * 0.42
     const sky = g.createLinearGradient(0, 0, 0, horizon)
     sky.addColorStop(0, '#0b0c12')
@@ -189,8 +144,7 @@ export default function Touge({ onScore, onState }) {
     g.fillStyle = sky
     g.fillRect(0, 0, W, horizon)
 
-    /* The ridge line drifts with the road, which is the only cue that
-       the whole world is turning rather than just the tarmac. */
+    /* The ridge drifts with the road, the only cue the world is turning. */
     g.fillStyle = '#0a0b10'
     g.beginPath()
     g.moveTo(0, horizon)
@@ -206,10 +160,7 @@ export default function Touge({ onScore, onState }) {
     g.fillStyle = '#07070a'
     g.fillRect(0, horizon, W, H - horizon)
 
-    /* Project every segment first, then draw the ribbon in one path.
-       Drawing a quad per segment left hairline seams between them, and
-       the lighter rumble underneath showed through as the grey rungs
-       across the road. One path has no internal edges to leak. */
+    /* Project every segment first, then draw the ribbon in one path. */
     const camZ = s.pos
     const pts = []
     let x = 0
@@ -251,14 +202,11 @@ export default function Touge({ onScore, onState }) {
       g.fill()
     }
 
-    /* Verge, then tarmac. The verge is a single band too, so the only
-       thing that alternates is the rumble on top of it. */
+    /* Verge, then tarmac. */
     ribbon(1.2, '#101418')
     ribbon(1, '#15151b')
 
-    /* Rumble strips: these do alternate, and they are the motion cue
-       now that the tarmac is flat. Each quad reaches a pixel past the
-       next so the pair never separates. */
+    /* Rumble strips: these do alternate, and they are the motion cue now that the tarmac is flat. */
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i]
       const b = pts[i + 1]
@@ -275,8 +223,7 @@ export default function Touge({ onScore, onState }) {
         g.fill()
       }
 
-      /* Centre dashes, every fourth pair so they read as dashes rather
-         than a solid stripe. */
+      /* Centre dashes, every fourth pair so they read as dashes rather than a solid stripe. */
       if (i % 4 === 0) {
         g.fillStyle = 'rgba(250,250,250,0.34)'
         g.beginPath()
@@ -289,8 +236,7 @@ export default function Touge({ onScore, onState }) {
       }
     }
 
-    /* Cones, back to front so a near one covers a far one. The curve
-       accumulation is already in pts, so no replaying it per cone. */
+    /* Cones, back to front so a near one covers a far one. */
     for (let i = pts.length - 1; i >= 0; i--) {
       const pt = pts[i]
       if (pt.seg.cone == null || pt.scale <= 0) continue
@@ -333,8 +279,7 @@ export default function Touge({ onScore, onState }) {
       }
     }
 
-    /* The car. Fixed near the bottom and leaning into the steer, which
-       is cheaper than turning a sprite and reads the same. */
+    /* The car. */
     const lean = (keys.current.left ? -1 : 0) + (keys.current.right ? 1 : 0)
     drawCar(g, W / 2, H - 30, crashed, s.boosting, lean)
 
@@ -379,9 +324,7 @@ export default function Touge({ onScore, onState }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fresh, loop, stop])
 
-  /* One frame with the clock stopped, so an unstarted cabinet shows the
-     game rather than a black rectangle. dt is zero on the first pass, so
-     nothing moves; the scheduled frame is cancelled straight after. */
+  /* One frame with the clock stopped: dt is zero, nothing moves. */
   useEffect(() => {
     sim.current = fresh()
     loop()
@@ -390,8 +333,7 @@ export default function Touge({ onScore, onState }) {
 
   useEffect(() => () => stop(), [stop])
 
-  /* Held keys repeat keydown, and each repeat would read as a second
-     tap, so only a genuine press counts. */
+  /* Held keys repeat keydown, so only a genuine press counts as a tap. */
   const tapped = (dir) => {
     const s = sim.current
     if (!s) return
@@ -459,18 +401,8 @@ export default function Touge({ onScore, onState }) {
   )
 }
 
-
-/* Seen from behind and slightly above, which is where the camera is.
-   Built from back to front so each layer sits on the one under it:
-   shadow, tyres, lower body, shoulders, glass, lights. The gradients
-   are what give it volume — a flat fill at this size reads as a card
-   standing on the road rather than a car sitting on it. */
-/* The nitro gauge, on the canvas rather than in DOM.
-   It used to be an absolutely positioned element anchored to the bottom
-   of the whole component — but the component is the canvas *and* the
-   hint line underneath it, so the gauge sat on top of the hint instead
-   of inside the screen. Painted here it cannot drift out of the screen
-   again, and it scales with the game rather than with the page. */
+/* Seen from behind and slightly above, which is where the camera is. */
+/* The nitro gauge, on the canvas rather than in DOM. */
 function drawNitro(g, fuel, boosting, dashing, dashReady) {
   const x = 14
   const y = H - 26
@@ -485,8 +417,7 @@ function drawNitro(g, fuel, boosting, dashing, dashReady) {
   g.fillStyle = 'rgba(0,0,0,0.5)'
   g.fillRect(x - 2, y - 2, w + 4, h + 4)
 
-  /* Segmented rather than a smooth bar: at a glance you want to know
-     roughly how many more boosts there are, not a percentage. */
+  /* Segmented: you want roughly how many boosts are left, not a percent. */
   const seg = 8
   const sw = (w - (seg - 1) * 2) / seg
   for (let i = 0; i < seg; i++) {
@@ -501,8 +432,7 @@ function drawNitro(g, fuel, boosting, dashing, dashReady) {
     }
   }
 
-  /* Dash sits next to it, because both are things you spend and the
-     player should read them in one glance. */
+  /* Beside the gauge, because both are things you spend. */
   const dx = x + w + 14
   g.fillStyle = dashing ? '#fff' : dashReady ? 'rgba(210,210,220,0.85)' : 'rgba(140,140,150,0.5)'
   g.fillText('DASH', dx, y - 5)
@@ -515,9 +445,7 @@ function drawCar(g, x, y, crashed, boosting, lean) {
   const tint = crashed ? '#c9414c' : boosting ? '#7fb2e8' : '#d6d6de'
   const dark = crashed ? '#5e1a20' : boosting ? '#1f3d5e' : '#3a3a46'
 
-  /* Contact shadow. Soft, wider than the car, and it stays put when the
-     body leans, which is what sells the lean as a roll rather than a
-     slide. */
+  /* Contact shadow. */
   g.save()
   g.fillStyle = 'rgba(0,0,0,0.5)'
   g.beginPath()
@@ -547,8 +475,7 @@ function drawCar(g, x, y, crashed, boosting, lean) {
   g.closePath()
   g.fill()
 
-  /* Shoulders: the lit top surface, brightest along the upper edge
-     where a light above the road would catch it. */
+  /* Shoulders: the lit top surface. */
   const body = g.createLinearGradient(0, -h, 0, -10)
   body.addColorStop(0, tint)
   body.addColorStop(0.55, tint)
@@ -562,8 +489,7 @@ function drawCar(g, x, y, crashed, boosting, lean) {
   g.closePath()
   g.fill()
 
-  /* Roof and rear glass. The glass is darkest at the bottom and picks
-     up a sliver of sky along the top. */
+  /* Roof and rear glass. */
   const glass = g.createLinearGradient(0, -h + 3, 0, -15)
   glass.addColorStop(0, 'rgba(150,170,200,0.55)')
   glass.addColorStop(0.4, 'rgba(14,16,22,0.95)')
@@ -583,8 +509,7 @@ function drawCar(g, x, y, crashed, boosting, lean) {
   g.fillRect(-w / 2 + 8, -h + 4, 3, 4)
   g.fillRect(w / 2 - 11, -h + 4, 3, 4)
 
-  /* Tail lights, with a bloom so they read as emitting rather than
-     painted on. */
+  /* Tail lights, with a bloom so they read as emitting rather than painted on. */
   const lamp = crashed ? '#ff9a9a' : '#ff3b3b'
   g.save()
   g.shadowColor = lamp
@@ -594,8 +519,7 @@ function drawCar(g, x, y, crashed, boosting, lean) {
   g.fillRect(w / 2 - 15, -11, 11, 4)
   g.restore()
 
-  /* Number plate: a small bright rectangle low and centred, which is
-     the detail that makes the rest read as a car. */
+  /* Number plate. */
   g.fillStyle = 'rgba(240,240,245,0.85)'
   g.fillRect(-7, -9, 14, 5)
 

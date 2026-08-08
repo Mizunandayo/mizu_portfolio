@@ -1,21 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/* ══════════════════════════════════════════════════
-   蛇 — snake, played straight.
-
-   Grid, tick, no easing and no particles. The whole
-   appeal of this one is that it is exactly the game
-   everybody already knows, so the job here is fidelity
-   rather than invention: chunky cells with a hard edge,
-   a blue surround, and a tick you can count.
-
-   The only concession to modern play is the turn queue.
-   On a fast tick a player rounding a corner presses two
-   directions inside one frame, and a version that reads
-   only the last one eats itself on input the player did
-   make correctly. Two turns are held and spent one per
-   tick.
-   ══════════════════════════════════════════════════ */
+/* 蛇 — snake, played straight. */
 
 const CELL = 20
 const COLS = 22
@@ -38,8 +23,6 @@ export default function Hebi({ onScore, onState }) {
   const [hud, setHud] = useState({ score: 0, len: START_LEN })
   const phaseRef = useRef('ready')
 
-  /* The shell owns the phase now; this component only needs to know it
-     for its own guards. */
   const setPhaseBoth = (p) => {
     phaseRef.current = p
     onState?.(p)
@@ -75,8 +58,7 @@ export default function Hebi({ onScore, onState }) {
     if (c && sim.current) draw(c.getContext('2d'), sim.current)
   }, [])
 
-  /* The attract frame. Without it a cabinet you have not started yet is
-     just a black rectangle, which reads as broken rather than as waiting. */
+  /* Attract frame: an unstarted cabinet showing black reads as broken. */
   useEffect(() => {
     sim.current = fresh()
     paint()
@@ -121,8 +103,7 @@ export default function Hebi({ onScore, onState }) {
   const turn = (x, y) => {
     const s = sim.current
     if (!s || phaseRef.current !== 'run') return
-    /* Against the last committed direction, not the current one, or two
-       turns inside a tick can double back through the neck. */
+    /* Against the last queued turn, or two inside one tick double back. */
     const prev = s.queue.length ? s.queue[s.queue.length - 1] : s.dir
     if (prev.x === -x && prev.y === -y) return
     if (prev.x === x && prev.y === y) return
@@ -142,7 +123,7 @@ export default function Hebi({ onScore, onState }) {
     e.stopPropagation()
   }
 
-  /* Swipe, because a d-pad drawn on a phone screen covers the board. */
+  /* Swipe: a drawn d-pad would cover the board. */
   const touch = useRef(null)
   const onDown = (e) => {
     if (phaseRef.current !== 'run') return begin()
@@ -194,9 +175,7 @@ function step(s) {
     s.dead = true
     return
   }
-  /* The tail cell is about to move on, so running into it is legal —
-     refusing it is the classic off-by-one that kills a snake travelling
-     in a tight loop it could actually survive. */
+  /* The tail vacates this tick, so entering it is legal. */
   const last = s.body.length - 1
   for (let i = 0; i < s.body.length; i++) {
     if (i === last && !s.grow) continue
@@ -213,7 +192,6 @@ function step(s) {
   if (next.x === s.apple.x && next.y === s.apple.y) {
     s.eaten += 1
     s.grow += 2
-    /* Worth more as it quickens, so a long run outscores a lucky one. */
     s.score += 10 + Math.floor(s.eaten / TICK_EVERY) * 2
     place(s)
   }

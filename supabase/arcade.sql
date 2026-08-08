@@ -1,54 +1,11 @@
--- ══════════════════════════════════════════════════
--- 遊技場 — the arcade leaderboard.
+-- 遊技場 — the arcade leaderboard. One table for all four games.
 --
--- One table for all four games rather than four: the
--- columns are identical, only the meaning of `score`
--- differs, and one throttle across the lot is the
--- behaviour we want anyway.
---
--- ── What can and cannot be defended ──
---
--- The game runs in the browser, so the score is a number
--- the browser chose. Nothing here can make that number
--- true. Running the games server-side would, and is not
--- worth it for a portfolio toy.
---
--- What is worth it is making a fake score cost the same
--- as a real one. Three layers, in order of how much they
--- actually buy:
---
---   1. Ceilings that match what the code can emit. Snake
---      cannot exceed 7,220 because the board holds 308
---      cells; the old ceiling of 999,999 let a forged
---      score sit at the top forever and look plausible.
---
---   2. A run has to be opened before it can be scored,
---      and the elapsed wall-clock time has to be enough
---      for the score at the game's own top speed. To put
---      up 3,000m in Boken you must wait the 184 seconds
---      the run would really take. Tokens are single use,
---      so a run cannot be replayed.
---
---   3. Rate limits per address on opening runs, scoring
---      them, and clearing your own scores.
---
--- Together these do not make cheating impossible. They
--- make it slower than playing, which for a board of this
--- size is the win condition.
---
--- ── What is properly locked ──
---
--- No anon grants on either table. Everything goes through
--- the functions below, so the throttles cannot be walked
--- around and visitor_key and ip are never readable by
--- anyone. Every function pins `search_path`, so a planted
--- function in another schema cannot be picked up by an
--- unqualified call inside a definer body.
---
--- Names go through the same tidy_name() the tickets use,
--- so blanks, control characters and zero-width padding
--- are rejected in one place for the whole site.
--- ══════════════════════════════════════════════════
+-- The score is a number the browser chose and nothing here can make it
+-- true; what these do is make a fake score cost what a real one costs.
+-- Ceilings are read off what each game can emit, a run must be opened
+-- before it can be scored and the server's clock has to allow it, and
+-- opening, scoring and clearing are all rate limited per address.
+-- No anon grants on either table; every function pins search_path.
 
 -- ── Tables ────────────────────────────────────────
 
@@ -62,14 +19,11 @@ create table if not exists public.arcade_scores (
   created_at  timestamptz not null default now()
 );
 
--- The inline check only applies to a fresh install, so it is replaced
--- here too. Both paths end up with the same four games.
 alter table public.arcade_scores drop constraint if exists arcade_scores_game_check;
 alter table public.arcade_scores
   add constraint arcade_scores_game_check check (game in ('boken', 'hebi', 'touge', 'shooter'));
 
--- An open run, waiting to be scored. Its whole job is to prove that
--- wall-clock time passed between starting and submitting.
+-- An open run: proof that wall-clock time passed before the score.
 create table if not exists public.arcade_runs (
   id          uuid        primary key default gen_random_uuid(),
   game        text        not null check (game in ('boken', 'hebi', 'touge', 'shooter')),
@@ -79,16 +33,11 @@ create table if not exists public.arcade_runs (
   spent       boolean     not null default false
 );
 
--- The board reads "top N for one game", so the index is laid out the way
--- that query walks. Both directions are served from it — Postgres can
--- scan an index backwards.
 create index if not exists arcade_scores_board_idx
   on public.arcade_scores (game, score);
 
--- Submitting looks its own row up by game and key on every single call.
--- Without this that is a sequential scan, which is a slow query anyone
--- can trigger at will — a rate limiter that costs the server more than
--- it costs the attacker is not a rate limiter.
+-- Submitting looks its own row up on every call; without this that is a
+-- sequential scan anyone can trigger at will.
 create index if not exists arcade_scores_mine_idx
   on public.arcade_scores (game, visitor_key);
 
@@ -112,26 +61,14 @@ create policy arcade_scores_admin
   using (public.is_admin())
   with check (public.is_admin());
 
--- No policy at all on arcade_runs: with RLS on and nothing granted, it
--- is reachable only from the definer functions below. Nobody gets to
--- read open runs, which is what stops a token being harvested.
+-- No policy on arcade_runs: only the definer functions reach it, so a
+-- token cannot be harvested.
 
 
 -- ── What each game can actually produce ───────────
--- Read off the game code, not guessed.
---
---   boken   320px/s x 1.25 board x 1.22 nudge = 488px/s over 30px/m
---           = 16.3 m/s. 20,000m would be twenty minutes unbroken.
---   hebi    a 22x14 board is 308 cells and the snake starts at 4 and
---           grows 2 an apple, so 152 apples is a perfect game and the
---           scoring curve makes that 7,220. It cannot go higher.
---   touge   (430 + 190 nitro) x 40 units/s over 40 = 620 m/s.
---   shooter one spawn per 300ms at 60pts for the best kill = 200 pts/s
---           with nothing missed.
---
--- `rate` is the per-second ceiling checked against elapsed time; `hi` is
--- the absolute refusal. Both are deliberately a little generous — the
--- point is to refuse the impossible, not to adjudicate a good run.
+-- Read off the game code: boken 16.3 m/s, hebi 7,220 on a perfect
+-- 308-cell board, touge 620 m/s with nitro, shooter 200 pts/s.
+-- `rate` is checked against elapsed time, `hi` is the flat refusal.
 drop function if exists public.arcade_limits(text);
 create or replace function public.arcade_limits(p_game text)
 returns table (lo int, hi int, rate numeric)
@@ -150,9 +87,6 @@ $$;
 
 
 -- ── Opening a run ─────────────────────────────────
--- Called when a game actually starts. Returns a token the submit below
--- will demand. The token is worthless on its own: it carries no score
--- and cannot be read back out of the table.
 drop function if exists public.arcade_begin(text, uuid);
 create or replace function public.arcade_begin(p_game text, p_key uuid)
 returns uuid
@@ -169,13 +103,8 @@ begin
     raise exception 'Unknown game.';
   end if;
 
-  -- Housekeeping on the way past, so nothing has to be scheduled. An
-  -- hour is far longer than any run and short enough that the table
-  -- stays small.
   delete from public.arcade_runs where started_at < now() - interval '1 hour';
 
-  -- Opening runs is cheap for the caller, so it needs its own ceiling or
-  -- it is a free way to make the server write rows all day.
   if v_ip <> '' then
     select count(*) into v_open
     from public.arcade_runs
@@ -199,8 +128,6 @@ grant execute on function public.arcade_begin(text, uuid) to anon, authenticated
 
 
 -- ── The board ─────────────────────────────────────
--- Ordering is decided here rather than by the caller, so a client cannot
--- ask for the board upside down and present the worst runs as the best.
 drop function if exists public.arcade_submit(text, text, int, uuid);
 drop function if exists public.arcade_submit(text, text, int, uuid, uuid);
 drop function if exists public.arcade_board(text, int);
@@ -218,23 +145,11 @@ security definer
 stable
 set search_path = public
 as $$
-  -- All four games count up: metres and points. Written as a plain
-  -- descending sort rather than a per-game case, because a case listing
-  -- every game on one branch reads as though some game takes the other.
+  -- The ordering has to live inside the window as well as outside it:
+  -- `over ()` with no order numbers rows in arrival order, which sorts
+  -- the list correctly and prints the wrong rank against each line.
   --
-  -- The ordering has to live inside the window as well as outside it.
-  -- `over ()` with no order numbers rows in whatever sequence they
-  -- arrive, so the list came out sorted correctly with the wrong rank
-  -- against each line — the worst kind of wrong, because it looks right
-  -- until you read it.
-  --
-  -- The caller's own row comes back whether or not it made the cut, so
-  -- somebody sitting at 31st can still see where they are. It is ranked
-  -- against the whole board, not against the rows returned.
-  --
-  -- `mine` is computed here and the key itself is never returned, so a
-  -- client can highlight its own row without the board ever handing out
-  -- anybody's identifier.
+  -- The caller's own row comes back whether or not it made the cut.
   with ranked as (
     select row_number() over (order by -s.score, s.created_at)::int as rank,
            s.name,
@@ -245,10 +160,7 @@ as $$
     where s.game = p_game
   ),
   lim as (select greatest(1, least(coalesce(p_limit, 10), 50)) as n)
-  -- Wrapped in coalesce because `uuid = null` is null, not false. The
-  -- site always sends a key so it never saw this, but calling the board
-  -- by hand without one printed a column of NULLs where a plain false
-  -- is what is meant.
+  -- coalesce because `uuid = null` is null, not false.
   select r.rank, r.name, r.score, r.at, coalesce(r.visitor_key = p_key, false) as mine
   from ranked r, lim
   where r.rank <= lim.n
@@ -258,6 +170,29 @@ $$;
 
 revoke all on function public.arcade_board(text, int, uuid) from public;
 grant execute on function public.arcade_board(text, int, uuid) to anon, authenticated;
+
+
+-- ── Is that name taken ────────────────────────────
+-- Case-insensitive. Your own rows are excluded, or the rename panel
+-- would refuse the name you already hold.
+drop function if exists public.arcade_name_taken(text, uuid);
+create or replace function public.arcade_name_taken(p_name text, p_key uuid default null)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.arcade_scores
+    where lower(name) = lower(public.tidy_name(p_name))
+      and (p_key is null or visitor_key <> p_key)
+  );
+$$;
+
+revoke all on function public.arcade_name_taken(text, uuid) from public;
+grant execute on function public.arcade_name_taken(text, uuid) to anon, authenticated;
 
 
 -- ── Scoring a run ─────────────────────────────────
@@ -298,10 +233,8 @@ begin
   if v_name is null or v_name = '' then
     raise exception 'Enter a name first.';
   end if;
-  v_name := left(v_name, 24);
+  v_name := left(v_name, 15); -- the gate caps at 15; this is the backstop
 
-  -- Per address, per hour. Generous enough that nobody playing honestly
-  -- will meet it, tight enough that a script cannot fill the board.
   if v_ip <> '' then
     select count(*) into recent
     from public.arcade_scores
@@ -313,9 +246,8 @@ begin
     end if;
   end if;
 
-  -- Spend the token. Claimed with an UPDATE rather than checked with a
-  -- SELECT so two calls racing the same run cannot both win it: only one
-  -- update can flip `spent`, and the loser sees no row.
+  -- Claimed with an UPDATE, not a SELECT: two calls racing the same run
+  -- cannot both flip `spent`, and the loser sees no row.
   update public.arcade_runs
   set spent = true
   where id = p_run
@@ -329,17 +261,13 @@ begin
     raise exception 'That run has already been scored.';
   end if;
 
-  -- Time has to have passed for the score to exist. The five seconds of
-  -- slack absorbs clock skew and the moment between the game starting
-  -- and the row being written; beyond that a score has to be earned at
-  -- a speed the game can actually reach.
+  -- Five seconds of slack for clock skew; beyond that the score has to
+  -- be reachable at the game's own top speed.
   v_secs := extract(epoch from (now() - v_started));
   if p_score > v_rate * (v_secs + 5) then
     raise exception 'That run was too quick for that score.';
   end if;
 
-  -- One row per visitor per game, holding their best. A board listing
-  -- the same person eight times is a worse board.
   select s.score into best
   from public.arcade_scores s
   where s.game = p_game and s.visitor_key = p_key;
@@ -362,20 +290,8 @@ grant execute on function public.arcade_submit(text, text, int, uuid, uuid) to a
 
 
 -- ── Starting over ─────────────────────────────────
--- Changing your name clears your scores. Worth spelling out, because it
--- is a deliberate choice and not the only one available: the boards key
--- on the visitor rather than on the name, so a rename could equally have
--- carried every entry across untouched.
---
--- It works this way because a name on this board is meant to be the name
--- that earned the run. Carrying a score onto a new name lets one person
--- hold a place under a name that never played for it, and nobody reading
--- the board could tell. A clean slate is the honest version, and it is
--- why the client warns before calling this.
---
--- It only ever deletes rows belonging to the key it is handed, and keys
--- are never returned by anything here, so it cannot be pointed at
--- somebody else's scores without first guessing a UUID.
+-- Changing your name clears your scores: a name here is meant to be the
+-- name that earned the run. Only touches rows for the key it is handed.
 drop function if exists public.arcade_forget(uuid);
 create or replace function public.arcade_forget(p_key uuid)
 returns int
@@ -388,9 +304,6 @@ declare
   recent int;
   v_rows int;
 begin
-  -- A destructive endpoint open to anonymous callers needs its own
-  -- ceiling, even though it can only ever reach rows the caller already
-  -- holds the key for.
   if v_ip <> '' then
     select count(*) into recent
     from public.arcade_runs

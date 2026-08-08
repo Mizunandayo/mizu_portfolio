@@ -11878,6 +11878,7 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   padding: 7px 14px;
   font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.76rem;
+  line-height: 1;
   font-weight: 700;
   color: rgba(212, 212, 216, 0.9);
   background: rgba(250, 250, 250, 0.05);
@@ -11919,7 +11920,75 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 
 .lk-n-mizu { font-variant-numeric: tabular-nums; }
 
+/* Twice the size inside the lightbox, where it sits alone on a large
+   dark field and the version scaled for a project row was lost on it.
+   Everything is in em against the button's own font-size, so one number
+   moves the padding, the gap and the heart together. */
+.plb-action-mizu .lk-mizu {
+  font-size: 1.06rem; /* -30% on 1.52 */
+  gap: 0.42em;
+  padding: 0.46em 0.92em;
+  border-width: 2px;
+}
+
+.plb-action-mizu .lk-mizu svg {
+  width: 1.05em;
+  height: 1.05em;
+  stroke-width: 2.1;
+}
+
 .lk-err-mizu { font-size: 0.68rem; color: #f8b4b4; }
+
+/* ── Hackathon tally ──
+   The count rides on the title's own line, pushed right. Aligned to the
+   first baseline rather than centred, because a title that wraps to two
+   lines would otherwise drag the heart down to the middle of the block
+   instead of leaving it beside the first line. */
+.hack-headrow-mizu {
+  /* stretch, because .hack-text-mizu is a column flex with
+     align-items: flex-start — without this the row shrinks to its own
+     content and space-between has no free space to push the tally into,
+     so the heart sat against the title instead of at the far edge. */
+  align-self: stretch;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+/* The heading owns the bottom margin, so the row must not add one. */
+.hack-headrow-mizu .hack-headline-mizu {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.hack-tally-mizu {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(161, 161, 170, 0.85);
+}
+
+.hack-tally-mizu svg { width: 1.15em; height: 1.15em; }
+.hack-tally-mizu.is-mine { color: #ff6b6b; }
+
+/* ── The heart in the dialog ──
+   Beside the project it belongs to, and pushed to the right edge so it
+   lines up with the rule above rather than trailing the name. */
+.hkd-project-row-mizu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hkd-project-row-mizu .hkd-project-name-mizu { min-width: 0; }
 
 @media (max-width: 620px) {
   .pdlg-titlerow-mizu { flex-wrap: wrap; gap: 8px; }
@@ -13441,6 +13510,17 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
 }
 
 .ar-cancel-mizu:hover { color: #fafafa; border-color: rgba(250, 250, 250, 0.45); }
+
+/* Sits under the form and keeps a fixed height, so the panel does not
+   jump between the counter and the clash message. */
+.ar-gate-note-mizu {
+  min-height: 1.2em;
+  margin: 10px 0 0;
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: rgba(161, 161, 170, 0.75);
+}
 
 .ar-gate-err-mizu {
   margin: 12px 0 0;

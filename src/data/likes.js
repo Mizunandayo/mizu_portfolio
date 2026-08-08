@@ -20,13 +20,19 @@ import { LIKES_CHANGED } from '../events.js'
 const KEY = 'mizu:like-key'
 const MINE = 'mizu:liked'
 
-/* Tickets share the projects' table rather than getting one of their
-   own. toggle_like takes any slug up to 60 characters, so a namespaced
-   id fits, and one per-IP throttle across both is the behaviour we
-   want anyway — forty likes an hour is forty likes an hour, whatever
-   they were spent on. The prefix is what stops a ticket id ever
-   colliding with a project slug. */
+/* Tickets and hackathons share the projects' table rather than getting
+   one each, and one per-IP throttle across all three is the behaviour
+   we want anyway — forty likes an hour is forty likes an hour, whatever
+   they were spent on. The prefix keeps the three namespaces apart.
+
+   toggle_like does NOT accept an arbitrary slug: it refuses anything it
+   cannot find, so each prefix needs a matching allowlist on the server.
+   Projects come from project_stats, tickets from an approved row, and
+   hackathons from public.hackathons — which is seeded from
+   data/hackathons.js in schema.sql and has to gain a row whenever a
+   hackathon is added here. */
 export const ticketSlug = (id) => `ticket:${id}`
+export const hackSlug = (id) => `hack:${id}`
 
 export function visitorKey() {
   try {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { configured } from '../../../data/supabase.js'
 import {
-  CABINETS, cabinet, board, beginRun, submit, forget, fmtScore, fmtParts, isBetter, readName, writeName,
+  CABINETS, cabinet, board, beginRun, submit, forget, nameTaken, NAME_MAX, fmtScore, fmtParts, isBetter, readName, writeName,
 } from '../../../data/arcade.js'
 import Boken from './Boken.jsx'
 import Hebi from './Hebi.jsx'
@@ -9,15 +9,8 @@ import Touge from './Touge.jsx'
 import Shooter from './Shooter.jsx'
 import Trophy from './Trophy.jsx'
 
-/* ══════════════════════════════════════════════════
-   遊技場 — the cabinet.
-
-   Four games behind one frame: a picker, a stage, and
-   the board beside it. The games know nothing about
-   scoring or names; they run and hand back a number.
-   Everything else lives here, so another cabinet is a
-   component and a row in CABINETS.
-   ══════════════════════════════════════════════════ */
+/* 遊技場 — four games behind one frame. The games know nothing about
+   scoring or names; they run and hand back a number. */
 
 const STAGE = { boken: Boken, hebi: Hebi, touge: Touge, shooter: Shooter }
 
@@ -29,6 +22,7 @@ export default function Arcade() {
   const [name, setName] = useState(readName)
   const [draft, setDraft] = useState('')
   const [renaming, setRenaming] = useState(false)
+  const [taken, setTaken] = useState(null)
   const [last, setLast] = useState(null)
   const [best, setBest] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -36,9 +30,7 @@ export default function Arcade() {
   const [phase, setPhase] = useState('ready')
   const playing = phase === 'run'
   const live = useRef(true)
-  /* The open run, held as a promise rather than a value: a short game
-     can finish before the server has answered, and awaiting it at submit
-     time is what stops that losing the score. */
+  /* A promise, not a value: a short game can end before the server answers. */
   const run = useRef(null)
 
   const c = cabinet(id)
@@ -58,10 +50,7 @@ export default function Arcade() {
     }
   }, [])
 
-  /* Switching cabinet is a fresh start: the board, the last run and the
-     session best all belong to one game. Phase included, or a game over
-     on the way out stays painted over the next cabinet, which does not
-     report its own state until you actually start it. */
+  /* Phase included, or a game over stays painted over the next cabinet. */
   useEffect(() => {
     setRows([])
     setLast(null)
@@ -71,15 +60,9 @@ export default function Arcade() {
     load(id)
   }, [id, load])
 
-  /* The name is asked for once, before the first game, and every board
-     uses it from then on. A form between the run and the leaderboard is
-     the thing that stops people submitting at all, and it was asking
-     again on every cabinet for a name it already had. */
   const named = name.trim().length > 0
 
-  /* A run is opened the moment a game starts, so the server has its own
-     clock on it. Without that the score is checked against nothing and
-     any number submitted instantly would stand. */
+  /* Opened on start so the server has its own clock on the run. */
   const onState = useCallback((p) => {
     setPhase(p)
     if (p !== 'run') return
@@ -107,9 +90,7 @@ export default function Arcade() {
     [id, name]
   )
 
-  /* Naming and renaming are the same form. Naming is free; renaming
-     clears every score this browser holds, which is why the panel says
-     so plainly before the button is reachable. */
+  /* Renaming clears every score this browser holds; the panel says so. */
   const saveName = async (e) => {
     e.preventDefault()
     const v = draft.trim()
@@ -121,8 +102,6 @@ export default function Arcade() {
     setRenaming(false)
     if (first || !configured) return
 
-    /* A new name starts from nothing. The panel says so before you get
-       here, so this is the confirmed action rather than a surprise. */
     setBusy(true)
     setErr('')
     setBest(null)
@@ -136,9 +115,31 @@ export default function Arcade() {
     }
   }
 
-  /* Space and the arrows scroll the page. While a run is going they
-     belong to the game, whether or not the canvas kept focus — holding
-     jump should not also take you to the bottom of the site. */
+  /* `alive` guards the in-flight request: clearing the timeout only stops
+     one that has not gone out yet. `taken` holds the draft it refers to,
+     so the render can tell if the answer still matches the field. */
+  useEffect(() => {
+    const v = draft.trim()
+    if (!configured || (!renaming && named) || v.length < 2 || v === name.trim()) {
+      setTaken(null)
+      return
+    }
+
+    let alive = true
+    setTaken('checking')
+    const t = setTimeout(async () => {
+      try {
+        const hit = await nameTaken(v)
+        if (alive && live.current) setTaken(hit ? v : false)
+      } catch {
+        if (alive && live.current) setTaken(false)
+      }
+    }, 400)
+
+    return () => { alive = false; clearTimeout(t) }
+  }, [draft, renaming, named, name])
+
+  /* While a run is going these belong to the game, focus or not. */
   useEffect(() => {
     if (!playing) return
     const keys = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'])
@@ -151,7 +152,6 @@ export default function Arcade() {
 
   return (
     <div className="ar-mizu">
-      {/* ── Picker ── */}
       <div className="ar-tabs-mizu" role="tablist" aria-label="Arcade games">
         {CABINETS.map((k) => (
           <button
@@ -169,18 +169,12 @@ export default function Arcade() {
       </div>
 
       <div className="ar-body-mizu">
-        {/* ── Cabinet ── */}
         <div className="ar-stage-mizu">
           <div className="ar-cab-mizu">
-            {/* The hood overhangs the sign and drops a shadow on it,
-                which is what makes the marquee read as backlit rather
-                than as a bright rectangle. Both inert. */}
+            {/* The hood's shadow is what makes the marquee read as backlit. */}
             <div className="ar-hood-mizu">
               <span className="ar-tube-mizu" aria-hidden="true" />
 
-              {/* A marquee names the game, so the name is on it. The
-                  kanji and the title share a line at display size and
-                  the strapline sits under them, quiet. */}
               <div className="ar-marquee-mizu">
                 <p className="ar-marquee-row-mizu">
                   <span className="ar-marquee-jp-mizu" aria-hidden="true">{c.jp}</span>
@@ -195,9 +189,7 @@ export default function Arcade() {
               <div className="ar-screen-mizu">
                 <Game onScore={onScore} onState={onState} />
 
-                {/* Every overlay here is inert, so the click that lands
-                    on it still reaches the stage below — which is what
-                    both focuses the canvas and starts the run. */}
+                {/* Inert, so the click reaches the stage and starts the run. */}
                 {named && !renaming && phase === 'ready' && (
                   <div className="ar-start-mizu">
                     <span className="ar-start-play-mizu" aria-hidden="true">▶</span>
@@ -206,9 +198,7 @@ export default function Arcade() {
                   </div>
                 )}
 
-                {/* Over the game rather than replacing it, so the last
-                    frame stays visible underneath — you get to see what
-                    finished you. */}
+                {/* Over the game, so you see what finished you. */}
                 {phase === 'done' && !renaming && (
                   <div className="ar-over-mizu" aria-live="polite">
                     <p className="ar-over-jp-mizu" aria-hidden="true">終了</p>
@@ -225,9 +215,7 @@ export default function Arcade() {
                   </div>
                 )}
 
-                {/* The gate, and the same panel again for a rename. Asked
-                    once, then never again on any cabinet — this is what
-                    the boards carry against every score. */}
+                {/* The gate, and the same panel again for a rename. */}
                 {(!named || renaming) && (
                   <div className="ar-gate-mizu">
                     <p className="ar-gate-jp-mizu" aria-hidden="true">名前</p>
@@ -243,13 +231,17 @@ export default function Arcade() {
                       <input
                         className="ar-name-mizu"
                         value={draft}
-                        maxLength={24}
+                        maxLength={NAME_MAX}
                         placeholder="Your name"
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => e.stopPropagation()}
                         aria-label="Name for the leaderboards"
                       />
-                      <button type="submit" className="ar-send-mizu" disabled={!draft.trim() || busy}>
+                      <button
+                        type="submit"
+                        className="ar-send-mizu"
+                        disabled={!draft.trim() || busy || taken === draft.trim() || taken === 'checking'}
+                      >
                         {renaming ? 'Save name' : 'Start playing'}
                       </button>
                       {renaming && (
@@ -262,15 +254,18 @@ export default function Arcade() {
                         </button>
                       )}
                     </form>
+                    <p className="ar-gate-note-mizu">
+                      {taken === 'checking' ? 'Checking…'
+                        : taken === draft.trim() ? `“${draft.trim()}” is already on the boards.`
+                        : `${draft.trim().length}/${NAME_MAX}`}
+                    </p>
+
                     {renaming && err && <p className="ar-gate-err-mizu">{err}</p>}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Sticks and buttons are furniture: they say what this is
-                at a glance, and the real controls are the keyboard and
-                the screen itself. */}
             <div className="ar-deck-mizu">
               <span className="ar-stick-mizu" aria-hidden="true"><i /></span>
 
@@ -308,14 +303,10 @@ export default function Arcade() {
           )}
         </div>
 
-        {/* ── Board ── */}
         <aside className="ar-board-mizu">
           <header className="ar-board-head-mizu">
             <span className="ar-board-jp-mizu" aria-hidden="true">順位</span>
             <h4 className="ar-board-title-mizu">Leaderboard</h4>
-            {/* Which cabinet, and how deep the board goes. A count of
-                the rows in hand would just read "10" forever now that
-                only the top ten are fetched. */}
             <p className="ar-board-sub-mizu">
               {c.name}
               <b>Top {TOP}</b>
@@ -333,11 +324,7 @@ export default function Arcade() {
               {rows.filter((r) => r.rank <= TOP).map((r) => {
                 const { value, unit } = fmtParts(id, r.score)
 
-                /* The top three stack onto two lines. The panel is 260px
-                   wide with 24px of padding, so a first-place name at
-                   1.24rem and its score cannot share 212px beside a cup.
-                   Fourth down keeps the compact row, which is also what
-                   makes the break read as a podium rather than a glitch. */
+                /* Top three get the podium row; fourth down stays compact. */
                 if (r.rank <= 3) {
                   return (
                     <li
@@ -369,9 +356,7 @@ export default function Arcade() {
             </ol>
           )}
 
-          {/* Outside the list on purpose: the list scrolls and this must
-              not scroll away. Only appears when the player did not make
-              the ten, so it is never a duplicate of a row above. */}
+          {/* Only when the player missed the ten, so never a duplicate. */}
           {rows.some((r) => r.rank > TOP) && (() => {
             const r = rows.find((x) => x.rank > TOP)
             const { value, unit } = fmtParts(id, r.score)

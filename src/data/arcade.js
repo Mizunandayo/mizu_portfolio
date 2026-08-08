@@ -1,27 +1,7 @@
 import { db, configured } from './supabase.js'
 import { visitorKey } from './likes.js'
 
-/* ══════════════════════════════════════════════════
-   遊技場 — the four cabinets and their board.
-
-   Everything a game needs to be listed, played and
-   scored is declared here, so adding a fourth is a
-   data change plus one component rather than an edit
-   in five files.
-
-   `dir` is which way the board sorts. The server has
-   the same knowledge in arcade_board(), and the server
-   is the authority — this copy only decides how the
-   number is drawn before it has been submitted.
-
-   `lo`/`hi` mirror arcade_limits() in arcade.sql, and
-   both are read off what the games can actually emit
-   rather than picked. Repeated on purpose: the client
-   uses them to refuse to send a nonsense run, the server
-   uses them to refuse to believe one. The server is the
-   authority — editing this file only changes the error
-   message a cheat gets.
-   ══════════════════════════════════════════════════ */
+/* 遊技場 — the four cabinets and their board. */
 
 export const CABINETS = [
   {
@@ -76,19 +56,14 @@ export const CABINETS = [
 
 export const cabinet = (id) => CABINETS.find((c) => c.id === id) ?? CABINETS[0]
 
-/* Points read bare, everything else takes its unit as a suffix. This
-   used to fall through to a lap-time formatter for any unit it did not
-   recognise, so Boken's metres printed as 00:00.036. Unknown units now
-   read as themselves instead of as a time. */
+/* Points read bare, everything else takes its unit as a suffix. */
 export function fmtScore(id, n) {
   if (n == null) return '—'
   const { unit } = cabinet(id)
   return unit === 'pts' ? n.toLocaleString() : `${n.toLocaleString()} ${unit}`
 }
 
-/* The same number, split, for places that want the unit set quieter than
-   the digits. One source for both so a board row and a game-over card
-   can never disagree about what a score reads as. */
+/* The same number, split, for places that want the unit set quieter than the digits. */
 export function fmtParts(id, n) {
   if (n == null) return { value: '—', unit: '' }
   const { unit } = cabinet(id)
@@ -98,9 +73,7 @@ export function fmtParts(id, n) {
 export const isBetter = (id, a, b) =>
   b == null ? true : cabinet(id).dir === 'desc' ? a > b : a < b
 
-/* The name the visitor last played under, so they do not retype it for
-   every run. Not an identity — the visitor key is what the board keys
-   on, and that is equally the browser's to invent. */
+/* The name the visitor last played under, so they do not retype it for every run. */
 const NAME = 'mizu:arcade-name'
 
 export const readName = () => {
@@ -119,19 +92,25 @@ export const writeName = (v) => {
   }
 }
 
-/* Wipes every score this browser owns, across all four games. Called on
-   a name change: a name on the board is meant to be the name that
-   earned the run, so a new name starts from nothing. The client warns
-   before this is reached. */
+/* Wipes every score this browser owns, across all four games. */
 export async function forget() {
   if (!configured) return 0
   const n = await db.rpc('arcade_forget', { p_key: visitorKey() })
   return typeof n === 'number' ? n : 0
 }
 
-/* Ten rows, plus this visitor's own row whether or not it made the cut.
-   The key goes up so the server can flag which row is theirs; it never
-   comes back down, for anyone. */
+export const NAME_MAX = 15
+
+/* Asked while typing, so the gate can refuse a taken name before the run rather than after it. */
+export async function nameTaken(name) {
+  if (!configured) return false
+  const v = await db.rpc('arcade_name_taken', {
+    p_name: name, p_key: visitorKey(),
+  })
+  return v === true
+}
+
+/* Ten rows, plus this visitor's own row whether or not it made the cut. */
 export async function board(game, limit = 10) {
   if (!configured) return []
   const rows = await db.rpc('arcade_board', {
@@ -140,9 +119,7 @@ export async function board(game, limit = 10) {
   return Array.isArray(rows) ? rows : []
 }
 
-/* Opened when a game actually starts. The token it returns is what the
-   server demands at submit time, and it is what makes the clock the
-   score is checked against the server's rather than the browser's. */
+/* Opened when a game actually starts. */
 export async function beginRun(game) {
   if (!configured) return null
   const id = await db.rpc('arcade_begin', { p_game: game, p_key: visitorKey() })
@@ -151,9 +128,7 @@ export async function beginRun(game) {
 
 export async function submit(game, name, score, run) {
   const c = cabinet(game)
-  /* Refused here as well as on the server. Not for safety — the server
-     is what makes it safe — but so an obviously broken run reports a
-     clear message instead of a round trip and a raised exception. */
+  /* Refused here as well as on the server. */
   if (!Number.isFinite(score) || score < c.lo || score > c.hi) {
     throw new Error('That run did not register.')
   }

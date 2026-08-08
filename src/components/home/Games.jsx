@@ -6,16 +6,6 @@ import Arcade from './arcade/Arcade.jsx'
 
 /* ══════════════════════════════════════════════════
    遊戯 — the arcade.
-
-   Games played rather than built, laid out the way a
-   library lays out covers: the art and nothing else.
-   Every cover already carries its own title in its own
-   lettering, so anything printed over it would be the
-   same name twice. Hovering catches the light on it.
-
-   Images are found on disk at build time and paired
-   with names from games.js by their number. See the
-   plugin in vite.config.js.
    ══════════════════════════════════════════════════ */
 
 const MARK = { steam: SteamIcon, xbox: XboxIcon }
