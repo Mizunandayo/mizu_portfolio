@@ -21,11 +21,13 @@ export const MODES = {
   personal: {
     id: 'personal',
     label: 'Personal',
-    hint: 'The full thing — Japanese layout, loading screen, the lot.',
+    hint: 'The full thing, Japanese layout, loading screen, the lot.',
   },
   recruiter: {
+    /* `id` stays 'recruiter': it is the stored value, the body class and
+       every check in the CSS. Only the label is shown. */
     id: 'recruiter',
-    label: 'Recruiter',
+    label: 'Professional',
     hint: 'Plain sections, no ornament, straight to the work.',
   },
 }

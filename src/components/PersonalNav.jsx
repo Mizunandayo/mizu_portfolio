@@ -334,7 +334,7 @@ export default function PersonalNav({ onCredits }) {
             <span className="pnav-kanji-mizu" aria-hidden="true">
               職
             </span>
-            <span className="pnav-label-mizu">Recruiter mode</span>
+            <span className="pnav-label-mizu">Professional mode</span>
           </button>
         </div>
       </div>
