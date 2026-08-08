@@ -404,7 +404,7 @@ export default function Welcome({ show, onPickTrack }) {
             </div>
 
 <h2 id="wc-title" className="wc-title-mizu">
- ようこそ youkoso Welcome in.
+ようこそ 𝗪𝗲𝗹𝗰𝗼𝗺𝗲!
 </h2>
 
 <p className="wc-copy-mizu">
