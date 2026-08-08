@@ -390,18 +390,70 @@ export default function Welcome({ show, onPickTrack }) {
               </span>
             </div>
 
-            <h2 id="wc-title" className="wc-title-mizu">
-              Welcome to Mizuki&rsquo;s Garage
-            </h2>
+<h2 id="wc-title" className="wc-title-mizu">
+  to Mizuki's Horizon
+</h2>
 
-            <p className="wc-copy-mizu">
-              This is a collection of the projects I&rsquo;ve built, the
-              hackathons I&rsquo;ve competed in, and the ideas I&rsquo;ve
-              brought to life. Click any card to learn more about the work
-              behind it.
-            </p>
+<p className="wc-copy-mizu">
+  Come take a look around. Here you&rsquo;ll find the projects I&rsquo;ve
+  built, the hackathons I&rsquo;ve joined, the experiences that shaped me,
+  and a few things I&rsquo;ve made just for fun. Explore the work, create
+  your own customized ticket, and feel free to play some retro games along the way.
+</p>
 
             <p className="wc-sign-mizu">Greetings from Francis Daniel</p>
+
+            {/* Above the music, not below it: Enter and "continue without
+                chosen music" both act on the track list, so a name field
+                between them split one decision in half. */}
+            <div className="wc-name-mizu">
+              <label className="wc-name-label-mizu" htmlFor="wc-name">
+                氏名 / Name
+              </label>
+
+              <input
+                id="wc-name"
+                className="wc-name-input-mizu"
+                type="text"
+                value={name}
+                maxLength={28}
+                autoComplete="name"
+                placeholder="Enter your name"
+                onChange={(e) => setName(e.target.value)}
+                /* Enter issues rather than dismissing the dialog —
+                   a bare <input> inside <dialog> would otherwise let
+                   the default close it. */
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return
+                  e.preventDefault()
+                  if (name.trim() && !clash) setTicket(true)
+                }}
+              />
+
+              <button
+                type="button"
+                className="wc-issue-mizu"
+                onClick={() => setTicket(true)}
+                disabled={!name.trim() || clash || dupe === 'checking'}
+              >
+                <span className="wc-issue-kanji-mizu" aria-hidden="true">
+                  発券
+                </span>
+                Get your ticket
+              </button>
+
+              {/* The clash warning replaces the standing note rather than
+                  stacking under it, so the row never grows. */}
+              <p className="wc-name-note-mizu" aria-live="polite">
+                {dupe === 'checking' ? (
+                  'Checking…'
+                ) : clash ? (
+                  <b>“{name.trim()}” already has a ticket. Try another.</b>
+                ) : (
+                  'No rush. The ticket desk is further down the page if you would rather make one later.'
+                )}
+              </p>
+            </div>
 
             <div className="wc-music-mizu">
               <p className="wc-music-label-mizu" id="wc-music">
@@ -457,51 +509,6 @@ export default function Welcome({ show, onPickTrack }) {
                   sound until the page has been touched.
                 </p>
               )}
-            </div>
-
-            {/* A field to fill in, not a form to submit — an underline
-                and a label, the way a ticket is written on. */}
-            <div className="wc-name-mizu">
-              <label className="wc-name-label-mizu" htmlFor="wc-name">
-                氏名 / Name
-              </label>
-
-              <input
-                id="wc-name"
-                className="wc-name-input-mizu"
-                type="text"
-                value={name}
-                maxLength={28}
-                autoComplete="name"
-                placeholder="Enter your name"
-                onChange={(e) => setName(e.target.value)}
-                /* Enter issues rather than dismissing the dialog —
-                   a bare <input> inside <dialog> would otherwise let
-                   the default close it. */
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return
-                  e.preventDefault()
-                  if (name.trim() && !clash) setTicket(true)
-                }}
-              />
-
-              <button
-                type="button"
-                className="wc-issue-mizu"
-                onClick={() => setTicket(true)}
-                disabled={!name.trim() || clash || dupe === 'checking'}
-              >
-                <span className="wc-issue-kanji-mizu" aria-hidden="true">
-                  発券
-                </span>
-                Get your ticket
-              </button>
-
-              <p className="wc-name-note-mizu" aria-live="polite">
-                {dupe === 'checking' ? 'Checking…'
-                  : clash ? `“${name.trim()}” already has a ticket. Try another.`
-                  : ''}
-              </p>
             </div>
 
             <div className="wc-cta-mizu">

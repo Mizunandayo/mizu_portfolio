@@ -7097,9 +7097,7 @@ html.tk-open-mizu {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding-bottom: 10px;
-  margin-bottom: clamp(14px, 2vw, 20px);
-  border-bottom: 1px solid rgba(250, 250, 250, 0.14);
+  margin-bottom: clamp(18px, 2.6vw, 28px);
 }
 
 .wc-name-label-mizu {
@@ -13522,15 +13520,20 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   color: rgba(161, 161, 170, 0.75);
 }
 
-/* Under the greeting's name field. Fixed height so the panel does not
-   jump as the message appears. */
+/* Under the greeting's name field. Carries the standing "you can do this
+   later" note and, when it applies, the clash warning in its place, so
+   the row height never changes between them. */
 .wc-name-note-mizu {
   flex: 1 1 100%;
   min-height: 1.1em;
-  margin: 8px 0 0;
-  font-size: 0.72rem;
-  color: #ff9b9b;
+  margin: 0px 0 10px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: rgba(161, 161, 170, 0.85);
 }
+
+.wc-name-note-mizu b { font-weight: 500; color: #ff9b9b; }
 
 .ar-gate-err-mizu {
   margin: 12px 0 0;
