@@ -72,6 +72,12 @@ export default function Welcome({ show, onPickTrack }) {
   const ref = useRef(null)
   const audioRef = useRef(null)
   const previewRef = useRef(null)
+  /* Previews are off from the moment a close begins. The panel animates
+     out over 460ms with a translate and a scale, so rows slide under a
+     stationary pointer and fire mouseenter again after close() has
+     already stopped the audio, starting a preview that outlives the
+     dialog and plays on with no player to show for it. */
+  const goneRef = useRef(false)
   const dwellRef = useRef(null)
 
   useEffect(() => {
@@ -109,6 +115,7 @@ export default function Welcome({ show, onPickTrack }) {
      Hovering auditions a track, softer than the real thing so an
      audition never sounds like the player has already started. */
   const preview = useCallback((t) => {
+    if (goneRef.current) return
     clearTimeout(dwellRef.current)
     const a = previewRef.current
     if (!a) return
@@ -179,6 +186,9 @@ export default function Welcome({ show, onPickTrack }) {
   const discardRef = useRef(false)
 
   const finish = useCallback(() => {
+    /* Again on the way out: the guard above stops a new preview starting,
+       this stops one that was already audible when close() ran. */
+    stopPreview()
     if (pick && !discardRef.current) onPickTrack?.(pick)
     setOpen(false)
     setClosing(false)
@@ -187,7 +197,7 @@ export default function Welcome({ show, onPickTrack }) {
     } catch {
       /* ignore */
     }
-  }, [pick, onPickTrack])
+  }, [pick, onPickTrack, stopPreview])
 
   /* Dip, then leave. The panel plays its exit before it is unmounted,
      so the close is deferred by exactly the animation's length.
@@ -199,6 +209,7 @@ export default function Welcome({ show, onPickTrack }) {
   const close = useCallback((discard = false) => {
     if (closing) return
     discardRef.current = discard === true
+    goneRef.current = true
     audioRef.current?.pause()
     stopPreview()
 
@@ -227,9 +238,11 @@ export default function Welcome({ show, onPickTrack }) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (open && !el.open) el.showModal()
+    if (open && !el.open) { goneRef.current = false; el.showModal() }
     if (!open && el.open) el.close()
   }, [open])
+
+  useEffect(() => () => stopPreview(), [stopPreview])
 
   /* Scroll lock. showModal() makes the page behind inert to clicks but
      does not stop the wheel from scrolling it, so the page slides
