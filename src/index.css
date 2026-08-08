@@ -13522,6 +13522,16 @@ textarea.es-body-mizu::placeholder { color: rgba(161, 161, 170, 0.45); }
   color: rgba(161, 161, 170, 0.75);
 }
 
+/* Under the greeting's name field. Fixed height so the panel does not
+   jump as the message appears. */
+.wc-name-note-mizu {
+  flex: 1 1 100%;
+  min-height: 1.1em;
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: #ff9b9b;
+}
+
 .ar-gate-err-mizu {
   margin: 12px 0 0;
   font-size: 0.7rem;

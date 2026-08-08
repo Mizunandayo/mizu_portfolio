@@ -1,4 +1,4 @@
-import { db, publicUrl, upload, removeObjects } from './supabase.js'
+import { db, configured, publicUrl, upload, removeObjects } from './supabase.js'
 
 export const BUCKET = 'tickets'
 
@@ -54,6 +54,13 @@ export async function listApproved(limit = 24) {
    so a throttled visitor never reaches the bucket; and a row pointing at
    a missing file is visible in the panel and can be rejected, whereas a
    file with no row is invisible and stays forever. */
+/* Stable reference: useNameTaken keys its effect on it. */
+export async function nameTaken(name) {
+  if (!configured) return false
+  const v = await db.rpc('ticket_name_taken', { p_name: name })
+  return v === true
+}
+
 export async function submit({ thumb, plate, name, design, message, email }) {
   const who = tidyName(name)
   if (!who) throw new Error('Your ticket needs a name.')

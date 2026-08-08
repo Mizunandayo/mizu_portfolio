@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import useNameTaken from '../../hooks/useNameTaken.jsx'
+import { nameTaken } from '../../data/tickets.js'
 import { useMode } from '../../hooks/useMode.jsx'
 import { TRACKS } from '../../data/music.js'
 import { HERO_SOUND } from '../../events.js'
@@ -56,6 +58,8 @@ export default function Welcome({ show, onPickTrack }) {
   const [locked, setLocked] = useState(false)
   const [slide, setSlide] = useState(0)
   const [name, setName] = useState('')
+  const dupe = useNameTaken(name, nameTaken)
+  const clash = dupe === name.trim()
   const [ticket, setTicket] = useState(false)
 
   /* Openable from the gallery long after the greeting has been dismissed. */
@@ -477,7 +481,7 @@ export default function Welcome({ show, onPickTrack }) {
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return
                   e.preventDefault()
-                  if (name.trim()) setTicket(true)
+                  if (name.trim() && !clash) setTicket(true)
                 }}
               />
 
@@ -485,13 +489,19 @@ export default function Welcome({ show, onPickTrack }) {
                 type="button"
                 className="wc-issue-mizu"
                 onClick={() => setTicket(true)}
-                disabled={!name.trim()}
+                disabled={!name.trim() || clash || dupe === 'checking'}
               >
                 <span className="wc-issue-kanji-mizu" aria-hidden="true">
                   発券
                 </span>
                 Get your ticket
               </button>
+
+              <p className="wc-name-note-mizu" aria-live="polite">
+                {dupe === 'checking' ? 'Checking…'
+                  : clash ? `“${name.trim()}” already has a ticket. Try another.`
+                  : ''}
+              </p>
             </div>
 
             <div className="wc-cta-mizu">

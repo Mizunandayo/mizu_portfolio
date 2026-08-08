@@ -8,6 +8,7 @@ import Hebi from './Hebi.jsx'
 import Touge from './Touge.jsx'
 import Shooter from './Shooter.jsx'
 import Trophy from './Trophy.jsx'
+import useNameTaken from '../../../hooks/useNameTaken.jsx'
 
 /* 遊技場 — four games behind one frame. The games know nothing about
    scoring or names; they run and hand back a number. */
@@ -22,7 +23,6 @@ export default function Arcade() {
   const [name, setName] = useState(readName)
   const [draft, setDraft] = useState('')
   const [renaming, setRenaming] = useState(false)
-  const [taken, setTaken] = useState(null)
   const [last, setLast] = useState(null)
   const [best, setBest] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -61,6 +61,10 @@ export default function Arcade() {
   }, [id, load])
 
   const named = name.trim().length > 0
+
+  const taken = useNameTaken(draft, nameTaken, {
+    skip: (!renaming && named) || draft.trim() === name.trim(),
+  })
 
   /* Opened on start so the server has its own clock on the run. */
   const onState = useCallback((p) => {
@@ -115,29 +119,6 @@ export default function Arcade() {
     }
   }
 
-  /* `alive` guards the in-flight request: clearing the timeout only stops
-     one that has not gone out yet. `taken` holds the draft it refers to,
-     so the render can tell if the answer still matches the field. */
-  useEffect(() => {
-    const v = draft.trim()
-    if (!configured || (!renaming && named) || v.length < 2 || v === name.trim()) {
-      setTaken(null)
-      return
-    }
-
-    let alive = true
-    setTaken('checking')
-    const t = setTimeout(async () => {
-      try {
-        const hit = await nameTaken(v)
-        if (alive && live.current) setTaken(hit ? v : false)
-      } catch {
-        if (alive && live.current) setTaken(false)
-      }
-    }, 400)
-
-    return () => { alive = false; clearTimeout(t) }
-  }, [draft, renaming, named, name])
 
   /* While a run is going these belong to the game, focus or not. */
   useEffect(() => {

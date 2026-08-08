@@ -509,11 +509,9 @@ create trigger project_likes_tally_trg
   after insert or delete on public.project_likes
   for each row execute function public.project_likes_tally();
 
--- toggle_like itself is defined in the hardening section below, so
--- that its allowlist check and this table stay in one place.
-
-revoke all on function public.toggle_like(text, uuid) from public;
-grant execute on function public.toggle_like(text, uuid) to anon, authenticated;
+-- toggle_like is defined in the hardening section below, together with
+-- its allowlist check. Its grants live there too: running them here
+-- fails on a fresh database, because the function does not exist yet.
 
 
 -- ══════════════════════════════════════════════════
@@ -604,6 +602,28 @@ on conflict (id) do nothing;
 alter table public.hackathons enable row level security;
 grant all on public.hackathons to service_role;
 -- No anon grant: only toggle_like reads it, and that is a definer.
+
+
+-- Is that ticket name already used. Asked while typing so the form can
+-- say so before the upload rather than after it. Stored names are
+-- already tidied by the insert trigger, so only the incoming one needs
+-- it. Pending tickets count: one is going to be approved and would
+-- collide then.
+create or replace function public.ticket_name_taken(p_name text)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.tickets
+    where lower(name) = lower(public.tidy_name(p_name))
+  );
+$$;
+
+revoke all on function public.ticket_name_taken(text) from public;
+grant execute on function public.ticket_name_taken(text) to anon, authenticated;
 
 
 create or replace function public.toggle_like(p_slug text, p_key uuid)

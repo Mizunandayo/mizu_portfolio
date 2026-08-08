@@ -6,7 +6,8 @@ import {
   SANS,
   MINCHO,
 } from './ticketPresets.js'
-import { submit, tidyName, EMAIL_RE, NAME_MAX } from '../../data/tickets.js'
+import { submit, nameTaken, tidyName, EMAIL_RE, NAME_MAX } from '../../data/tickets.js'
+import useNameTaken from '../../hooks/useNameTaken.jsx'
 import { configured } from '../../data/supabase.js'
 import { TICKETS_CHANGED } from '../../events.js'
 import ART from 'virtual:ticket-art'
@@ -226,6 +227,8 @@ export default function Ticket({ open, name, art, onClose }) {
      the constraint can never disagree about what counts as a name. */
   const typed = tidyName(who)
   const named = typed.length > 0
+  const dupe = useNameTaken(who, nameTaken)
+  const clash = dupe === who.trim()
   const clean = typed || 'YOUR NAME'
   const serial = useMemo(() => serialOf(clean), [clean])
 
@@ -853,8 +856,8 @@ export default function Ticket({ open, name, art, onClose }) {
                 type="button"
                 className="tk-save-mizu"
                 onClick={review}
-                disabled={busy || !named}
-                title={named ? undefined : 'Add a name first'}
+                disabled={busy || !named || clash || dupe === 'checking'}
+                title={clash ? 'That name already has a ticket' : named ? undefined : 'Add a name first'}
               >
                 {busy ? 'Rendering…' : 'Next'}
                 <Chev dir="right" />
@@ -1138,10 +1141,12 @@ export default function Ticket({ open, name, art, onClose }) {
               onChange={(e) => setWho(e.target.value)}
             />
             <span
-              className={`tk-count-mizu${named ? '' : ' is-need'}`}
+              className={`tk-count-mizu${named && !clash ? '' : ' is-need'}`}
               aria-live="polite"
             >
-              {named ? `${typed.length}/${NAME_MAX}` : 'Required'}
+              {dupe === 'checking' ? 'Checking…'
+                : clash ? 'Taken'
+                : named ? `${typed.length}/${NAME_MAX}` : 'Required'}
             </span>
           </label>
 
